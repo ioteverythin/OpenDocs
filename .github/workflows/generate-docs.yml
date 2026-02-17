@@ -1,0 +1,60 @@
+name: Generate Documentation
+
+on:
+  push:
+    paths:
+      - 'README.md'
+  workflow_dispatch:
+    inputs:
+      readme_path:
+        description: 'Path to the README file'
+        required: false
+        default: './README.md'
+      formats:
+        description: 'Comma-separated formats: word,pdf,pptx'
+        required: false
+        default: 'word,pdf,pptx'
+
+permissions:
+  contents: write
+
+jobs:
+  generate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install IoTEverything
+        run: pip install ioteverything
+
+      - name: Generate documentation
+        run: |
+          README="${{ github.event.inputs.readme_path || './README.md' }}"
+          FORMATS="${{ github.event.inputs.formats || 'word,pdf,pptx' }}"
+
+          # Convert comma-separated to individual --format flags
+          for FMT in $(echo "$FORMATS" | tr ',' '\n'); do
+            ioteverything generate "$README" --local --format "$FMT" -o ./generated-docs
+          done
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-documentation
+          path: generated-docs/
+          retention-days: 30
+
+      - name: Commit generated docs (optional)
+        if: github.event_name == 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add generated-docs/ || true
+          git diff --staged --quiet || git commit -m "docs: auto-generate documentation from README [skip ci]"
+          git push || true
