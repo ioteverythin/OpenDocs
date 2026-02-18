@@ -5,7 +5,7 @@ a ``Theme`` instance and uses it instead of hardcoded constants.
 
 Usage::
 
-    from ioteverything.generators.themes import get_theme, list_themes
+    from opendocs.generators.themes import get_theme, list_themes
 
     theme = get_theme("ocean")
     gen = WordGenerator(theme=theme)

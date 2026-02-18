@@ -3,7 +3,7 @@
 Uses OpenAI (or compatible) structured outputs to extract entities and
 relations from README text with higher accuracy than deterministic rules.
 
-Requires: ``pip install ioteverything[llm]``
+Requires: ``pip install opendocs[llm]``
 """
 
 from __future__ import annotations
@@ -164,7 +164,7 @@ class LLMClient:
         except ImportError:
             raise ImportError(
                 "LLM mode requires the 'openai' package. "
-                "Install with: pip install ioteverything[llm]"
+                "Install with: pip install opendocs[llm]"
             )
 
         self.model = model

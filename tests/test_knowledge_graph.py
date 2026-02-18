@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ioteverything.core.knowledge_graph import (
+from opendocs.core.knowledge_graph import (
     Entity,
     EntityType,
     KnowledgeGraph,
@@ -112,8 +112,9 @@ class TestKnowledgeGraph:
 
     def test_to_mermaid(self, sample_kg: KnowledgeGraph):
         mermaid = sample_kg.to_mermaid()
-        assert mermaid.startswith("graph TD")
+        assert mermaid.startswith("graph LR")
         assert "SmartTemp" in mermaid
+        assert "subgraph" in mermaid
 
     def test_merge(self, sample_kg: KnowledgeGraph):
         other = KnowledgeGraph()

@@ -34,6 +34,7 @@ from ..core.models import (
     DocumentModel,
     GenerationResult,
     ImageBlock,
+    InlineSpan,
     ListBlock,
     MermaidBlock,
     OutputFormat,
@@ -48,6 +49,29 @@ from .styles import Colors, Fonts
 
 def _rgb(t: tuple) -> colors.Color:
     return colors.Color(t[0] / 255, t[1] / 255, t[2] / 255)
+
+
+def _spans_to_html(spans: list[InlineSpan]) -> str:
+    """Convert InlineSpans to ReportLab-compatible HTML with <a> tags."""
+    parts: list[str] = []
+    for span in spans:
+        text = (
+            span.text
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+        if span.is_link:
+            parts.append(f'<a href="{span.url}" color="#1565C0"><u>{text}</u></a>')
+        elif span.bold:
+            parts.append(f"<b>{text}</b>")
+        elif span.italic:
+            parts.append(f"<i>{text}</i>")
+        elif span.code:
+            parts.append(f'<font face="{Fonts.CODE}" size="{Fonts.CODE_SIZE_PT}">{text}</font>')
+        else:
+            parts.append(text)
+    return "".join(parts)
 
 
 # ---------------------------------------------------------------------------
@@ -209,7 +233,7 @@ def _draw_page_decorations(canvas, doc_template, repo_name: str):
     canvas.setFillColor(_rgb(Colors.WHITE))
     canvas.setFont("Helvetica-Bold", 8)
     canvas.drawString(inch, h - 14, repo_name)
-    canvas.drawRightString(w - inch, h - 14, "IoTEverything")
+    canvas.drawRightString(w - inch, h - 14, "opendocs")
 
     # Footer line
     canvas.setStrokeColor(_rgb(Colors.TABLE_BORDER))
@@ -324,7 +348,7 @@ class PdfGenerator(BaseGenerator):
             ["Repository", doc.metadata.repo_name or "—"],
             ["Source", doc.metadata.repo_url or doc.metadata.source_path or "—"],
             ["Generated", doc.metadata.generated_at[:19] if doc.metadata.generated_at else "—"],
-            ["Tool", "IoTEverything v0.1"],
+            ["Tool", "opendocs v0.1"],
         ]
         info_table = Table(info_data, colWidths=[1.5 * inch, 4 * inch])
         info_table.setStyle(TableStyle([
@@ -360,7 +384,7 @@ class PdfGenerator(BaseGenerator):
             ("URL", meta.repo_url or "—"),
             ("Source Path", meta.source_path or "—"),
             ("Generated At", meta.generated_at or "—"),
-            ("Generator", "IoTEverything v0.1"),
+            ("Generator", "opendocs v0.1"),
             ("Sections", str(len(doc.sections))),
             ("Content Blocks", str(len(doc.all_blocks))),
             ("Mermaid Diagrams", str(len(doc.mermaid_diagrams))),
@@ -682,13 +706,16 @@ class PdfGenerator(BaseGenerator):
 
     def _render_block(self, story: list, block: ContentBlock, styles: dict) -> None:
         if isinstance(block, ParagraphBlock):
-            safe = (
-                block.text
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-            )
-            story.append(Paragraph(safe, styles["Normal"]))
+            if block.spans:
+                html = _spans_to_html(block.spans)
+            else:
+                html = (
+                    block.text
+                    .replace("&", "&amp;")
+                    .replace("<", "&lt;")
+                    .replace(">", "&gt;")
+                )
+            story.append(Paragraph(html, styles["Normal"]))
             story.append(Spacer(1, 0.06 * inch))
 
         elif isinstance(block, CodeBlock):
@@ -732,10 +759,14 @@ class PdfGenerator(BaseGenerator):
         elif isinstance(block, ListBlock):
             prefix_fn = (lambda i: f"{i + 1}. ") if block.ordered else (lambda _: "●  ")
             for i, item in enumerate(block.items):
-                safe = item.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 bullet = f'<font color="#{Colors.PRIMARY[0]:02X}{Colors.PRIMARY[1]:02X}{Colors.PRIMARY[2]:02X}">{prefix_fn(i)}</font>'
+                # Use rich spans if available
+                if block.rich_items and i < len(block.rich_items):
+                    content = _spans_to_html(block.rich_items[i])
+                else:
+                    content = item.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 story.append(Paragraph(
-                    f"{bullet}{safe}",
+                    f"{bullet}{content}",
                     styles["ListItem"],
                 ))
             story.append(Spacer(1, 0.06 * inch))

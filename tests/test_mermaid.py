@@ -7,14 +7,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ioteverything.generators.mermaid_renderer import (
+from opendocs.generators.mermaid_renderer import (
     MermaidRenderer,
     _diagram_hash,
     _pako_deflate_base64,
     _plain_base64,
 )
-from ioteverything.generators.diagram_extractor import DiagramExtractor, ImageCache
-from ioteverything.core.models import (
+from opendocs.generators.diagram_extractor import DiagramExtractor, ImageCache
+from opendocs.core.models import (
     DocumentModel,
     DocumentMetadata,
     Section,
@@ -78,7 +78,7 @@ class TestMermaidRendererInk:
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.get = MagicMock(return_value=mock_resp)
 
-        with patch("ioteverything.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
+        with patch("opendocs.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
             result = renderer.render(SIMPLE_MERMAID, label="test")
 
         assert result is not None
@@ -105,7 +105,7 @@ class TestMermaidRendererInk:
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.get = MagicMock(side_effect=Exception("Connection failed"))
 
-        with patch("ioteverything.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
+        with patch("opendocs.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
             result = renderer.render(SIMPLE_MERMAID)
 
         assert result is None
@@ -128,7 +128,7 @@ class TestMermaidRendererInk:
             "sequenceDiagram\n    Alice->>Bob: Hello",
         ]
 
-        with patch("ioteverything.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
+        with patch("opendocs.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
             results = renderer.render_batch(diagrams)
 
         assert len(results) == 2
@@ -153,7 +153,7 @@ class TestDownloadImage:
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.get = MagicMock(return_value=mock_resp)
 
-        with patch("ioteverything.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
+        with patch("opendocs.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
             result = renderer.download_image("https://example.com/diagram.png")
 
         assert result is not None
@@ -168,7 +168,7 @@ class TestDownloadImage:
         mock_client.__exit__ = MagicMock(return_value=False)
         mock_client.get = MagicMock(side_effect=Exception("Network error"))
 
-        with patch("ioteverything.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
+        with patch("opendocs.generators.mermaid_renderer.httpx.Client", return_value=mock_client):
             result = renderer.download_image("https://example.com/fail.png")
 
         assert result is None

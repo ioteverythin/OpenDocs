@@ -1,7 +1,7 @@
 """Knowledge Graph models for semantic document representation.
 
 These models capture *typed semantic entities* and their *relationships*
-extracted from README content — the core IP of IoTEverything.
+extracted from README content — the core IP of opendocs.
 
 The KG sits between the parser and generators:
 
@@ -167,7 +167,10 @@ class KnowledgeGraph(BaseModel):
             self.add_relation(r)
 
     def to_mermaid(self, *, max_entities: int = 0) -> str:
-        """Export the knowledge graph as a Mermaid diagram.
+        """Export the knowledge graph as an architecture-style Mermaid diagram.
+
+        Groups entities by type into subgraphs and shows only the most
+        meaningful architectural relations.
 
         Parameters
         ----------
@@ -180,23 +183,62 @@ class KnowledgeGraph(BaseModel):
             entities = sorted(
                 entities, key=lambda e: e.confidence, reverse=True
             )[:max_entities]
-            valid_ids = {e.id for e in entities}
-        else:
-            valid_ids = {e.id for e in entities}
 
-        lines = ["graph TD"]
-        # Nodes
+        valid_ids = {e.id for e in entities}
+
+        # Group entities by type
+        groups: dict[str, list[Entity]] = {}
         for e in entities:
-            label = f"{e.name} ({e.entity_type.value})"
-            safe_id = e.id.replace("-", "_").replace(" ", "_")
-            lines.append(f'    {safe_id}["{label}"]')
+            label = e.entity_type.value.replace("_", " ").title()
+            groups.setdefault(label, []).append(e)
 
-        # Edges (only between included nodes)
+        # Architectural group ordering (most important first)
+        type_order = [
+            "Project", "Component", "Feature", "Framework",
+            "Technology", "Language", "Cloud Service", "Platform",
+            "Database", "Api Endpoint", "Protocol", "Configuration",
+            "Metric", "Hardware", "Person Org", "License",
+            "Prerequisite",
+        ]
+
+        lines = ["graph LR"]
+
+        # Subgraphs per entity type
+        for type_label in type_order:
+            ents = groups.pop(type_label, [])
+            if not ents:
+                continue
+            safe_sg = type_label.replace(" ", "_")
+            lines.append(f"    subgraph {safe_sg}[\"{type_label}\"]")
+            for e in ents[:8]:  # cap per group for readability
+                safe_id = e.id.replace("-", "_").replace(" ", "_")
+                safe_name = e.name.replace('"', "'")
+                lines.append(f'        {safe_id}["{safe_name}"]')
+            lines.append("    end")
+
+        # Any remaining types
+        for type_label, ents in groups.items():
+            if not ents:
+                continue
+            safe_sg = type_label.replace(" ", "_")
+            lines.append(f"    subgraph {safe_sg}[\"{type_label}\"]")
+            for e in ents[:8]:
+                safe_id = e.id.replace("-", "_").replace(" ", "_")
+                safe_name = e.name.replace('"', "'")
+                lines.append(f'        {safe_id}["{safe_name}"]')
+            lines.append("    end")
+
+        # Edges — only between included nodes, deduplicate
+        seen_edges: set[str] = set()
         for r in self.relations:
             if r.source_id in valid_ids and r.target_id in valid_ids:
                 src = r.source_id.replace("-", "_").replace(" ", "_")
                 tgt = r.target_id.replace("-", "_").replace(" ", "_")
-                lines.append(f'    {src} -->|{r.relation_type.value}| {tgt}')
+                edge_key = f"{src}->{tgt}"
+                if edge_key not in seen_edges:
+                    seen_edges.add(edge_key)
+                    label = r.relation_type.value.replace("_", " ")
+                    lines.append(f"    {src} -->|{label}| {tgt}")
 
         return "\n".join(lines)
 

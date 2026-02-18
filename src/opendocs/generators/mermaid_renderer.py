@@ -112,7 +112,7 @@ class MermaidRenderer:
         theme: str = "default",
     ) -> None:
         if cache_dir is None:
-            self._tmp = tempfile.mkdtemp(prefix="ioteverything_diagrams_")
+            self._tmp = tempfile.mkdtemp(prefix="opendocs_diagrams_")
             self.cache_dir = Path(self._tmp)
         else:
             self.cache_dir = Path(cache_dir)

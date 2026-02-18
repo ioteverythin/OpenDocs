@@ -6,11 +6,11 @@ from pathlib import Path
 
 import pytest
 
-from ioteverything.core.parser import ReadmeParser
-from ioteverything.generators.diagram_extractor import DiagramExtractor
-from ioteverything.generators.pdf_generator import PdfGenerator
-from ioteverything.generators.pptx_generator import PptxGenerator
-from ioteverything.generators.word_generator import WordGenerator
+from opendocs.core.parser import ReadmeParser
+from opendocs.generators.diagram_extractor import DiagramExtractor
+from opendocs.generators.pdf_generator import PdfGenerator
+from opendocs.generators.pptx_generator import PptxGenerator
+from opendocs.generators.word_generator import WordGenerator
 
 
 @pytest.fixture

@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from ioteverything.core.models import OutputFormat
-from ioteverything.pipeline import Pipeline
+from opendocs.core.models import OutputFormat
+from opendocs.pipeline import Pipeline
 
 
 @pytest.fixture

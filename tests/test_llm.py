@@ -8,12 +8,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ioteverything.core.knowledge_graph import (
+from opendocs.core.knowledge_graph import (
     EntityType,
     KnowledgeGraph,
     RelationType,
 )
-from ioteverything.core.parser import ReadmeParser
+from opendocs.core.parser import ReadmeParser
 
 
 # ---------------------------------------------------------------------------
@@ -105,13 +105,13 @@ class TestLLMClient:
         with patch.dict("sys.modules", {"openai": None}):
             # Reimport to trigger the check
             from importlib import reload
-            from ioteverything.llm import llm_extractor
+            from opendocs.llm import llm_extractor
 
             # Can't easily force ImportError with a mock like this
             # but we verify the error message is set correctly
             pass  # The actual test is that it doesn't crash in normal import
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_chat_returns_string(self, MockClient):
         """Ensure chat() returns the model's response text."""
         mock_instance = MockClient.return_value
@@ -126,7 +126,7 @@ class TestLLMClient:
 # ---------------------------------------------------------------------------
 
 class TestLLMExtractor:
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_extract_entities_from_doc(
         self, MockClient, sample_doc, mock_extraction_response
     ):
@@ -134,7 +134,7 @@ class TestLLMExtractor:
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = mock_extraction_response
 
-        from ioteverything.llm.llm_extractor import LLMExtractor
+        from opendocs.llm.llm_extractor import LLMExtractor
 
         extractor = LLMExtractor.__new__(LLMExtractor)
         extractor.llm = mock_instance
@@ -147,14 +147,14 @@ class TestLLMExtractor:
         names = {e.name for e in kg.entities}
         assert "SmartTemp" in names
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_extract_handles_markdown_fences(self, MockClient, sample_doc):
         """LLMExtractor should strip ```json fences from responses."""
         response = '```json\n{"entities": [{"name": "TestEntity", "entity_type": "component", "confidence": 0.9}], "relations": []}\n```'
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = response
 
-        from ioteverything.llm.llm_extractor import LLMExtractor
+        from opendocs.llm.llm_extractor import LLMExtractor
 
         extractor = LLMExtractor.__new__(LLMExtractor)
         extractor.llm = mock_instance
@@ -164,13 +164,13 @@ class TestLLMExtractor:
         names = {e.name for e in kg.entities}
         assert "TestEntity" in names
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_extract_graceful_on_bad_json(self, MockClient, sample_doc):
         """LLMExtractor should not crash on invalid JSON responses."""
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = "This is not JSON at all"
 
-        from ioteverything.llm.llm_extractor import LLMExtractor
+        from opendocs.llm.llm_extractor import LLMExtractor
 
         extractor = LLMExtractor.__new__(LLMExtractor)
         extractor.llm = mock_instance
@@ -181,13 +181,13 @@ class TestLLMExtractor:
         # At least the project root should exist
         assert any(e.entity_type == EntityType.PROJECT for e in kg.entities)
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_extract_handles_api_error(self, MockClient, sample_doc):
         """LLMExtractor should handle API errors gracefully."""
         mock_instance = MockClient.return_value
         mock_instance.chat.side_effect = RuntimeError("API timeout")
 
-        from ioteverything.llm.llm_extractor import LLMExtractor
+        from opendocs.llm.llm_extractor import LLMExtractor
 
         extractor = LLMExtractor.__new__(LLMExtractor)
         extractor.llm = mock_instance
@@ -197,13 +197,13 @@ class TestLLMExtractor:
         # Should still have the project root
         assert len(kg.entities) >= 1
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_extract_sets_llm_method(self, MockClient, sample_doc, mock_extraction_response):
         """All LLM-extracted entities should have extraction_method='llm'."""
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = mock_extraction_response
 
-        from ioteverything.llm.llm_extractor import LLMExtractor
+        from opendocs.llm.llm_extractor import LLMExtractor
 
         extractor = LLMExtractor.__new__(LLMExtractor)
         extractor.llm = mock_instance
@@ -219,7 +219,7 @@ class TestLLMExtractor:
 # ---------------------------------------------------------------------------
 
 class TestLLMSummarizer:
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_executive_summary(
         self, MockClient, sample_doc, mock_summary_response
     ):
@@ -227,7 +227,7 @@ class TestLLMSummarizer:
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = mock_summary_response
 
-        from ioteverything.llm.llm_extractor import LLMSummarizer
+        from opendocs.llm.llm_extractor import LLMSummarizer
 
         summarizer = LLMSummarizer.__new__(LLMSummarizer)
         summarizer.llm = mock_instance
@@ -237,7 +237,7 @@ class TestLLMSummarizer:
         assert "SmartTemp" in result
         assert len(result) > 50
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_stakeholder_summary(
         self, MockClient, sample_doc, mock_stakeholder_response
     ):
@@ -245,7 +245,7 @@ class TestLLMSummarizer:
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = mock_stakeholder_response
 
-        from ioteverything.llm.llm_extractor import LLMSummarizer
+        from opendocs.llm.llm_extractor import LLMSummarizer
 
         summarizer = LLMSummarizer.__new__(LLMSummarizer)
         summarizer.llm = mock_instance
@@ -254,12 +254,12 @@ class TestLLMSummarizer:
         result = summarizer.stakeholder_summary(sample_doc, kg, "cto")
         assert "Python" in result or "architecture" in result.lower()
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_unknown_persona(self, MockClient, sample_doc):
         """Unknown persona should return an error message, not crash."""
         mock_instance = MockClient.return_value
 
-        from ioteverything.llm.llm_extractor import LLMSummarizer
+        from opendocs.llm.llm_extractor import LLMSummarizer
 
         summarizer = LLMSummarizer.__new__(LLMSummarizer)
         summarizer.llm = mock_instance
@@ -268,7 +268,7 @@ class TestLLMSummarizer:
         result = summarizer.stakeholder_summary(sample_doc, kg, "alien")
         assert "Unknown persona" in result
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_enrich_populates_kg(
         self, MockClient, sample_doc, mock_summary_response, mock_stakeholder_response
     ):
@@ -282,7 +282,7 @@ class TestLLMSummarizer:
             mock_stakeholder_response,
         ]
 
-        from ioteverything.llm.llm_extractor import LLMSummarizer
+        from opendocs.llm.llm_extractor import LLMSummarizer
 
         summarizer = LLMSummarizer.__new__(LLMSummarizer)
         summarizer.llm = mock_instance
@@ -296,13 +296,13 @@ class TestLLMSummarizer:
         assert "investor" in kg.stakeholder_summaries
         assert "developer" in kg.stakeholder_summaries
 
-    @patch("ioteverything.llm.llm_extractor.LLMClient")
+    @patch("opendocs.llm.llm_extractor.LLMClient")
     def test_enrich_handles_api_failure(self, MockClient, sample_doc):
         """enrich() should gracefully handle API failures."""
         mock_instance = MockClient.return_value
         mock_instance.chat.side_effect = RuntimeError("Connection refused")
 
-        from ioteverything.llm.llm_extractor import LLMSummarizer
+        from opendocs.llm.llm_extractor import LLMSummarizer
 
         summarizer = LLMSummarizer.__new__(LLMSummarizer)
         summarizer.llm = mock_instance
@@ -321,8 +321,8 @@ class TestLLMSummarizer:
 class TestSmartReport:
     def test_generate_basic_report(self, sample_doc, tmp_path):
         """Smart report should generate a Markdown file."""
-        from ioteverything.core.semantic_extractor import SemanticExtractor
-        from ioteverything.generators.smart_report import generate_smart_report
+        from opendocs.core.semantic_extractor import SemanticExtractor
+        from opendocs.generators.smart_report import generate_smart_report
 
         extractor = SemanticExtractor()
         kg = extractor.extract(sample_doc)
@@ -339,7 +339,7 @@ class TestSmartReport:
 
     def test_report_includes_llm_summaries(self, sample_doc, tmp_path):
         """Report should render LLM summaries when present in KG."""
-        from ioteverything.generators.smart_report import generate_smart_report
+        from opendocs.generators.smart_report import generate_smart_report
 
         kg = KnowledgeGraph()
         kg.executive_summary = "This is a test executive summary."
@@ -359,7 +359,7 @@ class TestSmartReport:
 
     def test_report_without_summaries(self, sample_doc, tmp_path):
         """Report should work fine even without LLM summaries."""
-        from ioteverything.generators.smart_report import generate_smart_report
+        from opendocs.generators.smart_report import generate_smart_report
 
         kg = KnowledgeGraph()
         result = generate_smart_report(sample_doc, kg, tmp_path)

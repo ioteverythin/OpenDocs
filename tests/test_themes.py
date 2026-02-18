@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ioteverything.generators.themes import (
+from opendocs.generators.themes import (
     CORPORATE_THEME,
     DEFAULT_THEME,
     OCEAN_THEME,
@@ -13,7 +13,7 @@ from ioteverything.generators.themes import (
     list_themes,
     register_theme,
 )
-from ioteverything.generators.styles import Colors, apply_theme, reset_theme
+from opendocs.generators.styles import Colors, apply_theme, reset_theme
 
 
 class TestThemeRegistry:
@@ -44,7 +44,7 @@ class TestThemeRegistry:
         assert DEFAULT_THEME is CORPORATE_THEME
 
     def test_register_custom_theme(self):
-        from ioteverything.generators.themes import ThemeColors, ThemeFonts, ThemeLayout
+        from opendocs.generators.themes import ThemeColors, ThemeFonts, ThemeLayout
 
         custom = Theme(
             name="test_custom",

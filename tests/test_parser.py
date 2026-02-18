@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ioteverything.core.models import (
+from opendocs.core.models import (
     BlockquoteBlock,
     CodeBlock,
     HeadingBlock,
@@ -13,7 +13,7 @@ from ioteverything.core.models import (
     ParagraphBlock,
     TableBlock,
 )
-from ioteverything.core.parser import ReadmeParser
+from opendocs.core.parser import ReadmeParser
 
 
 @pytest.fixture

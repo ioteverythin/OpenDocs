@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ioteverything.core.fetcher import ReadmeFetcher, is_github_url, parse_github_url
+from opendocs.core.fetcher import ReadmeFetcher, is_github_url, parse_github_url
 
 
 # ---------------------------------------------------------------------------

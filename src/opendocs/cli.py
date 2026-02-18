@@ -1,4 +1,4 @@
-"""IoTEverything CLI — generate documentation from GitHub READMEs."""
+"""opendocs CLI — generate documentation from GitHub READMEs."""
 
 from __future__ import annotations
 
@@ -32,9 +32,9 @@ FORMAT_MAP = {
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="ioteverything")
+@click.version_option(version="0.1.0", prog_name="opendocs")
 def main():
-    """IoTEverything — Convert GitHub READMEs into multi-format documentation."""
+    """opendocs — Convert GitHub READMEs into multi-format documentation."""
     pass
 
 

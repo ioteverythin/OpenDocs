@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from ioteverything.core.models import (
+from opendocs.core.models import (
     DocumentModel,
     Section,
     TableBlock,
     ParagraphBlock,
 )
-from ioteverything.generators.table_sorter import (
+from opendocs.generators.table_sorter import (
     TableSorter,
     SortStrategy,
     _extract_number,

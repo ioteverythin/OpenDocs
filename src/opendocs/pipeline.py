@@ -175,7 +175,7 @@ class Pipeline:
 
                 except ImportError:
                     console.print("[yellow]⚠  openai package not installed; skipping LLM mode[/]")
-                    console.print("[dim]   Install with: pip install ioteverything\\[llm\\][/]")
+                    console.print("[dim]   Install with: pip install opendocs\\[llm\\][/]")
                 except Exception as exc:
                     console.print(f"[yellow]⚠  LLM extraction failed: {exc}[/]")
 

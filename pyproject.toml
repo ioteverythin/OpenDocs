@@ -3,7 +3,7 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ioteverything"
+name = "opendocs"
 version = "0.1.0"
 description = "Convert GitHub README files into structured multi-format documentation artifacts."
 readme = "README.md"
@@ -12,7 +12,10 @@ requires-python = ">=3.10"
 authors = [
     {name = "IoTEverything Contributors"},
 ]
-keywords = ["documentation", "readme", "github", "docx", "pdf", "pptx", "iot"]
+maintainers = [
+    {name = "IoTEverything Contributors"},
+]
+keywords = ["documentation", "readme", "github", "docx", "pdf", "pptx", "opendocs", "iot"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -48,12 +51,12 @@ llm = [
 ]
 
 [project.scripts]
-ioteverything = "ioteverything.cli:main"
+opendocs = "opendocs.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/ioteverything/ioteverything"
-Repository = "https://github.com/ioteverything/ioteverything"
-Issues = "https://github.com/ioteverything/ioteverything/issues"
+Homepage = "https://github.com/ioteverythin/OpenDocs"
+Repository = "https://github.com/ioteverythin/OpenDocs"
+Issues = "https://github.com/ioteverythin/OpenDocs/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -40,6 +40,23 @@ class BlockType(str, Enum):
 
 
 # ---------------------------------------------------------------------------
+# Inline spans (rich text within paragraphs/lists)
+# ---------------------------------------------------------------------------
+
+class InlineSpan(BaseModel):
+    """A segment of inline text — optionally a hyperlink."""
+    text: str
+    url: str = ""        # non-empty → this span is a hyperlink
+    bold: bool = False
+    italic: bool = False
+    code: bool = False
+
+    @property
+    def is_link(self) -> bool:
+        return bool(self.url)
+
+
+# ---------------------------------------------------------------------------
 # Content blocks
 # ---------------------------------------------------------------------------
 
@@ -53,7 +70,8 @@ class HeadingBlock(BaseModel):
 class ParagraphBlock(BaseModel):
     """A paragraph of text (may contain inline markdown)."""
     type: BlockType = BlockType.PARAGRAPH
-    text: str
+    text: str                                         # plain-text fallback
+    spans: list[InlineSpan] = Field(default_factory=list)  # rich inline content
 
 
 class CodeBlock(BaseModel):
@@ -75,6 +93,7 @@ class ListBlock(BaseModel):
     type: BlockType = BlockType.LIST
     ordered: bool = False
     items: list[str] = Field(default_factory=list)
+    rich_items: list[list[InlineSpan]] = Field(default_factory=list)  # per-item spans
 
 
 class ImageBlock(BaseModel):

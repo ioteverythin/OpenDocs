@@ -20,6 +20,7 @@ from ..core.models import (
     GenerationResult,
     HeadingBlock,
     ImageBlock,
+    InlineSpan,
     ListBlock,
     MermaidBlock,
     OutputFormat,
@@ -77,6 +78,60 @@ def _set_paragraph_shading(paragraph, color: tuple[int, int, int]):
     shading.set(qn("w:fill"), _hex(color))
     shading.set(qn("w:val"), "clear")
     p_pr.append(shading)
+
+
+def _add_hyperlink(paragraph, text: str, url: str):
+    """Add a clickable hyperlink run to a paragraph."""
+    part = paragraph.part
+    r_id = part.relate_to(
+        url,
+        "http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink",
+        is_external=True,
+    )
+    hyperlink = OxmlElement("w:hyperlink")
+    hyperlink.set(qn("r:id"), r_id)
+
+    run_el = OxmlElement("w:r")
+    rPr = OxmlElement("w:rPr")
+    # Blue underlined style
+    color_el = OxmlElement("w:color")
+    color_el.set(qn("w:val"), "1565C0")
+    rPr.append(color_el)
+    u_el = OxmlElement("w:u")
+    u_el.set(qn("w:val"), "single")
+    rPr.append(u_el)
+    sz = OxmlElement("w:sz")
+    sz.set(qn("w:val"), str(Fonts.BODY_SIZE_PT * 2))  # half-points
+    rPr.append(sz)
+    run_el.append(rPr)
+
+    t_el = OxmlElement("w:t")
+    t_el.set(qn("xml:space"), "preserve")
+    t_el.text = text
+    run_el.append(t_el)
+
+    hyperlink.append(run_el)
+    paragraph._element.append(hyperlink)
+
+
+def _add_rich_runs(paragraph, spans: list[InlineSpan]):
+    """Render a list of InlineSpans into a paragraph with hyperlinks and formatting."""
+    for span in spans:
+        if not span.text:
+            continue
+        if span.is_link:
+            _add_hyperlink(paragraph, span.text, span.url)
+        else:
+            run = paragraph.add_run(span.text)
+            run.font.size = Pt(Fonts.BODY_SIZE_PT)
+            run.font.name = Fonts.BODY
+            if span.bold:
+                run.bold = True
+            if span.italic:
+                run.italic = True
+            if span.code:
+                run.font.name = Fonts.CODE
+                run.font.size = Pt(Fonts.CODE_SIZE_PT)
 
 
 class WordGenerator(BaseGenerator):
@@ -229,7 +284,7 @@ class WordGenerator(BaseGenerator):
             ("Repository", doc.metadata.repo_name),
             ("Source", doc.metadata.repo_url or doc.metadata.source_path),
             ("Generated", doc.metadata.generated_at[:19] if doc.metadata.generated_at else ""),
-            ("Tool", "IoTEverything v0.1"),
+            ("Tool", "opendocs v0.1"),
         ]
         info_table = docx.add_table(rows=len(info_items), cols=2)
         info_table.alignment = WD_TABLE_ALIGNMENT.CENTER
@@ -308,7 +363,11 @@ class WordGenerator(BaseGenerator):
 
     def _render_block(self, docx: DocxDocument, block: ContentBlock) -> None:
         if isinstance(block, ParagraphBlock):
-            p = docx.add_paragraph(block.text)
+            p = docx.add_paragraph()
+            if block.spans:
+                _add_rich_runs(p, block.spans)
+            else:
+                p.add_run(block.text)
             p.paragraph_format.space_after = Pt(Layout.SPACE_AFTER_PARAGRAPH)
 
         elif isinstance(block, CodeBlock):
@@ -437,13 +496,20 @@ class WordGenerator(BaseGenerator):
         """Render a list with colored bullet markers."""
         for i, item in enumerate(block.items):
             if block.ordered:
-                p = docx.add_paragraph(style="List Number")
-                p.text = item
+                p = docx.add_paragraph()
+                num_run = p.add_run(f"{i + 1}. ")
+                num_run.font.color.rgb = RGBColor(*Colors.PRIMARY)
+                num_run.font.size = Pt(Fonts.BODY_SIZE_PT)
             else:
                 p = docx.add_paragraph()
                 marker = p.add_run("●  ")
                 marker.font.color.rgb = RGBColor(*Colors.PRIMARY)
                 marker.font.size = Pt(8)
+
+            # Use rich spans if available, otherwise plain text
+            if block.rich_items and i < len(block.rich_items):
+                _add_rich_runs(p, block.rich_items[i])
+            else:
                 text_run = p.add_run(item)
                 text_run.font.size = Pt(Fonts.BODY_SIZE_PT)
                 text_run.font.name = Fonts.BODY
@@ -545,7 +611,7 @@ class WordGenerator(BaseGenerator):
             ("URL", meta.repo_url),
             ("Source Path", meta.source_path),
             ("Generated At", meta.generated_at),
-            ("Generator", "IoTEverything v0.1"),
+            ("Generator", "opendocs v0.1"),
             ("Sections", str(len(doc.sections))),
             ("Content Blocks", str(len(doc.all_blocks))),
             ("Mermaid Diagrams", str(len(doc.mermaid_diagrams))),

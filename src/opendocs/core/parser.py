@@ -19,6 +19,7 @@ from .models import (
     DocumentModel,
     HeadingBlock,
     ImageBlock,
+    InlineSpan,
     ListBlock,
     MermaidBlock,
     ParagraphBlock,
@@ -54,6 +55,49 @@ def _extract_text(node: dict[str, Any]) -> str:
         text_parts.append(children)
 
     return "".join(text_parts)
+
+
+def _extract_spans(node: dict[str, Any]) -> list[InlineSpan]:
+    """Recursively extract rich inline spans (text + links) from an AST node."""
+    if isinstance(node, str):
+        return [InlineSpan(text=node)] if node else []
+
+    ntype = node.get("type", "")
+
+    # Link node → wrap children text in a single span with url
+    if ntype == "link":
+        url = node.get("attrs", {}).get("url", "")
+        text = _extract_text(node).strip()
+        if text:
+            return [InlineSpan(text=text, url=url)]
+        return []
+
+    # Strong / emphasis
+    if ntype in ("strong", "bold"):
+        text = _extract_text(node)
+        return [InlineSpan(text=text, bold=True)] if text else []
+    if ntype in ("emphasis", "em"):
+        text = _extract_text(node)
+        return [InlineSpan(text=text, italic=True)] if text else []
+    if ntype == "codespan":
+        raw = node.get("raw", "") or node.get("text", "")
+        return [InlineSpan(text=raw, code=True)] if raw else []
+
+    # Container nodes → recurse children
+    spans: list[InlineSpan] = []
+    if "raw" in node and not node.get("children"):
+        spans.append(InlineSpan(text=node["raw"]))
+    elif "text" in node and not node.get("children"):
+        spans.append(InlineSpan(text=node["text"]))
+    else:
+        children = node.get("children")
+        if isinstance(children, list):
+            for child in children:
+                spans.extend(_extract_spans(child))
+        elif isinstance(children, str):
+            spans.append(InlineSpan(text=children))
+
+    return spans
 
 
 def _extract_table_cells(row_children: list[dict]) -> list[str]:
@@ -136,7 +180,8 @@ class ReadmeParser:
         if ntype == "paragraph":
             text = _extract_text(node).strip()
             if text:
-                return ParagraphBlock(text=text)
+                spans = _extract_spans(node)
+                return ParagraphBlock(text=text, spans=spans)
             return None
 
         if ntype == "code_block":
@@ -215,9 +260,11 @@ class ReadmeParser:
             "ordered", False
         )
         items: list[str] = []
+        rich_items: list[list[InlineSpan]] = []
         for child in node.get("children", []):
             items.append(_extract_text(child).strip())
-        return ListBlock(ordered=ordered, items=items)
+            rich_items.append(_extract_spans(child))
+        return ListBlock(ordered=ordered, items=items, rich_items=rich_items)
 
     # ------------------------------------------------------------------
     # Section builder

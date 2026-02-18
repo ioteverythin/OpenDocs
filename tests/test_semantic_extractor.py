@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from ioteverything.core.parser import ReadmeParser
-from ioteverything.core.semantic_extractor import SemanticExtractor
+from opendocs.core.parser import ReadmeParser
+from opendocs.core.semantic_extractor import SemanticExtractor
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ class TestSemanticExtractor:
         assert len(kg.relations) > 0
 
     def test_project_entity_extracted(self, sample_doc):
-        from ioteverything.core.knowledge_graph import EntityType
+        from opendocs.core.knowledge_graph import EntityType
 
         extractor = SemanticExtractor()
         kg = extractor.extract(sample_doc)
@@ -41,7 +41,7 @@ class TestSemanticExtractor:
 
     def test_technologies_discovered(self, sample_doc):
         """The sample README mentions Python, MQTT, etc."""
-        from ioteverything.core.knowledge_graph import EntityType
+        from opendocs.core.knowledge_graph import EntityType
 
         extractor = SemanticExtractor()
         kg = extractor.extract(sample_doc)
