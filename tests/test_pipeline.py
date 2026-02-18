@@ -23,12 +23,18 @@ class TestPipeline:
             output_dir=tmp_path,
             local=True,
         )
-        # 3 formats + 1 analysis report = 4
-        assert len(result.results) == 4
+        # 9 formats + 1 analysis report = 10
+        assert len(result.results) == 10
         assert all(r.success for r in result.results)
         assert result.word_path is not None
         assert result.pdf_path is not None
         assert result.pptx_path is not None
+        assert result.blog_path is not None
+        assert result.jira_path is not None
+        assert result.changelog_path is not None
+        assert result.latex_path is not None
+        assert result.onepager_path is not None
+        assert result.social_path is not None
 
     def test_local_single_format(self, sample_readme_path, tmp_path):
         pipeline = Pipeline()

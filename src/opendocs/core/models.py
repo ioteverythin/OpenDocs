@@ -23,6 +23,12 @@ class OutputFormat(str, Enum):
     WORD = "word"
     PDF = "pdf"
     PPTX = "pptx"
+    BLOG = "blog"
+    JIRA = "jira"
+    CHANGELOG = "changelog"
+    LATEX = "latex"
+    ONEPAGER = "onepager"
+    SOCIAL = "social"
     ALL = "all"
 
 
@@ -196,6 +202,30 @@ class PipelineResult(BaseModel):
     @property
     def pptx_path(self) -> Optional[Path]:
         return self._path_for(OutputFormat.PPTX)
+
+    @property
+    def blog_path(self) -> Optional[Path]:
+        return self._path_for(OutputFormat.BLOG)
+
+    @property
+    def jira_path(self) -> Optional[Path]:
+        return self._path_for(OutputFormat.JIRA)
+
+    @property
+    def changelog_path(self) -> Optional[Path]:
+        return self._path_for(OutputFormat.CHANGELOG)
+
+    @property
+    def latex_path(self) -> Optional[Path]:
+        return self._path_for(OutputFormat.LATEX)
+
+    @property
+    def onepager_path(self) -> Optional[Path]:
+        return self._path_for(OutputFormat.ONEPAGER)
+
+    @property
+    def social_path(self) -> Optional[Path]:
+        return self._path_for(OutputFormat.SOCIAL)
 
     def _path_for(self, fmt: OutputFormat) -> Optional[Path]:
         for r in self.results:

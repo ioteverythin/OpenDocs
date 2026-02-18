@@ -12,8 +12,14 @@ from .core.parser import ReadmeParser
 from .core.semantic_extractor import SemanticExtractor
 from .generators.diagram_extractor import DiagramExtractor, ImageCache
 from .generators.mermaid_renderer import MermaidRenderer
+from .generators.blog_generator import BlogGenerator
+from .generators.changelog_generator import ChangelogGenerator
+from .generators.jira_generator import JiraGenerator
+from .generators.latex_generator import LatexGenerator
+from .generators.onepager_generator import OnePagerGenerator
 from .generators.pdf_generator import PdfGenerator
 from .generators.pptx_generator import PptxGenerator
+from .generators.social_generator import SocialGenerator
 from .generators.styles import apply_theme, reset_theme
 from .generators.table_sorter import TableSorter
 from .generators.themes import get_theme, DEFAULT_THEME
@@ -26,6 +32,12 @@ _GENERATORS = {
     OutputFormat.WORD: WordGenerator,
     OutputFormat.PDF: PdfGenerator,
     OutputFormat.PPTX: PptxGenerator,
+    OutputFormat.BLOG: BlogGenerator,
+    OutputFormat.JIRA: JiraGenerator,
+    OutputFormat.CHANGELOG: ChangelogGenerator,
+    OutputFormat.LATEX: LatexGenerator,
+    OutputFormat.ONEPAGER: OnePagerGenerator,
+    OutputFormat.SOCIAL: SocialGenerator,
 }
 
 
@@ -94,7 +106,11 @@ class Pipeline:
         output_path.mkdir(parents=True, exist_ok=True)
 
         if formats is None:
-            formats = [OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX]
+            formats = [
+                OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
+                OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
+                OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
+            ]
 
         result = PipelineResult(source=source)
 

@@ -14,25 +14,31 @@ from .pipeline import Pipeline
 console = Console()
 
 BANNER = r"""
-  ___    _____   _____                      _   _     _
- |_ _|__|_   _| | ____|_   _____ _ __ _   _| |_| |__ (_)_ __   __ _
-  | |/ _ \| |   |  _| \ \ / / _ \ '__| | | | __| '_ \| | '_ \ / _` |
-  | | (_) | |   | |___ \ V /  __/ |  | |_| | |_| | | | | | | | (_| |
- |___\___/|_|   |_____| \_/ \___|_|   \__, |\__|_| |_|_|_| |_|\__, |
-                                       |___/                   |___/
-  README → Docs Pipeline  v0.1
+  ___                   ____
+ / _ \ _ __   ___ _ __ |  _ \  ___   ___ ___
+| | | | '_ \ / _ \ '_ \| | | |/ _ \ / __/ __|
+| |_| | |_) |  __/ | | | |_| | (_) | (__\__ \
+ \___/| .__/ \___|_| |_|____/ \___/ \___|___/
+      |_|
+  README → Docs Pipeline  v0.3
 """
 
 FORMAT_MAP = {
     "word": OutputFormat.WORD,
     "pdf": OutputFormat.PDF,
     "pptx": OutputFormat.PPTX,
+    "blog": OutputFormat.BLOG,
+    "jira": OutputFormat.JIRA,
+    "changelog": OutputFormat.CHANGELOG,
+    "latex": OutputFormat.LATEX,
+    "onepager": OutputFormat.ONEPAGER,
+    "social": OutputFormat.SOCIAL,
     "all": OutputFormat.ALL,
 }
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="opendocs")
+@click.version_option(version="0.3.0", prog_name="opendocs")
 def main():
     """opendocs — Convert GitHub READMEs into multi-format documentation."""
     pass
@@ -43,7 +49,11 @@ def main():
 @click.option(
     "-f", "--format",
     "fmt",
-    type=click.Choice(["word", "pdf", "pptx", "all"], case_sensitive=False),
+    type=click.Choice(
+        ["word", "pdf", "pptx", "blog", "jira", "changelog",
+         "latex", "onepager", "social", "all"],
+        case_sensitive=False,
+    ),
     default="all",
     help="Output format (default: all).",
 )
@@ -124,7 +134,11 @@ def generate(
     # Resolve formats
     chosen = FORMAT_MAP[fmt.lower()]
     if chosen == OutputFormat.ALL:
-        formats = [OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX]
+        formats = [
+            OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
+            OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
+            OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
+        ]
     else:
         formats = [chosen]
 

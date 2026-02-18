@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/opendocs.svg)](https://pypi.org/project/opendocs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-114%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-136%20passed-brightgreen.svg)]()
 
 ## What is OpenDocs?
 
@@ -16,7 +16,13 @@ OpenDocs (by [ioteverythin](https://www.ioteverythin.com/)) takes a GitHub repos
 | 📄 Technical Report | `.docx` (Word) | ✅ |
 | 📊 Executive Deck | `.pptx` (PowerPoint) | ✅ |
 | 📑 PDF Documentation | `.pdf` | ✅ |
-| 📝 Analysis Report | `.md` (Markdown) | ✅ |
+| �️ Blog Post | `.md` (SEO-ready) | ✅ NEW |
+| 🎫 Jira Tickets | `.json` (Epic + Stories) | ✅ NEW |
+| 📝 Changelog / Release Notes | `.md` | ✅ NEW |
+| 🎓 Academic Paper | `.tex` (LaTeX / IEEE) | ✅ NEW |
+| 📋 One-Pager / Datasheet | `.pdf` (executive) | ✅ NEW |
+| 📣 Social Cards | `.json` (OG + posts) | ✅ NEW |
+| �📝 Analysis Report | `.md` (Markdown) | ✅ |
 | 📐 Mermaid Diagrams | PNG rendering | ✅ |
 | 🧠 Knowledge Graph | Entity extraction | ✅ |
 | 🤖 LLM Summaries | Stakeholder views | ✅ |
@@ -60,6 +66,24 @@ opendocs generate https://github.com/owner/repo
 # Generate specific format with a theme
 opendocs generate https://github.com/owner/repo --format word --theme ocean
 
+# Generate blog post only
+opendocs generate https://github.com/owner/repo --format blog
+
+# Generate Jira tickets from README
+opendocs generate ./README.md --local --format jira
+
+# Generate LaTeX academic paper
+opendocs generate https://github.com/owner/repo --format latex
+
+# Generate executive one-pager PDF
+opendocs generate https://github.com/owner/repo --format onepager
+
+# Generate social media cards & post text
+opendocs generate https://github.com/owner/repo --format social
+
+# Generate changelog / release notes
+opendocs generate https://github.com/owner/repo --format changelog
+
 # From a local README file
 opendocs generate ./README.md --local
 
@@ -89,7 +113,14 @@ pipeline.run(
 
 ## Features
 
+- **9 Output Formats** — Word, PDF, PPTX, Blog Post, Jira Tickets, Changelog, LaTeX Paper, One-Pager PDF, Social Cards
 - **7 Built-in Themes** — Corporate, Ocean, Sunset, Dark, Minimal, Emerald, Royal
+- **Blog Post Generator** — SEO-friendly Markdown with front-matter, TOC, code examples, and CTA
+- **Jira Ticket Export** — Epic + Stories with acceptance criteria, story points, and labels
+- **Changelog Generator** — Categorized release notes (Features, Setup, API, DevOps, etc.)
+- **LaTeX Paper** — IEEE/ACM-style academic paper with abstract, code listings, tables, bibliography
+- **Executive One-Pager** — Single-page PDF datasheet with stats, features, tech stack, install command
+- **Social Cards** — OG metadata + ready-to-post text for Twitter, LinkedIn, Reddit, HN, Product Hunt
 - **Mermaid → PNG** — Renders mermaid diagrams to images via mermaid.ink API
 - **Knowledge Graph** — Extracts 10+ entity types (projects, technologies, APIs, metrics, etc.)
 - **Smart Table Sorting** — 6 strategies (smart, alpha, numeric, column:N, column:N:desc, none)
@@ -122,9 +153,10 @@ GitHub URL / Local .md
 │ Diagram Renderer │  ← mermaid.ink API
 └────────┬────────┘
          │
-    ┌────┼────┬────┬──────┐
-    ▼    ▼    ▼    ▼      ▼
-  Word  PDF  PPTX  MD  Diagrams
+    ┌────┼────┬────┬──────┬──────┬───────┬──────┬─────┬──────┐
+    ▼    ▼    ▼    ▼      ▼      ▼       ▼      ▼     ▼
+  Word  PDF  PPTX  Blog  Jira  Change  LaTeX  1-Pgr  Social
+                                 log
 ```
 
 ## Development
@@ -133,7 +165,7 @@ GitHub URL / Local .md
 # Install dev dependencies
 pip install -e ".[dev,llm]"
 
-# Run tests (114 tests)
+# Run tests (136 tests)
 pytest
 
 # Lint
