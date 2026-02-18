@@ -30,8 +30,8 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install IoTEverything
-        run: pip install ioteverything
+      - name: Install OpenDocs
+        run: pip install opendocs
 
       - name: Generate documentation
         run: |
@@ -40,7 +40,7 @@ jobs:
 
           # Convert comma-separated to individual --format flags
           for FMT in $(echo "$FORMATS" | tr ',' '\n'); do
-            ioteverything generate "$README" --local --format "$FMT" -o ./generated-docs
+            opendocs generate "$README" --local --format "$FMT" -o ./generated-docs
           done
 
       - name: Upload artifacts

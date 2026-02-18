@@ -9,7 +9,7 @@
 
 ## What is OpenDocs?
 
-OpenDocs (by IoTEverything) takes a GitHub repository README and automatically generates beautiful, professional documentation in multiple formats:
+OpenDocs (by [ioteverythin](https://www.ioteverythin.com/)) takes a GitHub repository README and automatically generates beautiful, professional documentation in multiple formats:
 
 | Output | Format | Status |
 |--------|--------|--------|
