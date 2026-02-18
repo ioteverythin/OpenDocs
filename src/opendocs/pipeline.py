@@ -117,10 +117,10 @@ class Pipeline:
         # -- Resolve theme ------------------------------------------------
         theme = get_theme(theme_name)
         apply_theme(theme)
-        console.print(f"[dim]🎨 Theme:[/] [bold]{theme_name}[/bold]")
+        console.print(f"[dim]Theme:[/] [bold]{theme_name}[/bold]")
 
         # -- Step 1: Fetch README -----------------------------------------
-        console.print(f"\n[bold blue]📥 Fetching README from:[/] {source}")
+        console.print(f"\n[bold blue]Fetching README from:[/] {source}")
         try:
             if local:
                 content, name = self.fetcher._fetch_local(source)
@@ -129,14 +129,14 @@ class Pipeline:
                 content, name = self.fetcher.fetch(source)
                 repo_url = source if is_github_url(source) else ""
         except Exception as exc:
-            console.print(f"[bold red]❌ Fetch failed:[/] {exc}")
+            console.print(f"[bold red]Fetch failed:[/] {exc}")
             reset_theme()
             return result
 
-        console.print(f"[green]✓[/] Fetched README ({len(content):,} chars)")
+        console.print(f"[green][OK][/] Fetched README ({len(content):,} chars)")
 
         # -- Step 2: Parse ------------------------------------------------
-        console.print("[bold blue]🔍 Parsing Markdown...[/]")
+        console.print("[bold blue]Parsing Markdown...[/]")
         doc: DocumentModel = self.parser.parse(
             content,
             repo_name=name,
@@ -144,65 +144,65 @@ class Pipeline:
             source_path=source,
         )
         console.print(
-            f"[green]✓[/] Parsed: {len(doc.sections)} sections, "
+            f"[green][OK][/] Parsed: {len(doc.sections)} sections, "
             f"{len(doc.all_blocks)} blocks, "
             f"{len(doc.mermaid_diagrams)} diagrams"
         )
 
         # -- Step 2b: Sort tables ----------------------------------------
         if sort_tables != "none":
-            console.print(f"[bold blue]📊 Sorting tables...[/] [dim](strategy={sort_tables})[/]")
+            console.print(f"[bold blue]Sorting tables...[/] [dim](strategy={sort_tables})[/]")
             sorter = TableSorter(strategy=sort_tables)
             doc = sorter.process(doc)
             from .core.models import TableBlock as _TB
             n_tables = sum(
                 1 for b in doc.all_blocks if isinstance(b, _TB)
             )
-            console.print(f"[green]✓[/] {n_tables} table(s) sorted")
+            console.print(f"[green][OK][/] {n_tables} table(s) sorted")
 
         # -- Step 3: Semantic extraction ----------------------------------
-        console.print("[bold blue]🧠 Extracting knowledge graph...[/]")
+        console.print("[bold blue]Extracting knowledge graph...[/]")
         kg = self.semantic_extractor.extract(doc)
 
         # Optional LLM enrichment
         if mode == "llm":
             if not api_key:
-                console.print("[yellow]⚠  LLM mode requires --api-key; falling back to basic[/]")
+                console.print("[yellow]WARNING: LLM mode requires --api-key; falling back to basic[/]")
             else:
                 try:
                     from .llm.llm_extractor import LLMExtractor, LLMSummarizer
 
                     # -- Entity extraction via LLM --
-                    console.print(f"[bold blue]🤖 Running LLM extraction...[/] [dim](model={model})[/]")
+                    console.print(f"[bold blue]Running LLM extraction...[/] [dim](model={model})[/]")
                     llm_extractor = LLMExtractor(
                         api_key=api_key, model=model, base_url=base_url,
                     )
                     llm_kg = llm_extractor.extract(doc)
                     kg.merge(llm_kg)
-                    console.print(f"[green]✓[/] LLM enriched graph (+{len(llm_kg.entities)} entities)")
+                    console.print(f"[green][OK][/] LLM enriched graph (+{len(llm_kg.entities)} entities)")
 
                     # -- Executive & stakeholder summaries --
-                    console.print("[bold blue]📝 Generating LLM summaries...[/]")
+                    console.print("[bold blue]Generating LLM summaries...[/]")
                     summarizer = LLMSummarizer(
                         api_key=api_key, model=model, base_url=base_url,
                     )
                     summarizer.enrich(doc, kg)
-                    console.print("[green]✓[/] Executive summary + 3 stakeholder views generated")
+                    console.print("[green][OK][/] Executive summary + 3 stakeholder views generated")
 
                 except ImportError:
-                    console.print("[yellow]⚠  openai package not installed; skipping LLM mode[/]")
+                    console.print("[yellow]WARNING: openai package not installed; skipping LLM mode[/]")
                     console.print("[dim]   Install with: pip install opendocs\\[llm\\][/]")
                 except Exception as exc:
-                    console.print(f"[yellow]⚠  LLM extraction failed: {exc}[/]")
+                    console.print(f"[yellow]WARNING: LLM extraction failed: {exc}[/]")
 
         stats = kg.compute_stats()
         console.print(
-            f"[green]✓[/] KG: {stats['total_entities']} entities, "
+            f"[green][OK][/] KG: {stats['total_entities']} entities, "
             f"{stats['total_relations']} relations"
         )
 
         # -- Step 4: Render diagrams & download images --------------------
-        console.print("[bold blue]📐 Rendering diagrams & downloading images...[/]")
+        console.print("[bold blue]Rendering diagrams & downloading images...[/]")
         renderer = MermaidRenderer(cache_dir=output_path / "diagrams")
         diagram_extractor = DiagramExtractor(renderer=renderer)
 
@@ -215,9 +215,9 @@ class Pipeline:
 
         n_rendered = len(image_cache.mermaid_images)
         n_external = len(image_cache.external_images)
-        kg_rendered = "✓" if image_cache.kg_diagram else "✗"
+        kg_rendered = "yes" if image_cache.kg_diagram else "no"
         console.print(
-            f"[green]✓[/] {len(diagram_paths)} .mmd file(s), "
+            f"[green][OK][/] {len(diagram_paths)} .mmd file(s), "
             f"{n_rendered} diagram(s) rendered, "
             f"{n_external} image(s) downloaded, "
             f"KG diagram: {kg_rendered}"
@@ -234,34 +234,34 @@ class Pipeline:
                 knowledge_graph=kg,
                 image_cache=image_cache,
             )
-            console.print(f"[bold blue]📄 Generating {fmt.value.upper()}...[/]")
+            console.print(f"[bold blue]Generating {fmt.value.upper()}...[/]")
 
             gen_result: GenerationResult = gen.generate(doc, output_path)
             result.results.append(gen_result)
 
             if gen_result.success:
-                console.print(f"[green]✓[/] {gen_result.output_path}")
+                console.print(f"[green][OK][/] {gen_result.output_path}")
             else:
-                console.print(f"[red]✗[/] {fmt.value}: {gen_result.error}")
+                console.print(f"[red][FAIL][/] {fmt.value}: {gen_result.error}")
 
         # -- Step 5b: Smart analysis report (always when KG is populated) --
         if kg.entities:
             from .generators.smart_report import generate_smart_report
 
-            console.print("[bold blue]📝 Generating Analysis Report (Markdown)...[/]")
+            console.print("[bold blue]Generating Analysis Report (Markdown)...[/]")
             report_result = generate_smart_report(doc, kg, output_path)
             result.results.append(report_result)
             if report_result.success:
-                console.print(f"[green]✓[/] {report_result.output_path}")
+                console.print(f"[green][OK][/] {report_result.output_path}")
             else:
-                console.print(f"[red]✗[/] Analysis report: {report_result.error}")
+                console.print(f"[red][FAIL][/] Analysis report: {report_result.error}")
 
         # -- Summary ------------------------------------------------------
         success = sum(1 for r in result.results if r.success)
         total = len(result.results)
         console.print(
-            f"\n[bold green]🎉 Done![/] {success}/{total} formats generated "
-            f"→ [link=file://{output_path}]{output_path}[/link]\n"
+            f"\n[bold green]Done![/] {success}/{total} formats generated "
+            f"-> [link=file://{output_path}]{output_path}[/link]\n"
         )
 
         reset_theme()

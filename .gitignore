@@ -27,6 +27,7 @@ Thumbs.db
 # Output
 output/
 output_*/
+test_output/
 generated_docs/
 diagrams/
 *.docx

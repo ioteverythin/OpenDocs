@@ -111,6 +111,65 @@ pipeline.run(
 )
 ```
 
+### Format Flags Reference
+
+Use `-f` / `--format` to generate only what you need:
+
+| Flag | Output | File |
+|------|--------|------|
+| `word` | Word document | `.docx` |
+| `pdf` | PDF document | `.pdf` |
+| `pptx` | PowerPoint deck | `.pptx` |
+| `blog` | SEO blog post | `.md` (with front-matter) |
+| `jira` | Jira tickets (Epic + Stories) | `.json` |
+| `changelog` | Release notes | `.md` |
+| `latex` | IEEE-style academic paper | `.tex` |
+| `onepager` | Executive one-pager | `.pdf` |
+| `social` | Social cards + post text | `.json` (OG, Twitter, LinkedIn, Reddit) |
+| `all` | Everything above (default) | all formats |
+
+**CLI examples:**
+
+```bash
+# Single format
+opendocs generate https://github.com/owner/repo -f jira
+
+# Default generates ALL formats
+opendocs generate https://github.com/owner/repo
+```
+
+**Python API — pick your formats:**
+
+```python
+from opendocs.pipeline import Pipeline
+from opendocs.core.models import OutputFormat
+
+pipeline = Pipeline()
+
+# Generate only Jira tickets
+pipeline.run(
+    "https://github.com/owner/repo",
+    formats=[OutputFormat.JIRA],
+)
+
+# Generate blog + social cards
+pipeline.run(
+    "https://github.com/owner/repo",
+    formats=[OutputFormat.BLOG, OutputFormat.SOCIAL],
+)
+
+# Classic trio only
+pipeline.run(
+    "https://github.com/owner/repo",
+    formats=[OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX],
+)
+
+# All available OutputFormat values:
+# OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
+# OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
+# OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL
+```
+
 ## Features
 
 - **9 Output Formats** — Word, PDF, PPTX, Blog Post, Jira Tickets, Changelog, LaTeX Paper, One-Pager PDF, Social Cards
