@@ -125,12 +125,12 @@ class SocialGenerator(BaseGenerator):
     ) -> str:
         """Build a Twitter/X post (≤280 chars)."""
         tag_str = " ".join(f"#{t}" for t in tags[:3])
-        post = f"🚀 Check out {name}!\n\n{desc}\n\n{url}\n\n{tag_str}"
+        post = f"Check out {name}!\n\n{desc}\n\n{url}\n\n{tag_str}"
         # Trim to 280 chars
         if len(post) > 280:
-            avail = 280 - len(f"🚀 {name}\n\n\n\n{url}\n\n{tag_str}") - 3
+            avail = 280 - len(f"{name}\n\n\n\n{url}\n\n{tag_str}") - 3
             short_desc = desc[:avail] + "..."
-            post = f"🚀 {name}\n\n{short_desc}\n\n{url}\n\n{tag_str}"
+            post = f"{name}\n\n{short_desc}\n\n{url}\n\n{tag_str}"
         return post[:280]
 
     def _linkedin_post(
@@ -140,7 +140,7 @@ class SocialGenerator(BaseGenerator):
         tag_str = " ".join(f"#{t}" for t in tags[:5])
         features = self._extract_features_text()
 
-        post = f"""🚀 Excited to share {name}!
+        post = f"""Excited to share {name}!
 
 {desc}
 
@@ -198,43 +198,43 @@ Would love to hear your feedback!"""
     # ------------------------------------------------------------------
 
     def _short_description(self, doc: DocumentModel) -> str:
-        """Build a ≤160 char description."""
+        """Build a <=160 char description."""
         if self.kg and self.kg.executive_summary:
             first = self.kg.executive_summary.split(". ")[0]
-            return first[:160]
+            return self._strip_html(first[:160])
         if doc.metadata.description:
-            return doc.metadata.description[:160]
+            return self._strip_html(doc.metadata.description[:160])
         paras = [
             b.text for b in doc.all_blocks
             if isinstance(b, ParagraphBlock) and len(b.text) > 20
         ]
         if paras:
-            return paras[0][:160]
-        return f"{doc.metadata.repo_name or 'Project'} — an open-source tool"
+            return self._strip_html(paras[0][:160])
+        return f"{doc.metadata.repo_name or 'Project'} -- an open-source tool"
 
     def _long_description(self, doc: DocumentModel) -> str:
-        """Build a longer description (≤500 chars)."""
+        """Build a longer description (<=500 chars)."""
         if self.kg and self.kg.executive_summary:
-            return self.kg.executive_summary[:500]
+            return self._strip_html(self.kg.executive_summary[:500])
         paras = [
             b.text for b in doc.all_blocks
             if isinstance(b, ParagraphBlock) and len(b.text) > 30
         ]
         if paras:
             text = " ".join(paras[:3])
-            return text[:500]
+            return self._strip_html(text[:500])
         return self._short_description(doc)
 
     def _long_description_for_ph(self, short: str) -> str:
         """Extended description for Product Hunt."""
         if self.kg and self.kg.executive_summary:
-            return self.kg.executive_summary
+            return self._strip_html(self.kg.executive_summary)
         return short
 
     def _tagline(self, doc: DocumentModel) -> str:
         """Build a short tagline."""
         if doc.metadata.description:
-            return doc.metadata.description[:60]
+            return self._strip_html(doc.metadata.description)[:60]
         return "an open-source project"
 
     def _build_hashtags(self, doc: DocumentModel) -> list[str]:
@@ -281,7 +281,7 @@ Would love to hear your feedback!"""
             return ""
         lines = ["Key features:"]
         for f in features[:5]:
-            lines.append(f"✅ {f.name}")
+            lines.append(f"- {f.name}")
         return "\n".join(lines)
 
     def _extract_techs(self) -> list[str]:

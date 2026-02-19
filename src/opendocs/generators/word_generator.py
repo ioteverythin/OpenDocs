@@ -175,8 +175,8 @@ class WordGenerator(BaseGenerator):
         font.name = Fonts.BODY
         font.size = Pt(Fonts.BODY_SIZE_PT)
         font.color.rgb = RGBColor(*Colors.TEXT)
-        style.paragraph_format.space_after = Pt(4)
-        style.paragraph_format.line_spacing = 1.15
+        style.paragraph_format.space_after = Pt(6)
+        style.paragraph_format.line_spacing = 1.2
 
         # -- Customize heading styles --
         self._setup_heading_styles(docx)
@@ -207,10 +207,10 @@ class WordGenerator(BaseGenerator):
     def _setup_heading_styles(self, docx: DocxDocument) -> None:
         """Customize built-in heading styles for a polished look."""
         heading_config = [
-            ("Heading 1", Fonts.H1_SIZE_PT, Colors.PRIMARY_DARK, 18, 8, True),
-            ("Heading 2", Fonts.H2_SIZE_PT, Colors.HEADING, 14, 6, True),
-            ("Heading 3", Fonts.H3_SIZE_PT, Colors.HEADING, 10, 4, False),
-            ("Heading 4", Fonts.H4_SIZE_PT, Colors.SECONDARY, 8, 4, False),
+            ("Heading 1", Fonts.H1_SIZE_PT, Colors.PRIMARY_DARK, 24, 10, True),
+            ("Heading 2", Fonts.H2_SIZE_PT, Colors.HEADING, 18, 8, True),
+            ("Heading 3", Fonts.H3_SIZE_PT, Colors.HEADING, 14, 6, False),
+            ("Heading 4", Fonts.H4_SIZE_PT, Colors.SECONDARY, 10, 4, False),
         ]
         for name, size, color, space_before, space_after, bold in heading_config:
             if name in [s.name for s in docx.styles]:
@@ -243,7 +243,7 @@ class WordGenerator(BaseGenerator):
         # Decorative icon text
         icon_p = docx.add_paragraph()
         icon_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        run = icon_p.add_run("📄")
+        run = icon_p.add_run("")
         run.font.size = Pt(48)
 
         # Title
@@ -326,7 +326,7 @@ class WordGenerator(BaseGenerator):
     def _add_toc_page(self, docx: DocxDocument) -> None:
         toc_heading = docx.add_paragraph()
         toc_heading.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        run = toc_heading.add_run("📋  Table of Contents")
+        run = toc_heading.add_run("Table of Contents")
         run.font.size = Pt(Fonts.H1_SIZE_PT)
         run.font.color.rgb = RGBColor(*Colors.PRIMARY_DARK)
         run.bold = True
@@ -355,6 +355,22 @@ class WordGenerator(BaseGenerator):
         if level <= 2:
             _add_bottom_border(heading_p, Colors.ACCENT if level == 1 else Colors.PRIMARY_LIGHT)
 
+        # -- LLM-polished prose (if available) ---------------------------
+        rewritten = (
+            self.kg.llm_sections.get(section.title, "")
+            if self.kg and self.kg.llm_sections
+            else ""
+        )
+        if rewritten:
+            # Add LLM-rewritten narrative as a styled overview paragraph,
+            # then still render the original blocks (code, tables, etc.)
+            p = docx.add_paragraph()
+            run = p.add_run(rewritten)
+            run.font.size = Pt(10)
+            run.font.color.rgb = RGBColor(*Colors.TEXT)
+            p.paragraph_format.space_after = Pt(8)
+            p.paragraph_format.space_before = Pt(2)
+
         for block in section.blocks:
             self._render_block(docx, block)
 
@@ -368,7 +384,7 @@ class WordGenerator(BaseGenerator):
                 _add_rich_runs(p, block.spans)
             else:
                 p.add_run(block.text)
-            p.paragraph_format.space_after = Pt(Layout.SPACE_AFTER_PARAGRAPH)
+            p.paragraph_format.space_after = Pt(6)
 
         elif isinstance(block, CodeBlock):
             self._render_code_block(docx, block)
@@ -389,22 +405,29 @@ class WordGenerator(BaseGenerator):
             # Try to embed actual downloaded image
             img_path = self.image_cache.get_external(block.src) if self.image_cache else None
             if img_path and img_path.exists():
-                # Caption
-                if block.alt:
-                    cap = docx.add_paragraph()
-                    cap.paragraph_format.space_after = Pt(2)
-                    run = cap.add_run(f"🖼  {block.alt}")
-                    run.font.size = Pt(Fonts.CAPTION_SIZE_PT)
-                    run.font.color.rgb = RGBColor(*Colors.PRIMARY)
-                    run.italic = True
+                try:
+                    # Caption
+                    if block.alt:
+                        cap = docx.add_paragraph()
+                        cap.paragraph_format.space_after = Pt(2)
+                        run = cap.add_run(f"  {block.alt}")
+                        run.font.size = Pt(Fonts.CAPTION_SIZE_PT)
+                        run.font.color.rgb = RGBColor(*Colors.PRIMARY)
+                        run.italic = True
 
-                docx.add_picture(str(img_path), width=Inches(5.5))
-                last_p = docx.paragraphs[-1]
-                last_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                last_p.paragraph_format.space_after = Pt(8)
+                    docx.add_picture(str(img_path), width=Inches(5.5))
+                    last_p = docx.paragraphs[-1]
+                    last_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    last_p.paragraph_format.space_after = Pt(8)
+                except Exception:
+                    # Image file may be corrupt or unsupported format
+                    p = docx.add_paragraph()
+                    run = p.add_run(f"[Image: {block.alt or block.src}]")
+                    run.italic = True
+                    run.font.color.rgb = RGBColor(*Colors.MUTED)
             else:
                 p = docx.add_paragraph()
-                run = p.add_run(f"🖼  {block.alt or block.src}")
+                run = p.add_run(f"[Image: {block.alt or block.src}]")
                 run.italic = True
                 run.font.color.rgb = RGBColor(*Colors.INFO)
                 run.font.size = Pt(Fonts.CAPTION_SIZE_PT)
@@ -427,6 +450,7 @@ class WordGenerator(BaseGenerator):
         # Language label
         if block.language:
             label_p = docx.add_paragraph()
+            label_p.paragraph_format.space_before = Pt(8)
             label_p.paragraph_format.space_after = Pt(0)
             run = label_p.add_run(f"  {block.language.upper()}")
             run.font.size = Pt(Fonts.SMALL_SIZE_PT)
@@ -437,8 +461,8 @@ class WordGenerator(BaseGenerator):
 
         # Code content in a shaded paragraph
         code_p = docx.add_paragraph()
-        code_p.paragraph_format.space_before = Pt(0)
-        code_p.paragraph_format.space_after = Pt(8)
+        code_p.paragraph_format.space_before = Pt(0 if block.language else 8)
+        code_p.paragraph_format.space_after = Pt(10)
         _set_paragraph_shading(code_p, Colors.CODE_BG)
 
         for line in block.code.rstrip("\n").split("\n"):
@@ -457,7 +481,7 @@ class WordGenerator(BaseGenerator):
         if img_path and img_path.exists():
             label_p = docx.add_paragraph()
             label_p.paragraph_format.space_after = Pt(2)
-            run = label_p.add_run("📐  DIAGRAM")
+            run = label_p.add_run("DIAGRAM")
             run.font.size = Pt(Fonts.SMALL_SIZE_PT)
             run.font.color.rgb = RGBColor(*Colors.WHITE)
             run.bold = True
@@ -474,7 +498,7 @@ class WordGenerator(BaseGenerator):
         # Fallback: show raw code
         label_p = docx.add_paragraph()
         label_p.paragraph_format.space_after = Pt(2)
-        run = label_p.add_run("📐  MERMAID DIAGRAM")
+        run = label_p.add_run("MERMAID DIAGRAM")
         run.font.size = Pt(Fonts.SMALL_SIZE_PT)
         run.font.color.rgb = RGBColor(*Colors.WHITE)
         run.bold = True
@@ -513,7 +537,7 @@ class WordGenerator(BaseGenerator):
                 text_run = p.add_run(item)
                 text_run.font.size = Pt(Fonts.BODY_SIZE_PT)
                 text_run.font.name = Fonts.BODY
-            p.paragraph_format.space_after = Pt(2)
+            p.paragraph_format.space_after = Pt(3)
             p.paragraph_format.left_indent = Inches(0.4)
 
     def _render_blockquote(self, docx: DocxDocument, block: BlockquoteBlock) -> None:
@@ -549,6 +573,11 @@ class WordGenerator(BaseGenerator):
         cols = len(block.headers) if block.headers else (len(block.rows[0]) if block.rows else 0)
         if cols == 0:
             return
+
+        # Add a small spacer before the table
+        spacer = docx.add_paragraph()
+        spacer.paragraph_format.space_after = Pt(2)
+        spacer.paragraph_format.space_before = Pt(4)
 
         row_count = (1 if block.headers else 0) + len(block.rows)
         table = docx.add_table(rows=row_count, cols=cols)
@@ -659,7 +688,7 @@ class WordGenerator(BaseGenerator):
         docx.add_page_break()
 
         heading = docx.add_paragraph()
-        run = heading.add_run("🧠  Knowledge Graph Summary")
+        run = heading.add_run("Knowledge Graph Summary")
         run.font.size = Pt(Fonts.H1_SIZE_PT)
         run.font.color.rgb = RGBColor(*Colors.PRIMARY_DARK)
         run.bold = True
@@ -679,7 +708,7 @@ class WordGenerator(BaseGenerator):
         # Executive summary (LLM-generated)
         if kg.executive_summary:
             exec_heading = docx.add_paragraph()
-            run = exec_heading.add_run("📋  Executive Summary")
+            run = exec_heading.add_run("Executive Summary")
             run.font.size = Pt(Fonts.H2_SIZE_PT)
             run.font.color.rgb = RGBColor(*Colors.PRIMARY_DARK)
             run.bold = True
@@ -703,9 +732,9 @@ class WordGenerator(BaseGenerator):
             run.font.name = Fonts.HEADING
 
             persona_labels = {
-                "cto": "🔧  CTO / Technical Lead",
-                "investor": "💰  Investor / Business",
-                "developer": "💻  Developer Onboarding",
+                "cto": "CTO / Technical Lead",
+                "investor": "Investor / Business",
+                "developer": "Developer Onboarding",
             }
 
             for persona, content in kg.stakeholder_summaries.items():
@@ -814,7 +843,7 @@ class WordGenerator(BaseGenerator):
         # Mermaid graph from KG
         docx.add_paragraph()
         mermaid_heading = docx.add_paragraph()
-        run = mermaid_heading.add_run("📐  Auto-Generated Architecture Graph")
+        run = mermaid_heading.add_run("Auto-Generated Architecture Graph")
         run.font.size = Pt(Fonts.H2_SIZE_PT)
         run.font.color.rgb = RGBColor(*Colors.PRIMARY_DARK)
         run.bold = True

@@ -210,7 +210,7 @@ class PptxGenerator(BaseGenerator):
         self._add_rect(slide, 0, 0, Inches(0.15), prs.slide_height, Colors.PRIMARY)
 
         self._add_textbox(
-            slide, text="📊  Document Summary",
+            slide, text="Document Summary",
             left=Inches(0.8), top=Inches(0.4),
             width=Inches(11), height=Inches(1),
             font_size=Pt(32), bold=True, color=Colors.PRIMARY_DARK,
@@ -385,7 +385,7 @@ class PptxGenerator(BaseGenerator):
             self._add_rect(slide, 0, 0, Inches(13.333), Inches(0.06), Colors.ACCENT)
 
             self._add_textbox(
-                slide, text=f"📐  Diagram {idx + 1}",
+                slide, text=f"Diagram {idx + 1}",
                 left=Inches(0.8), top=Inches(0.2),
                 width=Inches(10), height=Inches(0.6),
                 font_size=Pt(22), bold=True, color=Colors.PRIMARY_DARK,
@@ -402,22 +402,25 @@ class PptxGenerator(BaseGenerator):
         """Add a dedicated slide for an external image."""
         img_path = self.image_cache.get_external(block.src) if self.image_cache else None
         if img_path and img_path.exists():
-            slide = prs.slides.add_slide(prs.slide_layouts[6])
-            self._add_rect(slide, 0, 0, Inches(13.333), Inches(0.06), Colors.ACCENT)
+            try:
+                slide = prs.slides.add_slide(prs.slide_layouts[6])
+                self._add_rect(slide, 0, 0, Inches(13.333), Inches(0.06), Colors.ACCENT)
 
-            caption = block.alt or "Image"
-            self._add_textbox(
-                slide, text=f"🖼  {caption}",
-                left=Inches(0.8), top=Inches(0.2),
-                width=Inches(10), height=Inches(0.6),
-                font_size=Pt(20), bold=True, color=Colors.PRIMARY_DARK,
-            )
+                caption = block.alt or "Image"
+                self._add_textbox(
+                    slide, text=f"  {caption}",
+                    left=Inches(0.8), top=Inches(0.2),
+                    width=Inches(10), height=Inches(0.6),
+                    font_size=Pt(20), bold=True, color=Colors.PRIMARY_DARK,
+                )
 
-            slide.shapes.add_picture(
-                str(img_path),
-                left=Inches(1.5), top=Inches(1.0),
-                width=Inches(10), height=Inches(5.5),
-            )
+                slide.shapes.add_picture(
+                    str(img_path),
+                    left=Inches(1.5), top=Inches(1.0),
+                    width=Inches(10), height=Inches(5.5),
+                )
+            except Exception:
+                pass  # Skip corrupt / unsupported image files
 
     @staticmethod
     def _block_to_text(block: ContentBlock) -> str:
@@ -448,9 +451,9 @@ class PptxGenerator(BaseGenerator):
         if isinstance(block, CodeBlock):
             snippet = block.code[:350]
             lang = f" ({block.language})" if block.language else ""
-            return f"💻  Code{lang}:\n{snippet}"
+            return f"Code{lang}:\n{snippet}"
         if isinstance(block, MermaidBlock):
-            return "📐  [Mermaid Diagram — see technical report for details]"
+            return "[Mermaid Diagram -- see technical report for details]"
         if isinstance(block, BlockquoteBlock):
             return f'"{block.text[:300]}"'
         if isinstance(block, TableBlock):
@@ -535,7 +538,7 @@ class PptxGenerator(BaseGenerator):
 
         # Title
         self._add_textbox(
-            slide, text="🧠  Knowledge Graph",
+            slide, text="Knowledge Graph",
             left=Inches(0.8), top=Inches(0.3),
             width=Inches(11), height=Inches(0.8),
             font_size=Pt(32), bold=True, color=Colors.HEADING,
@@ -579,7 +582,7 @@ class PptxGenerator(BaseGenerator):
             diagram_slide = prs.slides.add_slide(prs.slide_layouts[6])
             self._add_rect(diagram_slide, 0, 0, Inches(13.333), Inches(0.06), Colors.ACCENT)
             self._add_textbox(
-                diagram_slide, text="📐  Architecture Graph",
+                diagram_slide, text="Architecture Graph",
                 left=Inches(0.8), top=Inches(0.2),
                 width=Inches(10), height=Inches(0.6),
                 font_size=Pt(26), bold=True, color=Colors.PRIMARY_DARK,
@@ -614,7 +617,7 @@ class PptxGenerator(BaseGenerator):
             self._add_rect(slide, 0, 0, SLIDE_W, Inches(0.08), Colors.SLIDE_ACCENT_BAR)
 
             self._add_textbox(
-                slide, text="📋  AI-Generated Executive Summary",
+                slide, text="AI-Generated Executive Summary",
                 left=Inches(0.8), top=Inches(0.3),
                 width=Inches(11), height=Inches(0.7),
                 font_size=Pt(28), bold=True, color=Colors.HEADING,
@@ -649,9 +652,9 @@ class PptxGenerator(BaseGenerator):
 
         # ── Slides 2+: Stakeholder Views (one per persona) ──────────
         persona_config = {
-            "cto": ("🔧  CTO / Technical Lead Assessment", Colors.PRIMARY),
-            "investor": ("💰  Investor / Business Analysis", Colors.SUCCESS),
-            "developer": ("💻  Developer Experience Review", Colors.INFO),
+            "cto": ("CTO / Technical Lead Assessment", Colors.PRIMARY),
+            "investor": ("Investor / Business Analysis", Colors.SUCCESS),
+            "developer": ("Developer Experience Review", Colors.INFO),
         }
 
         for persona, content in kg.stakeholder_summaries.items():
@@ -659,7 +662,7 @@ class PptxGenerator(BaseGenerator):
                 continue
 
             title, accent_color = persona_config.get(
-                persona, (f"👤  {persona.title()} View", Colors.PRIMARY)
+                persona, (f"{persona.title()} View", Colors.PRIMARY)
             )
 
             slide = prs.slides.add_slide(prs.slide_layouts[6])

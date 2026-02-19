@@ -66,7 +66,7 @@ class Colors:
 class Fonts:
     HEADING = "Calibri"
     BODY = "Calibri"
-    CODE = "Consolas"
+    CODE = "Courier"
 
     TITLE_SIZE_PT = 36
     H1_SIZE_PT = 24

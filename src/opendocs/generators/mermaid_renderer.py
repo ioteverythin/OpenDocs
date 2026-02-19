@@ -168,16 +168,36 @@ class MermaidRenderer:
                 results[idx] = path
         return results
 
+    # URLs that are badges / shields — not real content images
+    _BADGE_PATTERNS = (
+        "img.shields.io",
+        "badge.fury.io",
+        "badges.gitter.im",
+        "coveralls.io/repos",
+        "travis-ci.org",
+        "circleci.com",
+        "github.com/workflows",
+        "codecov.io",
+        "app.codacy.com/project/badge",
+    )
+
     def download_image(self, url: str) -> Path | None:
         """Download an external image URL and cache it locally.
 
         Returns the local path on success, or *None* on failure.
+        Skips badge/shield images and SVGs that cannot be embedded.
         """
+        # Skip badge images — they are small decorative shields
+        url_lower = url.lower()
+        if any(pat in url_lower for pat in self._BADGE_PATTERNS):
+            logger.debug("Skipping badge image: %s", url)
+            return None
+
         h = _diagram_hash(url)
         # Guess extension from URL
         ext = "png"
         for candidate in ("png", "jpg", "jpeg", "gif", "svg", "webp"):
-            if f".{candidate}" in url.lower():
+            if f".{candidate}" in url_lower:
                 ext = candidate
                 break
         cached = self.cache_dir / f"img_{h}.{ext}"
@@ -188,7 +208,25 @@ class MermaidRenderer:
             with httpx.Client(timeout=_IMAGE_DOWNLOAD_TIMEOUT, follow_redirects=True) as client:
                 resp = client.get(url)
                 resp.raise_for_status()
-                cached.write_bytes(resp.content)
+
+                # Check content type — skip SVGs (Word/PDF can't embed them)
+                ct = resp.headers.get("content-type", "").lower()
+                if "svg" in ct:
+                    logger.debug("Skipping SVG image: %s", url)
+                    return None
+
+                data = resp.content
+                # Basic raster image validation (check magic bytes)
+                if not (
+                    data[:8].startswith(b"\x89PNG")       # PNG
+                    or data[:2] == b"\xff\xd8"            # JPEG
+                    or data[:6] in (b"GIF87a", b"GIF89a") # GIF
+                    or data[:4] == b"RIFF"                # WebP
+                ):
+                    logger.warning("Skipping non-raster image (%s): %s", ct, url)
+                    return None
+
+                cached.write_bytes(data)
                 logger.info("Downloaded image %s → %s", url, cached)
                 return cached
         except Exception as exc:

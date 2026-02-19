@@ -14,6 +14,7 @@ from .generators.diagram_extractor import DiagramExtractor, ImageCache
 from .generators.mermaid_renderer import MermaidRenderer
 from .generators.blog_generator import BlogGenerator
 from .generators.changelog_generator import ChangelogGenerator
+from .generators.faq_generator import FaqGenerator
 from .generators.jira_generator import JiraGenerator
 from .generators.latex_generator import LatexGenerator
 from .generators.onepager_generator import OnePagerGenerator
@@ -38,6 +39,7 @@ _GENERATORS = {
     OutputFormat.LATEX: LatexGenerator,
     OutputFormat.ONEPAGER: OnePagerGenerator,
     OutputFormat.SOCIAL: SocialGenerator,
+    OutputFormat.FAQ: FaqGenerator,
 }
 
 
@@ -110,6 +112,7 @@ class Pipeline:
                 OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
                 OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
                 OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
+                OutputFormat.FAQ,
             ]
 
         result = PipelineResult(source=source)
@@ -188,6 +191,23 @@ class Pipeline:
                     )
                     summarizer.enrich(doc, kg)
                     console.print("[green][OK][/] Executive summary + 3 stakeholder views generated")
+
+                    # -- LLM content enhancement (blog, FAQ, section rewrites) --
+                    from .llm.llm_extractor import LLMContentEnhancer
+
+                    console.print("[bold blue]Running LLM content enhancement...[/]")
+                    enhancer = LLMContentEnhancer(
+                        api_key=api_key, model=model, base_url=base_url,
+                    )
+                    enhancer.enrich(doc, kg)
+                    parts = []
+                    if kg.llm_blog:
+                        parts.append("blog")
+                    if kg.llm_faq:
+                        parts.append(f"{len(kg.llm_faq)} FAQ items")
+                    if kg.llm_sections:
+                        parts.append(f"{len(kg.llm_sections)} section rewrites")
+                    console.print(f"[green][OK][/] LLM content: {', '.join(parts) if parts else 'none'}")
 
                 except ImportError:
                     console.print("[yellow]WARNING: openai package not installed; skipping LLM mode[/]")

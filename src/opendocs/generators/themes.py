@@ -72,7 +72,7 @@ class ThemeFonts:
 
     heading: str = "Calibri"
     body: str = "Calibri"
-    code: str = "Consolas"
+    code: str = "Courier"
 
     title_size_pt: int = 36
     h1_size_pt: int = 24
@@ -222,7 +222,7 @@ DARK_THEME = Theme(
         slide_title_bg=(33, 33, 48),
         slide_accent_bar=(255, 167, 38),
     ),
-    fonts=ThemeFonts(heading="Segoe UI", body="Segoe UI", code="Cascadia Code"),
+    fonts=ThemeFonts(heading="Segoe UI", body="Segoe UI", code="Courier"),
 )
 
 MINIMAL_THEME = Theme(
@@ -252,7 +252,7 @@ MINIMAL_THEME = Theme(
         slide_title_bg=(30, 30, 30),
         slide_accent_bar=(100, 100, 100),
     ),
-    fonts=ThemeFonts(heading="Arial", body="Arial", code="Courier New"),
+    fonts=ThemeFonts(heading="Arial", body="Arial", code="Courier"),
 )
 
 EMERALD_THEME = Theme(

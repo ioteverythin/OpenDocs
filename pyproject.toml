@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opendocs"
-version = "0.3.1"
+version = "0.4.0"
 description = "Convert GitHub README files into structured multi-format documentation artifacts."
 readme = "README.md"
 license = {text = "MIT"}
@@ -36,6 +36,7 @@ dependencies = [
     "pydantic>=2.5",
     "rich>=13.7",
     "click>=8.1",
+    "docx2pdf>=0.1.8",
 ]
 
 [project.optional-dependencies]

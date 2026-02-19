@@ -116,6 +116,11 @@ class KnowledgeGraph(BaseModel):
     stakeholder_summaries: dict[str, str] = Field(default_factory=dict)
     extraction_stats: dict[str, int] = Field(default_factory=dict)
 
+    # -- LLM-enhanced content (populated by LLMContentEnhancer) ----------
+    llm_blog: str = ""                           # Full blog post prose
+    llm_faq: list[dict[str, str]] = Field(default_factory=list)  # [{q:, a:}]
+    llm_sections: dict[str, str] = Field(default_factory=dict)   # title -> rewritten prose
+
     # -- Query helpers ---------------------------------------------------
 
     def get_entity(self, entity_id: str) -> Optional[Entity]:

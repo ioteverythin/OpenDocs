@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
@@ -9,6 +10,11 @@ from typing import TYPE_CHECKING, Optional
 from ..core.knowledge_graph import KnowledgeGraph
 from ..core.models import DocumentModel, GenerationResult, OutputFormat
 from .themes import DEFAULT_THEME, Theme
+
+# Pre-compiled regex for stripping HTML tags
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+# Collapse whitespace runs into a single space
+_MULTI_SPACE_RE = re.compile(r"\s{2,}")
 
 if TYPE_CHECKING:
     from .diagram_extractor import ImageCache
@@ -53,3 +59,13 @@ class BaseGenerator(ABC):
     def _ensure_dir(path: Path) -> Path:
         path.mkdir(parents=True, exist_ok=True)
         return path
+
+    @staticmethod
+    def _strip_html(text: str) -> str:
+        """Remove HTML tags and collapse whitespace.
+
+        Turns ``<a href="...">link text</a>`` into ``link text``, etc.
+        """
+        cleaned = _HTML_TAG_RE.sub("", text)
+        cleaned = _MULTI_SPACE_RE.sub(" ", cleaned)
+        return cleaned.strip()

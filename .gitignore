@@ -28,12 +28,20 @@ Thumbs.db
 output/
 output_*/
 test_output/
+test_llm_output*/
+test_remote/
 generated_docs/
+generated-docs/
 diagrams/
 *.docx
 *.pptx
 *.pdf
 ~$*
+
+# Temp scripts
+check_ast*.py
+compare_docs.py
+_test_*.py
 
 # Environment
 .env

@@ -33,12 +33,13 @@ FORMAT_MAP = {
     "latex": OutputFormat.LATEX,
     "onepager": OutputFormat.ONEPAGER,
     "social": OutputFormat.SOCIAL,
+    "faq": OutputFormat.FAQ,
     "all": OutputFormat.ALL,
 }
 
 
 @click.group()
-@click.version_option(version="0.3.0", prog_name="opendocs")
+@click.version_option(version="0.4.0", prog_name="opendocs")
 def main():
     """opendocs — Convert GitHub READMEs into multi-format documentation."""
     pass
@@ -51,7 +52,7 @@ def main():
     "fmt",
     type=click.Choice(
         ["word", "pdf", "pptx", "blog", "jira", "changelog",
-         "latex", "onepager", "social", "all"],
+         "latex", "onepager", "social", "faq", "all"],
         case_sensitive=False,
     ),
     default="all",
@@ -138,6 +139,7 @@ def generate(
             OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
             OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
             OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
+            OutputFormat.FAQ,
         ]
     else:
         formats = [chosen]

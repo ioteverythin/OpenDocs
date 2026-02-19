@@ -364,7 +364,7 @@ class SemanticExtractor:
                 ))
 
         for name, props in _HARDWARE.items():
-            if name.lower() in full_text:
+            if self._word_match(name, full_text):
                 canonical = props.get("canonical", name.title())
                 eid = self._make_id("hw", canonical)
                 kg.add_entity(Entity(
@@ -406,14 +406,14 @@ class SemanticExtractor:
     # ------------------------------------------------------------------
 
     def _extract_from_code_blocks(self, doc: DocumentModel, kg: KnowledgeGraph) -> None:
+        # Only real programming languages, not data formats
         lang_to_type = {
             "python": "Python", "py": "Python",
             "javascript": "JavaScript", "js": "JavaScript",
             "typescript": "TypeScript", "ts": "TypeScript",
             "java": "Java", "go": "Go", "rust": "Rust",
             "ruby": "Ruby", "php": "PHP", "bash": "Bash",
-            "shell": "Shell", "yaml": "YAML", "json": "JSON",
-            "sql": "SQL", "dockerfile": "Docker",
+            "shell": "Shell", "dockerfile": "Docker",
         }
 
         for block in doc.all_blocks:
@@ -721,6 +721,29 @@ class SemanticExtractor:
 
     @staticmethod
     def _word_match(word: str, text: str) -> bool:
-        """Check if *word* appears as a whole word in *text*."""
+        """Check if *word* appears as a whole word in *text*.
+
+        For very short words (<=3 chars) that are common English words,
+        require them to appear in a technical context (e.g. code fences,
+        backticks, alongside other tech terms) to avoid false positives
+        like 'go' matching 'go to' or 'r' matching articles.
+        """
+        # Common English words that also happen to be language/tech names
+        _AMBIGUOUS_SHORT = {"go", "r", "c", "dart"}
         pattern = r"\b" + re.escape(word) + r"\b"
+        if len(word) <= 3 and word.lower() in _AMBIGUOUS_SHORT:
+            # Require the word in a technical context:
+            # - in a code fence: ```go
+            # - in backticks: `go`
+            # - preceded/followed by comma in a tech list
+            # - in an install command
+            tech_patterns = [
+                r"```\s*" + re.escape(word) + r"\b",       # code fence
+                r"`" + re.escape(word) + r"`",               # inline code
+                r"(?:written\s+in|built\s+with|using|language[s]?[:\s]+\w*\s*)" + re.escape(word) + r"\b",
+            ]
+            for tp in tech_patterns:
+                if re.search(tp, text, re.IGNORECASE):
+                    return True
+            return False
         return bool(re.search(pattern, text, re.IGNORECASE))

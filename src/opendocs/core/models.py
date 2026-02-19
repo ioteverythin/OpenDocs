@@ -29,6 +29,7 @@ class OutputFormat(str, Enum):
     LATEX = "latex"
     ONEPAGER = "onepager"
     SOCIAL = "social"
+    FAQ = "faq"
     ALL = "all"
 
 
@@ -226,6 +227,10 @@ class PipelineResult(BaseModel):
     @property
     def social_path(self) -> Optional[Path]:
         return self._path_for(OutputFormat.SOCIAL)
+
+    @property
+    def faq_path(self) -> Optional[Path]:
+        return self._path_for(OutputFormat.FAQ)
 
     def _path_for(self, fmt: OutputFormat) -> Optional[Path]:
         for r in self.results:

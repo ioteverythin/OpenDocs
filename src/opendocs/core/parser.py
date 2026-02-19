@@ -163,10 +163,49 @@ class ReadmeParser:
         """Convert a flat mistune AST into a list of ContentBlock objects."""
         blocks: list[ContentBlock] = []
         for node in nodes:
+            # Extract inline images from paragraphs as standalone ImageBlocks
+            inline_images = self._extract_inline_images(node)
             block = self._node_to_block(node)
             if block is not None:
                 blocks.append(block)
+            blocks.extend(inline_images)
         return blocks
+
+    @staticmethod
+    def _extract_inline_images(node: dict[str, Any]) -> list[ContentBlock]:
+        """Pull ``image`` children out of paragraph nodes as ImageBlocks.
+
+        Mistune represents ``![alt](url)`` as an ``image`` child inside
+        a ``paragraph`` node, so they never appear as top-level blocks.
+        This helper walks paragraph children (recursively, to catch
+        images nested inside links) and returns them as proper blocks.
+        """
+        if node.get("type") not in ("paragraph",):
+            return []
+
+        images: list[ContentBlock] = []
+
+        def _scan(children: list) -> None:
+            for child in children:
+                if not isinstance(child, dict):
+                    continue
+                ctype = child.get("type", "")
+                if ctype == "image":
+                    attrs = child.get("attrs", {})
+                    alt = _extract_text(child).strip()
+                    src = attrs.get("url", "") or attrs.get("src", "")
+                    if src:
+                        images.append(ImageBlock(alt=alt, src=src))
+                # Also look inside link nodes (linked images)
+                grand = child.get("children", [])
+                if isinstance(grand, list):
+                    _scan(grand)
+
+        children = node.get("children", [])
+        if isinstance(children, list):
+            _scan(children)
+
+        return images
 
     def _node_to_block(self, node: dict[str, Any]) -> ContentBlock | None:  # noqa: PLR0911
         ntype = node.get("type", "")

@@ -122,11 +122,11 @@ class JiraGenerator(BaseGenerator):
         """Build a rich epic description."""
         parts: list[str] = []
         if self.kg and self.kg.executive_summary:
-            parts.append(self.kg.executive_summary)
+            parts.append(self._strip_html(self.kg.executive_summary))
             parts.append("")
 
         paras = [
-            b.text for b in doc.all_blocks
+            self._strip_html(b.text) for b in doc.all_blocks
             if isinstance(b, ParagraphBlock) and len(b.text) > 30
         ]
         if paras:
@@ -330,13 +330,22 @@ class JiraGenerator(BaseGenerator):
     @staticmethod
     def _section_to_description(section: Section) -> str:
         """Build a story description from section blocks."""
+        import re
+        _html_re = re.compile(r"<[^>]+>")
+        _multi_sp = re.compile(r"\s{2,}")
         parts: list[str] = []
         for block in section.blocks[:5]:  # cap context
             if isinstance(block, ParagraphBlock):
-                parts.append(block.text)
+                cleaned = _html_re.sub("", block.text)
+                cleaned = _multi_sp.sub(" ", cleaned).strip()
+                if cleaned:
+                    parts.append(cleaned)
             elif isinstance(block, ListBlock):
                 for item in block.items[:8]:
-                    parts.append(f"• {item}")
+                    cleaned = _html_re.sub("", item)
+                    cleaned = _multi_sp.sub(" ", cleaned).strip()
+                    if cleaned:
+                        parts.append(f"* {cleaned}")
             elif isinstance(block, CodeBlock):
                 parts.append(f"```{block.language}\n{block.code[:300]}\n```")
         return "\n\n".join(parts) if parts else section.title

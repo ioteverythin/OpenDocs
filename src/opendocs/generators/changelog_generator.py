@@ -85,17 +85,17 @@ class ChangelogGenerator(BaseGenerator):
         categories = self._categorize_sections(doc)
 
         category_order = [
-            ("🚀 Features", "features"),
-            ("📦 Installation & Setup", "setup"),
-            ("🔌 API & Endpoints", "api"),
-            ("⚙️ Configuration", "configuration"),
-            ("🏗️ Architecture", "architecture"),
-            ("🧪 Testing", "testing"),
-            ("🚢 Deployment", "devops"),
-            ("📖 Documentation", "documentation"),
-            ("🔮 Roadmap & Planned", "roadmap"),
-            ("🛡️ Security", "security"),
-            ("🤝 Community", "community"),
+            ("Features", "features"),
+            ("Installation & Setup", "setup"),
+            ("API & Endpoints", "api"),
+            ("Configuration", "configuration"),
+            ("Architecture", "architecture"),
+            ("Testing", "testing"),
+            ("Deployment", "devops"),
+            ("Documentation", "documentation"),
+            ("Roadmap & Planned", "roadmap"),
+            ("Security", "security"),
+            ("Community", "community"),
         ]
 
         for label, key in category_order:
@@ -111,7 +111,7 @@ class ChangelogGenerator(BaseGenerator):
         if self.kg:
             techs = self._extract_tech_entries()
             if techs:
-                lines.append("### 🛠️ Tech Stack")
+                lines.append("### Tech Stack")
                 lines.append("")
                 for tech in techs:
                     lines.append(f"- {tech}")
@@ -121,14 +121,14 @@ class ChangelogGenerator(BaseGenerator):
         if self.kg:
             deps = self._extract_dependencies()
             if deps:
-                lines.append("### 📋 Dependencies")
+                lines.append("### Dependencies")
                 lines.append("")
                 for dep in deps:
                     lines.append(f"- {dep}")
                 lines.append("")
 
         # -- Stats -------------------------------------------------------
-        lines.append("### 📊 Stats")
+        lines.append("### Stats")
         lines.append("")
         lines.append(f"- **Sections:** {len(doc.sections)}")
         lines.append(f"- **Content Blocks:** {len(doc.all_blocks)}")
