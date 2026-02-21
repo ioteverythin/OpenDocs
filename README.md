@@ -5,7 +5,7 @@
 [![PyPI](https://img.shields.io/pypi/v/opendocs.svg)](https://pypi.org/project/opendocs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![Tests](https://img.shields.io/badge/tests-136%20passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-163%20passed-brightgreen.svg)]()
 
 ## What is OpenDocs?
 
@@ -26,7 +26,8 @@ OpenDocs (by [ioteverythin](https://www.ioteverythin.com/)) takes a GitHub repos
 | 📐 Mermaid Diagrams | PNG rendering | ✅ |
 | 🧠 Knowledge Graph | Entity extraction | ✅ |
 | 🤖 LLM Summaries | Stakeholder views | ✅ |
-| 🎨 7 Themes | corporate, ocean, sunset, dark, minimal, emerald, royal | ✅ |
+| �️ Architecture Diagrams | `.mmd` + `.png` (5 views) | ✅ NEW |
+| �🎨 7 Themes | corporate, ocean, sunset, dark, minimal, emerald, royal | ✅ |
 
 ## Two Modes
 
@@ -81,6 +82,9 @@ opendocs generate https://github.com/owner/repo --format onepager
 # Generate social media cards & post text
 opendocs generate https://github.com/owner/repo --format social
 
+# Generate architecture diagrams (system, tech stack, data flow, deps, deployment)
+opendocs generate https://github.com/owner/repo --format architecture
+
 # Generate changelog / release notes
 opendocs generate https://github.com/owner/repo --format changelog
 
@@ -126,6 +130,7 @@ Use `-f` / `--format` to generate only what you need:
 | `latex` | IEEE-style academic paper | `.tex` |
 | `onepager` | Executive one-pager | `.pdf` |
 | `social` | Social cards + post text | `.json` (OG, Twitter, LinkedIn, Reddit) |
+| `architecture` | Architecture diagrams (5 views) | `.mmd` + `.png` + `.md` report |
 | `all` | Everything above (default) | all formats |
 
 **CLI examples:**
@@ -164,15 +169,22 @@ pipeline.run(
     formats=[OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX],
 )
 
+# Generate architecture diagrams only
+pipeline.run(
+    "https://github.com/owner/repo",
+    formats=[OutputFormat.ARCHITECTURE],
+)
+
 # All available OutputFormat values:
 # OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
 # OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
-# OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL
+# OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
+# OutputFormat.ARCHITECTURE
 ```
 
 ## Features
 
-- **9 Output Formats** — Word, PDF, PPTX, Blog Post, Jira Tickets, Changelog, LaTeX Paper, One-Pager PDF, Social Cards
+- **10+ Output Formats** — Word, PDF, PPTX, Blog Post, Jira Tickets, Changelog, LaTeX Paper, One-Pager PDF, Social Cards, Architecture Diagrams
 - **7 Built-in Themes** — Corporate, Ocean, Sunset, Dark, Minimal, Emerald, Royal
 - **Blog Post Generator** — SEO-friendly Markdown with front-matter, TOC, code examples, and CTA
 - **Jira Ticket Export** — Epic + Stories with acceptance criteria, story points, and labels
@@ -184,7 +196,7 @@ pipeline.run(
 - **Knowledge Graph** — Extracts 10+ entity types (projects, technologies, APIs, metrics, etc.)
 - **Smart Table Sorting** — 6 strategies (smart, alpha, numeric, column:N, column:N:desc, none)
 - **LLM Summaries** — Executive summary + CTO / Investor / Developer stakeholder views
-- **Architecture Diagrams** — Auto-generated KG visualization as Mermaid graph
+- **Architecture Diagrams** — 5 auto-generated views: System Architecture (C4-style), Tech Stack Layers, Data Flow, Dependency Tree, Deployment View — as `.mmd` source + rendered PNG + combined Markdown report
 
 ## Architecture
 
@@ -212,10 +224,10 @@ GitHub URL / Local .md
 │ Diagram Renderer │  ← mermaid.ink API
 └────────┬────────┘
          │
-    ┌────┼────┬────┬──────┬──────┬───────┬──────┬─────┬──────┐
-    ▼    ▼    ▼    ▼      ▼      ▼       ▼      ▼     ▼
-  Word  PDF  PPTX  Blog  Jira  Change  LaTeX  1-Pgr  Social
-                                 log
+    ┌────┼────┬────┬──────┬──────┬───────┬──────┬─────┬──────┬──────┐
+    ▼    ▼    ▼    ▼      ▼      ▼       ▼      ▼     ▼      ▼
+  Word  PDF  PPTX  Blog  Jira  Change  LaTeX  1-Pgr  Social  Arch
+                                 log                         Diag
 ```
 
 ## Development
@@ -224,7 +236,7 @@ GitHub URL / Local .md
 # Install dev dependencies
 pip install -e ".[dev,llm]"
 
-# Run tests (136 tests)
+# Run tests (163 tests)
 pytest
 
 # Lint

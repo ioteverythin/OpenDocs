@@ -30,6 +30,7 @@ class OutputFormat(str, Enum):
     ONEPAGER = "onepager"
     SOCIAL = "social"
     FAQ = "faq"
+    ARCHITECTURE = "architecture"
     ALL = "all"
 
 

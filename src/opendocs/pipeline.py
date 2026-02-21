@@ -25,6 +25,7 @@ from .generators.styles import apply_theme, reset_theme
 from .generators.table_sorter import TableSorter
 from .generators.themes import get_theme, DEFAULT_THEME
 from .generators.word_generator import WordGenerator
+from .generators.architecture_generator import ArchitectureGenerator
 
 console = Console()
 
@@ -40,6 +41,7 @@ _GENERATORS = {
     OutputFormat.ONEPAGER: OnePagerGenerator,
     OutputFormat.SOCIAL: SocialGenerator,
     OutputFormat.FAQ: FaqGenerator,
+    OutputFormat.ARCHITECTURE: ArchitectureGenerator,
 }
 
 
@@ -112,7 +114,7 @@ class Pipeline:
                 OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
                 OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
                 OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-                OutputFormat.FAQ,
+                OutputFormat.FAQ, OutputFormat.ARCHITECTURE,
             ]
 
         result = PipelineResult(source=source)

@@ -20,7 +20,7 @@ BANNER = r"""
 | |_| | |_) |  __/ | | | |_| | (_) | (__\__ \
  \___/| .__/ \___|_| |_|____/ \___/ \___|___/
       |_|
-  README → Docs Pipeline  v0.3
+  README → Docs Pipeline  v0.4.0
 """
 
 FORMAT_MAP = {
@@ -34,6 +34,7 @@ FORMAT_MAP = {
     "onepager": OutputFormat.ONEPAGER,
     "social": OutputFormat.SOCIAL,
     "faq": OutputFormat.FAQ,
+    "architecture": OutputFormat.ARCHITECTURE,
     "all": OutputFormat.ALL,
 }
 
@@ -52,7 +53,7 @@ def main():
     "fmt",
     type=click.Choice(
         ["word", "pdf", "pptx", "blog", "jira", "changelog",
-         "latex", "onepager", "social", "faq", "all"],
+         "latex", "onepager", "social", "faq", "architecture", "all"],
         case_sensitive=False,
     ),
     default="all",
@@ -139,7 +140,7 @@ def generate(
             OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
             OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
             OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-            OutputFormat.FAQ,
+            OutputFormat.FAQ, OutputFormat.ARCHITECTURE,
         ]
     else:
         formats = [chosen]
