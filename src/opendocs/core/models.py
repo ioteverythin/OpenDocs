@@ -94,6 +94,8 @@ class TableBlock(BaseModel):
     type: BlockType = BlockType.TABLE
     headers: list[str] = Field(default_factory=list)
     rows: list[list[str]] = Field(default_factory=list)
+    rich_headers: list[list[InlineSpan]] = Field(default_factory=list)
+    rich_rows: list[list[list[InlineSpan]]] = Field(default_factory=list)
 
 
 class ListBlock(BaseModel):

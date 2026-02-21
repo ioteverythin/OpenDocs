@@ -589,7 +589,13 @@ class WordGenerator(BaseGenerator):
         if block.headers:
             for j, header in enumerate(block.headers):
                 cell = table.cell(0, j)
-                cell.text = header
+                # Use rich spans if available (preserves hyperlinks)
+                if block.rich_headers and j < len(block.rich_headers) and block.rich_headers[j]:
+                    cell.text = ""  # clear default
+                    p = cell.paragraphs[0]
+                    _add_rich_runs(p, block.rich_headers[j])
+                else:
+                    cell.text = header
                 _set_cell_shading(cell, Colors.TABLE_HEADER_BG)
                 _set_cell_margins(cell, top=60, bottom=60, left=100, right=100)
                 for paragraph in cell.paragraphs:
@@ -607,7 +613,18 @@ class WordGenerator(BaseGenerator):
             for j, val in enumerate(row_data):
                 if j < cols:
                     cell = table.cell(idx, j)
-                    cell.text = val
+                    # Use rich spans if available (preserves hyperlinks)
+                    if (
+                        block.rich_rows
+                        and row_i < len(block.rich_rows)
+                        and j < len(block.rich_rows[row_i])
+                        and block.rich_rows[row_i][j]
+                    ):
+                        cell.text = ""  # clear default
+                        p = cell.paragraphs[0]
+                        _add_rich_runs(p, block.rich_rows[row_i][j])
+                    else:
+                        cell.text = val
                     _set_cell_shading(cell, bg)
                     _set_cell_margins(cell, top=40, bottom=40, left=100, right=100)
                     for paragraph in cell.paragraphs:

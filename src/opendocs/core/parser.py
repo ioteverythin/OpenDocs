@@ -105,6 +105,11 @@ def _extract_table_cells(row_children: list[dict]) -> list[str]:
     return [_extract_text(cell).strip() for cell in row_children]
 
 
+def _extract_table_cell_spans(row_children: list[dict]) -> list[list[InlineSpan]]:
+    """Extract rich inline spans (with URLs) from each cell in a table row."""
+    return [_extract_spans(cell) for cell in row_children]
+
+
 # ---------------------------------------------------------------------------
 # Parser
 # ---------------------------------------------------------------------------
@@ -271,6 +276,8 @@ class ReadmeParser:
         children = node.get("children", [])
         headers: list[str] = []
         rows: list[list[str]] = []
+        rich_headers: list[list[InlineSpan]] = []
+        rich_rows: list[list[list[InlineSpan]]] = []
 
         for child in children:
             ctype = child.get("type", "")
@@ -282,16 +289,22 @@ class ReadmeParser:
                 if child_children and child_children[0].get("type") in ("table_cell",):
                     # Cells are direct children — no row wrapper
                     headers = _extract_table_cells(child_children)
+                    rich_headers = _extract_table_cell_spans(child_children)
                 else:
                     # Row wrappers present
                     for row in child_children:
                         headers = _extract_table_cells(row.get("children", []))
+                        rich_headers = _extract_table_cell_spans(row.get("children", []))
             elif ctype in ("table_body", "tbody"):
                 for row in child_children:
                     row_children = row.get("children", [])
                     rows.append(_extract_table_cells(row_children))
+                    rich_rows.append(_extract_table_cell_spans(row_children))
 
-        return TableBlock(headers=headers, rows=rows)
+        return TableBlock(
+            headers=headers, rows=rows,
+            rich_headers=rich_headers, rich_rows=rich_rows,
+        )
 
     @staticmethod
     def _parse_list(node: dict[str, Any]) -> ListBlock:

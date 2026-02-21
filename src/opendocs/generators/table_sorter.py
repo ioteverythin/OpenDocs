@@ -222,9 +222,18 @@ class TableSorter:
 
         sorted_rows = self._apply_sort(block.rows, strategy, col, desc)
 
+        # Sort rich_rows in sync (if present)
+        sorted_rich_rows = block.rich_rows
+        if block.rich_rows and len(block.rich_rows) == len(block.rows):
+            # Build index mapping: original order → sorted order
+            index_map = [block.rows.index(r) for r in sorted_rows]
+            sorted_rich_rows = [block.rich_rows[i] for i in index_map]
+
         return TableBlock(
             headers=block.headers,
             rows=sorted_rows,
+            rich_headers=block.rich_headers,
+            rich_rows=sorted_rich_rows,
         )
 
     def _pick_smart_strategy(

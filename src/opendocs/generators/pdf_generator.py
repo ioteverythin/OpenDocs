@@ -630,10 +630,57 @@ class PdfGenerator(BaseGenerator):
                 )
 
         def render_table(block: TableBlock) -> None:
-            data: list[list[str]] = []
+            def _esc(t: str) -> str:
+                return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+            def _cell_to_markup(text: str, spans: list | None) -> str:
+                """Convert cell spans to ReportLab HTML markup (with links)."""
+                if not spans:
+                    return _esc(text)
+                parts = []
+                for span in spans:
+                    t = _esc(span.text) if span.text else ""
+                    if not t:
+                        continue
+                    if span.is_link:
+                        parts.append(f'<a href="{span.url}" color="#1565C0"><u>{t}</u></a>')
+                    elif span.bold:
+                        parts.append(f"<b>{t}</b>")
+                    elif span.italic:
+                        parts.append(f"<i>{t}</i>")
+                    elif span.code:
+                        parts.append(f'<font face="Courier" size="8">{t}</font>')
+                    else:
+                        parts.append(t)
+                return "".join(parts) if parts else _esc(text)
+
+            tbl_style = styles["Normal"]
+
+            data: list[list] = []
             if block.headers:
-                data.append(block.headers)
-            data.extend(block.rows)
+                row_markup = []
+                for j, h in enumerate(block.headers):
+                    spans = (
+                        block.rich_headers[j]
+                        if block.rich_headers and j < len(block.rich_headers)
+                        else None
+                    )
+                    row_markup.append(Paragraph(_cell_to_markup(h, spans), tbl_style))
+                data.append(row_markup)
+            for row_i, row in enumerate(block.rows):
+                row_markup = []
+                for j, val in enumerate(row):
+                    spans = (
+                        block.rich_rows[row_i][j]
+                        if (
+                            block.rich_rows
+                            and row_i < len(block.rich_rows)
+                            and j < len(block.rich_rows[row_i])
+                        )
+                        else None
+                    )
+                    row_markup.append(Paragraph(_cell_to_markup(val, spans), tbl_style))
+                data.append(row_markup)
             if not data:
                 return
             num_cols = len(data[0])

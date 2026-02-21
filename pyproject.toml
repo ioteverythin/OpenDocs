@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opendocs"
-version = "0.4.0"
+version = "0.4.1"
 description = "Convert GitHub README files into structured multi-format documentation artifacts."
 readme = "README.md"
 license = {text = "MIT"}
@@ -50,6 +50,13 @@ llm = [
     "langchain>=0.1",
     "langgraph>=0.0.30",
 ]
+agents = [
+    "openai>=1.12",
+    "langchain>=0.1",
+    "langgraph>=0.0.30",
+    "matplotlib>=3.8",
+    "httpx>=0.27",
+]
 
 [project.scripts]
 opendocs = "opendocs.cli:main"
@@ -62,6 +69,7 @@ Issues = "https://github.com/ioteverythin/OpenDocs/issues"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+exclude = ["opendocs.agents", "opendocs.agents.*"]
 
 [tool.ruff]
 line-length = 100
