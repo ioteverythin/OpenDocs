@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Optional
 from ..core.knowledge_graph import KnowledgeGraph
 from ..core.models import DocumentModel, GenerationResult, OutputFormat
 from .themes import DEFAULT_THEME, Theme
+from .styles import apply_theme
 
 # Pre-compiled regex for stripping HTML tags
 _HTML_TAG_RE = re.compile(r"<[^>]+>")
@@ -38,6 +39,7 @@ class BaseGenerator(ABC):
         image_cache: "ImageCache | None" = None,
     ) -> None:
         self.theme = theme or DEFAULT_THEME
+        apply_theme(self.theme)
         self.kg = knowledge_graph
         self.image_cache = image_cache
 

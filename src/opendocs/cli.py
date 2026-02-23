@@ -20,7 +20,7 @@ BANNER = r"""
 | |_| | |_) |  __/ | | | |_| | (_) | (__\__ \
  \___/| .__/ \___|_| |_|____/ \___/ \___|___/
       |_|
-  README → Docs Pipeline  v0.4.0
+  README → Docs Pipeline  v0.4.1
 """
 
 FORMAT_MAP = {
@@ -40,7 +40,7 @@ FORMAT_MAP = {
 
 
 @click.group()
-@click.version_option(version="0.4.0", prog_name="opendocs")
+@click.version_option(version="0.4.1", prog_name="opendocs")
 def main():
     """opendocs — Convert GitHub READMEs into multi-format documentation."""
     pass

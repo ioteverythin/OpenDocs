@@ -81,6 +81,7 @@ class PdfGenerator(BaseGenerator):
         try:
             # Create a temporary .docx in the same output directory
             word_gen = WordGenerator(
+                theme=self.theme,
                 image_cache=self.image_cache,
                 knowledge_graph=self.kg,
             )

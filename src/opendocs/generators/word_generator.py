@@ -164,10 +164,10 @@ class WordGenerator(BaseGenerator):
 
         # -- Page setup --
         for section in docx.sections:
-            section.top_margin = Inches(0.8)
-            section.bottom_margin = Inches(0.8)
-            section.left_margin = Inches(1.0)
-            section.right_margin = Inches(1.0)
+            section.top_margin = Inches(Layout.PAGE_MARGIN_INCHES * 0.8)
+            section.bottom_margin = Inches(Layout.PAGE_MARGIN_INCHES * 0.8)
+            section.left_margin = Inches(Layout.PAGE_MARGIN_INCHES)
+            section.right_margin = Inches(Layout.PAGE_MARGIN_INCHES)
 
         # -- Default body style --
         style = docx.styles["Normal"]

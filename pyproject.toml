@@ -60,6 +60,7 @@ agents = [
 
 [project.scripts]
 opendocs = "opendocs.cli:main"
+docagent = "opendocs.docagent.cli:main"
 
 [project.urls]
 Homepage = "https://www.ioteverythin.com/"

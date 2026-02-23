@@ -26,7 +26,7 @@ from ..core.models import (
     TableBlock,
 )
 from .base import BaseGenerator
-from .styles import Colors, Fonts
+from .styles import Colors, Fonts, Layout
 
 
 class PptxGenerator(BaseGenerator):
@@ -56,8 +56,8 @@ class PptxGenerator(BaseGenerator):
 
     def _build(self, doc: DocumentModel) -> Presentation:
         prs = Presentation()
-        prs.slide_width = Inches(13.333)
-        prs.slide_height = Inches(7.5)
+        prs.slide_width = Inches(Layout.SLIDE_WIDTH_INCHES)
+        prs.slide_height = Inches(Layout.SLIDE_HEIGHT_INCHES)
 
         self._add_title_slide(prs, doc)
 
