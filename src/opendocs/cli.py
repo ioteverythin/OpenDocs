@@ -108,6 +108,13 @@ def main():
     help="Custom OpenAI-compatible API base URL (e.g. http://localhost:11434/v1 for Ollama).",
 )
 @click.option(
+    "--provider",
+    "llm_provider",
+    type=click.Choice(["openai", "anthropic", "google", "ollama", "azure"], case_sensitive=False),
+    default="openai",
+    help="LLM provider: openai (default), anthropic (Claude), google (Gemini), ollama (local), azure.",
+)
+@click.option(
     "--sort-tables",
     "sort_tables",
     default="smart",
@@ -124,6 +131,7 @@ def generate(
     api_key: str | None,
     model: str,
     base_url: str | None,
+    llm_provider: str,
     sort_tables: str,
 ):
     """Generate documentation from a GitHub README or local Markdown file.
@@ -158,6 +166,7 @@ def generate(
         model=model,
         base_url=base_url,
         sort_tables=sort_tables,
+        provider=llm_provider,
     )
 
     # Exit code

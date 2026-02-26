@@ -1,7 +1,7 @@
-"""LLM client for DocAgent — OpenAI-compatible wrapper.
+"""LLM client for DocAgent — multi-provider wrapper.
 
-Supports both synchronous and async usage. Falls back gracefully
-when the ``openai`` package is not installed or no API key is set.
+Supports OpenAI, Anthropic (Claude), Google (Gemini), Ollama, and Azure OpenAI.
+Falls back gracefully when the required provider package is not installed.
 """
 
 from __future__ import annotations
@@ -11,46 +11,42 @@ import logging
 import os
 from typing import Any
 
+from ..llm.providers import (
+    LLMProvider,
+    get_provider,
+    DEFAULT_PROVIDER,
+)
+
 logger = logging.getLogger("docagent.llm")
 
-_client: Any = None
+_provider: LLMProvider | None = None
 
 
 def get_client(
     api_key: str | None = None,
     base_url: str | None = None,
-):
-    """Return a cached OpenAI client instance."""
-    global _client
-    if _client is not None:
-        return _client
+    *,
+    provider: str = DEFAULT_PROVIDER,
+    model: str | None = None,
+) -> LLMProvider:
+    """Return a cached LLM provider instance."""
+    global _provider
+    if _provider is not None:
+        return _provider
 
-    try:
-        from openai import OpenAI
-    except ImportError:
-        raise RuntimeError(
-            "openai package is required for LLM mode. "
-            "Install it with: pip install openai"
-        )
-
-    key = api_key or os.environ.get("OPENAI_API_KEY", "")
-    if not key:
-        raise RuntimeError(
-            "No OpenAI API key found. Pass --api-key or set OPENAI_API_KEY."
-        )
-
-    kwargs: dict[str, Any] = {"api_key": key}
-    if base_url:
-        kwargs["base_url"] = base_url
-
-    _client = OpenAI(**kwargs)
-    return _client
+    _provider = get_provider(
+        provider,
+        api_key=api_key,
+        model=model,
+        base_url=base_url,
+    )
+    return _provider
 
 
 def reset_client() -> None:
     """Reset the cached client (useful for testing)."""
-    global _client
-    _client = None
+    global _provider
+    _provider = None
 
 
 def chat_text(
@@ -60,24 +56,16 @@ def chat_text(
     model: str = "gpt-4o-mini",
     api_key: str | None = None,
     base_url: str | None = None,
+    provider: str = DEFAULT_PROVIDER,
     temperature: float = 0.3,
     max_tokens: int = 4096,
 ) -> str:
     """Send a chat completion and return the assistant's text reply."""
-    client = get_client(api_key=api_key, base_url=base_url)
-    logger.debug("LLM call: model=%s, system=%d chars, user=%d chars",
-                 model, len(system), len(user))
+    client = get_client(api_key=api_key, base_url=base_url, provider=provider, model=model)
+    logger.debug("LLM call: provider=%s, model=%s, system=%d chars, user=%d chars",
+                 provider, model, len(system), len(user))
 
-    response = client.chat.completions.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-        temperature=temperature,
-        max_tokens=max_tokens,
-    )
-    text = response.choices[0].message.content or ""
+    text = client.chat(system, user)
     logger.debug("LLM response: %d chars", len(text))
     return text.strip()
 
@@ -89,44 +77,28 @@ def chat_json(
     model: str = "gpt-4o-mini",
     api_key: str | None = None,
     base_url: str | None = None,
+    provider: str = DEFAULT_PROVIDER,
     temperature: float = 0.2,
     max_tokens: int = 4096,
 ) -> dict:
     """Send a chat completion expecting JSON output.
 
-    Tries ``response_format={"type": "json_object"}`` first,
-    falls back to parsing the text as JSON.
+    Each provider handles JSON mode natively where supported,
+    with fallback to prompt-guided JSON extraction.
     """
-    client = get_client(api_key=api_key, base_url=base_url)
+    client = get_client(api_key=api_key, base_url=base_url, provider=provider, model=model)
 
     try:
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            temperature=temperature,
-            max_tokens=max_tokens,
-            response_format={"type": "json_object"},
-        )
-        text = response.choices[0].message.content or "{}"
-    except Exception:
-        # Fallback — no JSON mode support
-        text = chat_text(
-            system, user,
-            model=model, api_key=api_key, base_url=base_url,
-            temperature=temperature, max_tokens=max_tokens,
-        )
-
-    # Parse JSON from response (handle markdown code fences)
-    text = text.strip()
-    if text.startswith("```"):
-        lines = text.splitlines()
-        text = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
-
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        logger.warning("Failed to parse LLM JSON response, returning raw text")
-        return {"raw": text}
+        return client.chat_json(system, user)
+    except Exception as exc:
+        logger.warning("JSON mode failed, attempting text parse: %s", exc)
+        # Fallback — get plain text and parse
+        text = client.chat(system, user).strip()
+        if text.startswith("```"):
+            lines = text.splitlines()
+            text = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+        try:
+            return json.loads(text)
+        except json.JSONDecodeError:
+            logger.warning("Failed to parse LLM JSON response, returning raw text")
+            return {"raw": text}

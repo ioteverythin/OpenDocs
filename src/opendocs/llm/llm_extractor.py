@@ -1,7 +1,8 @@
 """LLM-based semantic entity extraction.
 
-Uses OpenAI (or compatible) structured outputs to extract entities and
-relations from README text with higher accuracy than deterministic rules.
+Uses multi-provider LLM backends (OpenAI, Anthropic, Google, Ollama, Azure)
+to extract entities and relations from README text with higher accuracy
+than deterministic rules.
 
 Requires: ``pip install opendocs[llm]``
 """
@@ -14,6 +15,8 @@ import os
 import re
 import time
 from typing import Any
+
+from .providers import LLMProvider, get_provider, DEFAULT_PROVIDER
 
 from ..core.knowledge_graph import (
     Entity,
@@ -208,11 +211,15 @@ No introduction line — jump straight into the bullets.""",
 
 
 # ---------------------------------------------------------------------------
-# LLM Client wrapper with retry
+# LLM Client wrapper (delegates to unified provider)
 # ---------------------------------------------------------------------------
 
 class LLMClient:
-    """Thin wrapper around OpenAI's chat completion API with retry logic."""
+    """Thin wrapper that delegates to the unified multi-provider system.
+
+    Backward-compatible interface: ``LLMClient(api_key, model, base_url)``
+    still works.  New ``provider`` param selects the backend.
+    """
 
     def __init__(
         self,
@@ -221,50 +228,20 @@ class LLMClient:
         base_url: str | None = None,
         temperature: float = 0.1,
         max_retries: int = 3,
+        provider: str = DEFAULT_PROVIDER,
     ):
-        try:
-            from openai import OpenAI
-        except ImportError:
-            raise ImportError(
-                "LLM mode requires the 'openai' package. "
-                "Install with: pip install opendocs[llm]"
-            )
-
-        self.model = model
-        self.temperature = temperature
-        self.max_retries = max_retries
-        self.client = OpenAI(
-            api_key=api_key or os.environ.get("OPENAI_API_KEY"),
+        self._provider = get_provider(
+            provider,
+            api_key=api_key,
+            model=model,
             base_url=base_url,
+            temperature=temperature,
+            max_retries=max_retries,
         )
 
     def chat(self, system: str, user: str) -> str:
-        """Send a chat completion with exponential backoff retry."""
-        last_exc: Exception | None = None
-
-        for attempt in range(self.max_retries):
-            try:
-                response = self.client.chat.completions.create(
-                    model=self.model,
-                    temperature=self.temperature,
-                    messages=[
-                        {"role": "system", "content": system},
-                        {"role": "user", "content": user},
-                    ],
-                )
-                return response.choices[0].message.content or ""
-            except Exception as exc:
-                last_exc = exc
-                wait = 2 ** attempt  # 1s, 2s, 4s
-                logger.warning(
-                    "LLM request failed (attempt %d/%d): %s — retrying in %ds",
-                    attempt + 1, self.max_retries, exc, wait,
-                )
-                time.sleep(wait)
-
-        raise RuntimeError(
-            f"LLM request failed after {self.max_retries} attempts: {last_exc}"
-        )
+        """Send a chat completion with retry (handled by provider)."""
+        return self._provider.chat(system, user)
 
 
 # ---------------------------------------------------------------------------
@@ -285,8 +262,9 @@ class LLMExtractor:
         api_key: str | None = None,
         model: str = "gpt-4o-mini",
         base_url: str | None = None,
+        provider: str = DEFAULT_PROVIDER,
     ):
-        self.llm = LLMClient(api_key=api_key, model=model, base_url=base_url)
+        self.llm = LLMClient(api_key=api_key, model=model, base_url=base_url, provider=provider)
         self._id_counter = 0
 
     def extract(self, doc: DocumentModel) -> KnowledgeGraph:
@@ -445,8 +423,9 @@ class LLMSummarizer:
         api_key: str | None = None,
         model: str = "gpt-4o-mini",
         base_url: str | None = None,
+        provider: str = DEFAULT_PROVIDER,
     ):
-        self.llm = LLMClient(api_key=api_key, model=model, base_url=base_url)
+        self.llm = LLMClient(api_key=api_key, model=model, base_url=base_url, provider=provider)
 
     def enrich(
         self,
@@ -830,8 +809,9 @@ class LLMContentEnhancer:
         api_key: str | None = None,
         model: str = "gpt-4o-mini",
         base_url: str | None = None,
+        provider: str = DEFAULT_PROVIDER,
     ):
-        self.llm = LLMClient(api_key=api_key, model=model, base_url=base_url)
+        self.llm = LLMClient(api_key=api_key, model=model, base_url=base_url, provider=provider)
 
     def enrich(self, doc: DocumentModel, kg: KnowledgeGraph) -> None:
         """Generate blog, FAQ, and rewritten sections.  Stores on KG."""

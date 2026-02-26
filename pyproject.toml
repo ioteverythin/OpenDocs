@@ -50,8 +50,29 @@ llm = [
     "langchain>=0.1",
     "langgraph>=0.0.30",
 ]
+anthropic = [
+    "anthropic>=0.30",
+]
+google = [
+    "google-generativeai>=0.5",
+]
+ollama = [
+    "openai>=1.12",
+]
+azure = [
+    "openai>=1.12",
+]
+all-providers = [
+    "openai>=1.12",
+    "anthropic>=0.30",
+    "google-generativeai>=0.5",
+    "langchain>=0.1",
+    "langgraph>=0.0.30",
+]
 agents = [
     "openai>=1.12",
+    "anthropic>=0.30",
+    "google-generativeai>=0.5",
     "langchain>=0.1",
     "langgraph>=0.0.30",
     "matplotlib>=3.8",

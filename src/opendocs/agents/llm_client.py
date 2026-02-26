@@ -1,10 +1,10 @@
-"""Shared async OpenAI client for the agents layer.
+"""Shared async LLM client for the agents layer.
 
-Provides a thin wrapper around the OpenAI API with:
-- Singleton client management (one client per API key).
+Provides a thin wrapper around the multi-provider LLM system with:
+- Singleton provider management.
 - Structured JSON output via ``chat_json()``.
 - Plain text completions via ``chat_text()``.
-- Token-usage tracking per call.
+- Support for OpenAI, Anthropic (Claude), Google (Gemini), Ollama, Azure.
 - Graceful fallback when the API key is missing.
 """
 
@@ -14,27 +14,42 @@ import json
 import os
 from typing import Any
 
-from openai import AsyncOpenAI
-
+from ..llm.providers import (
+    AsyncLLMProvider,
+    get_async_provider,
+    DEFAULT_PROVIDER,
+)
 
 # ---------------------------------------------------------------------------
-# Singleton client
+# Singleton provider
 # ---------------------------------------------------------------------------
 
-_client: AsyncOpenAI | None = None
+_provider: AsyncLLMProvider | None = None
 
 
-def get_client(api_key: str | None = None) -> AsyncOpenAI:
-    """Return (and cache) an ``AsyncOpenAI`` client."""
-    global _client
-    if _client is None:
-        key = api_key or os.environ.get("OPENAI_API_KEY", "")
-        if not key:
-            raise RuntimeError(
-                "No OpenAI API key found. Set OPENAI_API_KEY or pass api_key=."
-            )
-        _client = AsyncOpenAI(api_key=key)
-    return _client
+def get_client(
+    api_key: str | None = None,
+    *,
+    provider: str = DEFAULT_PROVIDER,
+    model: str | None = None,
+    base_url: str | None = None,
+) -> AsyncLLMProvider:
+    """Return (and cache) an async LLM provider."""
+    global _provider
+    if _provider is None:
+        _provider = get_async_provider(
+            provider,
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+        )
+    return _provider
+
+
+def reset_client() -> None:
+    """Reset the cached provider (useful for testing)."""
+    global _provider
+    _provider = None
 
 
 # ---------------------------------------------------------------------------
@@ -49,19 +64,12 @@ async def chat_text(
     temperature: float = 0.3,
     max_tokens: int = 2048,
     api_key: str | None = None,
+    provider: str = DEFAULT_PROVIDER,
+    base_url: str | None = None,
 ) -> str:
     """Return a plain-text completion."""
-    client = get_client(api_key)
-    resp = await client.chat.completions.create(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    )
-    return resp.choices[0].message.content or ""
+    client = get_client(api_key, provider=provider, model=model, base_url=base_url)
+    return await client.chat(system, user)
 
 
 async def chat_json(
@@ -72,25 +80,16 @@ async def chat_json(
     temperature: float = 0.2,
     max_tokens: int = 4096,
     api_key: str | None = None,
+    provider: str = DEFAULT_PROVIDER,
+    base_url: str | None = None,
 ) -> dict[str, Any]:
     """Return a parsed JSON dict from the model.
 
-    Uses ``response_format={"type": "json_object"}`` so the model is
-    constrained to produce valid JSON.
+    Each provider handles JSON mode differently:
+    - OpenAI/Azure: native ``response_format``
+    - Anthropic: guided via system prompt
+    - Gemini: ``response_mime_type``
+    - Ollama: ``response_format`` where supported
     """
-    client = get_client(api_key)
-    resp = await client.chat.completions.create(
-        model=model,
-        temperature=temperature,
-        max_tokens=max_tokens,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user},
-        ],
-    )
-    raw = resp.choices[0].message.content or "{}"
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        return {"raw": raw, "_parse_error": True}
+    client = get_client(api_key, provider=provider, model=model, base_url=base_url)
+    return await client.chat_json(system, user)

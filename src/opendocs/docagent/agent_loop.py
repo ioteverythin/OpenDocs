@@ -91,6 +91,7 @@ class AgentLoop:
         theme_name: str = "corporate",
         since: str | None = None,
         until: str | None = None,
+        llm_provider: str = "openai",
     ) -> AgentResult:
         """Execute the full agent loop.
 
@@ -120,6 +121,8 @@ class AgentLoop:
             Start date for git history, e.g. '2025-01-01' or '3 months ago'.
         until
             End date for git history (default: today).
+        llm_provider
+            LLM provider name: openai, anthropic, google, ollama, azure.
         """
         t0 = time.time()
         result = AgentResult(repo_url=url)
@@ -132,7 +135,8 @@ class AgentLoop:
             if base_url:
                 llm_config["base_url"] = base_url
             llm_config["model"] = llm_model
-            logger.info("LLM mode enabled: model=%s", llm_model)
+            llm_config["provider"] = llm_provider
+            logger.info("LLM mode enabled: provider=%s, model=%s", llm_provider, llm_model)
 
         if doc_types is None:
             doc_types = list(DocumentType)

@@ -77,6 +77,7 @@ class Pipeline:
         model: str = "gpt-4o-mini",
         base_url: str | None = None,
         sort_tables: str = "smart",
+        provider: str = "openai",
     ) -> PipelineResult:
         """Run the full pipeline.
 
@@ -95,16 +96,19 @@ class Pipeline:
             Name of the color theme to use (e.g. ``corporate``, ``ocean``).
         mode
             Extraction mode: ``basic`` (deterministic) or ``llm``
-            (uses OpenAI for semantic enrichment).
+            (uses LLM for semantic enrichment).
         api_key
-            OpenAI API key — required when *mode* is ``llm``.
+            LLM API key — required when *mode* is ``llm``.
         model
             LLM model name (default ``gpt-4o-mini``).
         base_url
-            Custom OpenAI-compatible API base URL (e.g. local Ollama).
+            Custom API base URL (e.g. local Ollama, Azure endpoint).
         sort_tables
             Table sorting strategy: ``smart`` (auto-detect), ``alpha``,
             ``numeric``, ``column:N``, ``column:N:desc``, or ``none``.
+        provider
+            LLM provider: ``openai``, ``anthropic``, ``google``,
+            ``ollama``, ``azure``.
         """
         output_path = Path(output_dir).resolve()
         output_path.mkdir(parents=True, exist_ok=True)
@@ -178,9 +182,10 @@ class Pipeline:
                     from .llm.llm_extractor import LLMExtractor, LLMSummarizer
 
                     # -- Entity extraction via LLM --
-                    console.print(f"[bold blue]Running LLM extraction...[/] [dim](model={model})[/]")
+                    console.print(f"[bold blue]Running LLM extraction...[/] [dim](provider={provider}, model={model})[/]")
                     llm_extractor = LLMExtractor(
                         api_key=api_key, model=model, base_url=base_url,
+                        provider=provider,
                     )
                     llm_kg = llm_extractor.extract(doc)
                     kg.merge(llm_kg)
@@ -190,6 +195,7 @@ class Pipeline:
                     console.print("[bold blue]Generating LLM summaries...[/]")
                     summarizer = LLMSummarizer(
                         api_key=api_key, model=model, base_url=base_url,
+                        provider=provider,
                     )
                     summarizer.enrich(doc, kg)
                     console.print("[green][OK][/] Executive summary + 3 stakeholder views generated")
@@ -200,6 +206,7 @@ class Pipeline:
                     console.print("[bold blue]Running LLM content enhancement...[/]")
                     enhancer = LLMContentEnhancer(
                         api_key=api_key, model=model, base_url=base_url,
+                        provider=provider,
                     )
                     enhancer.enrich(doc, kg)
                     parts = []

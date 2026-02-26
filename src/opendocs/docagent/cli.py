@@ -119,6 +119,13 @@ def main():
     help="Custom OpenAI-compatible API base URL.",
 )
 @click.option(
+    "--provider",
+    "llm_provider",
+    type=click.Choice(["openai", "anthropic", "google", "ollama", "azure"], case_sensitive=False),
+    default="openai",
+    help="LLM provider: openai (default), anthropic (Claude), google (Gemini), ollama (local), azure.",
+)
+@click.option(
     "--theme",
     "theme_name",
     type=click.Choice(
@@ -154,6 +161,7 @@ def generate(
     api_key: str | None,
     llm_model: str,
     base_url: str | None,
+    llm_provider: str,
     theme_name: str,
     since_date: str | None,
     until_date: str | None,
@@ -174,9 +182,20 @@ def generate(
     elif mode == "deterministic":
         use_llm = False
     else:  # auto
-        use_llm = bool(api_key or os.environ.get("OPENAI_API_KEY"))
+        # Check for API key from any supported provider
+        key_env_vars = {
+            "openai": "OPENAI_API_KEY",
+            "anthropic": "ANTHROPIC_API_KEY",
+            "google": "GOOGLE_API_KEY",
+            "ollama": "",
+            "azure": "AZURE_OPENAI_API_KEY",
+        }
+        env_var = key_env_vars.get(llm_provider.lower(), "OPENAI_API_KEY")
+        has_key = bool(api_key or (env_var and os.environ.get(env_var)))
+        use_llm = has_key or llm_provider.lower() == "ollama"
 
     mode_label = "[bold green]LLM[/] 🧠" if use_llm else "[bold yellow]Deterministic[/] 📐"
+    provider_label = f" ({llm_provider})" if use_llm else ""
 
     # Resolve workspace
     ws = WorkspaceConfig(root=Path(workspace_path)) if workspace_path else WorkspaceConfig()
@@ -202,7 +221,7 @@ def generate(
         f"[bold]Documents:[/]  {', '.join(d.value for d in doc_types)}\n"
         f"[bold]Formats:[/]    {', '.join(f.value for f in export_formats)}\n"
         f"[bold]Theme:[/]      {theme_name}\n"
-        f"[bold]Mode:[/]       {mode_label}"
+        f"[bold]Mode:[/]       {mode_label}{provider_label}"
         + (f"\n[bold]Model:[/]      {llm_model}" if use_llm else "")
         + history_label,
         title="[bold green]DocAgent — New Session[/]",
@@ -232,6 +251,7 @@ def generate(
                 theme_name=theme_name,
                 since=since_date,
                 until=until_date,
+                llm_provider=llm_provider,
             )
         except Exception as exc:
             progress.stop()
