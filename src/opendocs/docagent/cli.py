@@ -132,7 +132,8 @@ def main():
         [
             "corporate", "ocean", "sunset", "dark", "minimal", "emerald", "royal",
             "slate", "rose", "nordic", "cyber", "terracotta", "sapphire", "mint",
-            "monochrome",
+            "monochrome", "aurora", "carbon", "lavender", "graphite", "obsidian",
+            "coral", "zen", "nebula", "sand", "glacier",
         ],
         case_sensitive=False,
     ),

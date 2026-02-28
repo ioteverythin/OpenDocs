@@ -181,6 +181,10 @@ class WordGenerator(BaseGenerator):
         # -- Customize heading styles --
         self._setup_heading_styles(docx)
 
+        # -- Add headers/footers from template variables --
+        if self.tvars.has_values:
+            self._add_header_footer(docx)
+
         # -- Title page --
         self._add_title_page(docx, doc)
 
@@ -224,6 +228,38 @@ class WordGenerator(BaseGenerator):
                 style.paragraph_format.keep_with_next = True
 
     # ------------------------------------------------------------------
+    # Headers & Footers (from template variables)
+    # ------------------------------------------------------------------
+
+    def _add_header_footer(self, docx: DocxDocument) -> None:
+        """Add document headers and footers from template variables."""
+        for section in docx.sections:
+            # --- Header ---
+            header_text = self.tvars.header_text
+            if header_text:
+                header = section.header
+                header.is_linked_to_previous = False
+                p = header.paragraphs[0] if header.paragraphs else header.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                run = p.add_run(header_text)
+                run.font.size = Pt(8)
+                run.font.color.rgb = RGBColor(*Colors.MUTED)
+                run.font.name = Fonts.BODY
+                _add_bottom_border(p, Colors.ACCENT, size=4)
+
+            # --- Footer ---
+            footer_text = self.tvars.footer_text
+            if footer_text:
+                footer = section.footer
+                footer.is_linked_to_previous = False
+                p = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                run = p.add_run(footer_text)
+                run.font.size = Pt(8)
+                run.font.color.rgb = RGBColor(*Colors.MUTED)
+                run.font.name = Fonts.BODY
+
+    # ------------------------------------------------------------------
     # Title page
     # ------------------------------------------------------------------
 
@@ -251,11 +287,23 @@ class WordGenerator(BaseGenerator):
         title.alignment = WD_ALIGN_PARAGRAPH.CENTER
         title.paragraph_format.space_before = Pt(12)
         title.paragraph_format.space_after = Pt(4)
-        run = title.add_run(doc.metadata.repo_name or "Technical Report")
+        # Use template project_name if available, else repo_name
+        title_text = self.tvars.project_name or doc.metadata.repo_name or "Technical Report"
+        run = title.add_run(title_text)
         run.font.size = Pt(Fonts.TITLE_SIZE_PT)
         run.font.color.rgb = RGBColor(*Colors.PRIMARY_DARK)
         run.bold = True
         run.font.name = Fonts.HEADING
+
+        # Version badge (from template vars)
+        if self.tvars.version:
+            ver_p = docx.add_paragraph()
+            ver_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            run = ver_p.add_run(f"v{self.tvars.version}")
+            run.font.size = Pt(11)
+            run.font.color.rgb = RGBColor(*Colors.ACCENT)
+            run.bold = True
+            run.font.name = Fonts.BODY
 
         # Accent underline
         line = docx.add_paragraph()
@@ -284,8 +332,21 @@ class WordGenerator(BaseGenerator):
             ("Repository", doc.metadata.repo_name),
             ("Source", doc.metadata.repo_url or doc.metadata.source_path),
             ("Generated", doc.metadata.generated_at[:19] if doc.metadata.generated_at else ""),
-            ("Tool", "opendocs v0.1"),
+            ("Tool", "opendocs v0.4.1"),
         ]
+        # Add template variable items
+        if self.tvars.author:
+            info_items.insert(0, ("Author", self.tvars.author))
+        if self.tvars.organisation:
+            info_items.insert(0, ("Organisation", self.tvars.organisation))
+        if self.tvars.version:
+            info_items.append(("Version", f"v{self.tvars.version}"))
+        if self.tvars.date:
+            info_items.append(("Date", self.tvars.date))
+        if self.tvars.confidentiality:
+            info_items.append(("Classification", self.tvars.confidentiality))
+        if self.tvars.department:
+            info_items.append(("Department", self.tvars.department))
         info_table = docx.add_table(rows=len(info_items), cols=2)
         info_table.alignment = WD_TABLE_ALIGNMENT.CENTER
         for i, (label, value) in enumerate(info_items):

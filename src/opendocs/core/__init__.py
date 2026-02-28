@@ -1,1 +1,1 @@
-"""Core modules for parsing and structuring README content."""
+"""Core modules for parsing and structuring README and notebook content."""

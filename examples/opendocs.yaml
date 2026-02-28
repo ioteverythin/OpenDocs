@@ -1,0 +1,27 @@
+# OpenDocs Template Variables — Example Configuration
+# ====================================================
+# Copy this file to your project root and customize the values.
+# Use with: opendocs generate <source> --config opendocs.yaml
+#
+# All fields are optional. CLI flags (--author, --org, etc.)
+# take precedence over values defined here.
+
+# Project identification
+project_name: "My Project"
+author: "Jane Doe"
+version: "1.0.0"
+date: "2026-02-28"
+
+# Organisation details (used in headers and footers)
+organisation: "Acme Corp"
+department: "Engineering"
+confidentiality: "Internal"       # Internal | Confidential | Public
+
+# Logo for document headers (optional, path relative to config file)
+# logo_path: "./assets/logo.png"
+
+# Custom variables (accessible as {{custom.key}} or {{key}} in templates)
+custom:
+  reviewer: "John Smith"
+  status: "Draft"
+  project_id: "PRJ-2026-001"

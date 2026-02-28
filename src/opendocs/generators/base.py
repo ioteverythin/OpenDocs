@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Optional
 
 from ..core.knowledge_graph import KnowledgeGraph
 from ..core.models import DocumentModel, GenerationResult, OutputFormat
+from ..core.template_vars import EMPTY_VARS, TemplateVars
 from .themes import DEFAULT_THEME, Theme
 from .styles import apply_theme
 
@@ -37,11 +38,13 @@ class BaseGenerator(ABC):
         theme: Theme | None = None,
         knowledge_graph: KnowledgeGraph | None = None,
         image_cache: "ImageCache | None" = None,
+        template_vars: TemplateVars | None = None,
     ) -> None:
         self.theme = theme or DEFAULT_THEME
         apply_theme(self.theme)
         self.kg = knowledge_graph
         self.image_cache = image_cache
+        self.tvars = template_vars or EMPTY_VARS
 
     @abstractmethod
     def generate(self, doc: DocumentModel, output_dir: Path) -> GenerationResult:

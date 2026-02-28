@@ -8,8 +8,10 @@ from rich.console import Console
 
 from .core.fetcher import ReadmeFetcher, is_github_url
 from .core.models import DocumentModel, GenerationResult, OutputFormat, PipelineResult
+from .core.notebook_parser import NotebookParser, is_notebook
 from .core.parser import ReadmeParser
 from .core.semantic_extractor import SemanticExtractor
+from .core.template_vars import EMPTY_VARS, TemplateVars, load_template_vars
 from .generators.diagram_extractor import DiagramExtractor, ImageCache
 from .generators.mermaid_renderer import MermaidRenderer
 from .generators.blog_generator import BlogGenerator
@@ -62,6 +64,7 @@ class Pipeline:
     ) -> None:
         self.fetcher = ReadmeFetcher(timeout=timeout, github_token=github_token)
         self.parser = ReadmeParser()
+        self.notebook_parser = NotebookParser()
         self.semantic_extractor = SemanticExtractor()
 
     def run(
@@ -78,6 +81,8 @@ class Pipeline:
         base_url: str | None = None,
         sort_tables: str = "smart",
         provider: str = "openai",
+        template_vars: TemplateVars | None = None,
+        config_path: str | None = None,
     ) -> PipelineResult:
         """Run the full pipeline.
 
@@ -109,6 +114,10 @@ class Pipeline:
         provider
             LLM provider: ``openai``, ``anthropic``, ``google``,
             ``ollama``, ``azure``.
+        template_vars
+            Pre-built ``TemplateVars`` instance with report variables.
+        config_path
+            Path to a YAML/JSON config file with template variables.
         """
         output_path = Path(output_dir).resolve()
         output_path.mkdir(parents=True, exist_ok=True)
@@ -128,8 +137,18 @@ class Pipeline:
         apply_theme(theme)
         console.print(f"[dim]Theme:[/] [bold]{theme_name}[/bold]")
 
+        # -- Resolve template variables -----------------------------------
+        tvars = template_vars or EMPTY_VARS
+        if config_path and not template_vars:
+            tvars = load_template_vars(config_path)
+        if tvars.has_values:
+            console.print(f"[dim]Template vars:[/] [bold]{tvars.project_name or '(unnamed)'}[/bold]")
+
+        # -- Check if source is a Jupyter Notebook ------------------------
+        is_nb = (local or not is_github_url(source)) and is_notebook(source)
+
         # -- Step 1: Fetch README -----------------------------------------
-        console.print(f"\n[bold blue]Fetching README from:[/] {source}")
+        console.print(f"\n[bold blue]{'Loading notebook' if is_nb else 'Fetching README'} from:[/] {source}")
         try:
             if local:
                 content, name = self.fetcher._fetch_local(source)
@@ -142,16 +161,25 @@ class Pipeline:
             reset_theme()
             return result
 
-        console.print(f"[green][OK][/] Fetched README ({len(content):,} chars)")
+        console.print(f"[green][OK][/] Fetched {'notebook' if is_nb else 'README'} ({len(content):,} chars)")
 
         # -- Step 2: Parse ------------------------------------------------
-        console.print("[bold blue]Parsing Markdown...[/]")
-        doc: DocumentModel = self.parser.parse(
-            content,
-            repo_name=name,
-            repo_url=repo_url,
-            source_path=source,
-        )
+        if is_nb:
+            console.print("[bold blue]Parsing Jupyter Notebook...[/]")
+            doc: DocumentModel = self.notebook_parser.parse_content(
+                content,
+                repo_name=name,
+                repo_url=repo_url,
+                source_path=source,
+            )
+        else:
+            console.print("[bold blue]Parsing Markdown...[/]")
+            doc: DocumentModel = self.parser.parse(
+                content,
+                repo_name=name,
+                repo_url=repo_url,
+                source_path=source,
+            )
         console.print(
             f"[green][OK][/] Parsed: {len(doc.sections)} sections, "
             f"{len(doc.all_blocks)} blocks, "
@@ -262,6 +290,7 @@ class Pipeline:
                 theme=theme,
                 knowledge_graph=kg,
                 image_cache=image_cache,
+                template_vars=tvars,
             )
             console.print(f"[bold blue]Generating {fmt.value.upper()}...[/]")
 
