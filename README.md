@@ -1,6 +1,6 @@
-# OpenDocs
+# 📚 OpenDocs
 
-> Convert GitHub READMEs, Markdown files, and Jupyter Notebooks into structured, multi-format documentation -- instantly.
+> Convert GitHub READMEs, Markdown files, and Jupyter Notebooks into structured, multi-format documentation — instantly.
 
 [![PyPI](https://img.shields.io/pypi/v/opendocs.svg)](https://pypi.org/project/opendocs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
