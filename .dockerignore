@@ -1,0 +1,12 @@
+# Ignore output directories
+output*/
+test_*/
+dist/
+build/
+*.egg-info/
+__pycache__/
+.pytest_cache/
+.git/
+.github/
+*.whl
+*.tar.gz

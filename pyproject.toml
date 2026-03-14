@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "opendocs"
-version = "0.5.1"
+version = "0.6.0"
 description = "Convert GitHub README files into structured multi-format documentation artifacts."
 readme = "README.md"
 license = {text = "MIT"}
@@ -83,6 +83,11 @@ templates = [
 ]
 watch = [
     "pyyaml>=6.0",
+]
+api = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "python-multipart>=0.0.9",
 ]
 
 [project.scripts]
