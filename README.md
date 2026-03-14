@@ -1,10 +1,22 @@
 # 📚 OpenDocs
 
+<p align="center">
+  <img src="./OpenDocs.png" alt="OpenDocs Banner" width="100%" />
+</p>
+
 > Convert GitHub READMEs, Markdown files, and Jupyter Notebooks into structured, multi-format documentation — instantly.
 
 [![PyPI](https://img.shields.io/pypi/v/opendocs.svg)](https://pypi.org/project/opendocs/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Open Source](https://img.shields.io/badge/Open%20Source-%E2%9D%A4-red.svg)](https://github.com/ioteverythin/OpenDocs)
+[![Contributions Welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg)](./CONTRIBUTING.md)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg)](https://github.com/ioteverythin/OpenDocs/pulls)
+[![VS Code Extension](https://img.shields.io/badge/VS%20Code-Extension-007ACC.svg?logo=visualstudiocode)](https://github.com/ioteverythin/Opendocs-ext)
+
+---
+
+> **#opensource** &nbsp;|&nbsp; **#documentation** &nbsp;|&nbsp; **#markdown** &nbsp;|&nbsp; **#ai** &nbsp;|&nbsp; **#devtools** &nbsp;|&nbsp; **#python** &nbsp;|&nbsp; **#jupyter** &nbsp;|&nbsp; **#llm**
 
 ## What is OpenDocs?
 
