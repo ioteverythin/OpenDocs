@@ -49,10 +49,10 @@ class SortStrategy(str, Enum):
 # Sort key helpers
 # ---------------------------------------------------------------------------
 
-_NUMERIC_RE = re.compile(r"-?[\d,]+\.?\d*")
+_NUMERIC_RE = re.compile(r"-?\d[\d,]*\.?\d*")
 _PERCENTAGE_RE = re.compile(r"([\d.]+)\s*%")
 _UNIT_RE = re.compile(
-    r"([\d,]+\.?\d*)\s*"
+    r"(\d[\d,]*\.?\d*)\s*"
     r"(Hz|hz|ms|s|sec|min|hrs?|KB|MB|GB|TB|%|k|K|M|B)"
 )
 
@@ -69,12 +69,16 @@ def _extract_number(text: str) -> float:
     # Check for value+unit
     m = _UNIT_RE.search(text)
     if m:
-        return float(m.group(1).replace(",", ""))
+        val = m.group(1).replace(",", "")
+        if val:
+            return float(val)
 
     # Bare number
     m = _NUMERIC_RE.search(text)
     if m:
-        return float(m.group().replace(",", ""))
+        val = m.group().replace(",", "")
+        if val:
+            return float(val)
 
     return float("inf")
 
