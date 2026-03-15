@@ -21,7 +21,7 @@ BANNER = r"""
 | |_| | |_) |  __/ | | | |_| | (_) | (__\__ \
  \___/| .__/ \___|_| |_|____/ \___/ \___|___/
       |_|
-  README → Docs Pipeline  v0.8.0
+  README → Docs Pipeline  v0.9.0
 """
 
 FORMAT_MAP = {
@@ -36,12 +36,13 @@ FORMAT_MAP = {
     "social": OutputFormat.SOCIAL,
     "faq": OutputFormat.FAQ,
     "architecture": OutputFormat.ARCHITECTURE,
+    "mindmap": OutputFormat.MINDMAP,
     "all": OutputFormat.ALL,
 }
 
 
 @click.group()
-@click.version_option(version="0.8.0", prog_name="opendocs")
+@click.version_option(version="0.9.0", prog_name="opendocs")
 def main():
     """opendocs — Convert GitHub READMEs, npm packages, Markdown files, and Jupyter Notebooks into multi-format documentation."""
     pass
@@ -261,7 +262,7 @@ def generate(
             OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
             OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
             OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-            OutputFormat.FAQ, OutputFormat.ARCHITECTURE,
+            OutputFormat.FAQ, OutputFormat.ARCHITECTURE, OutputFormat.MINDMAP,
         ]
     else:
         formats = [chosen]

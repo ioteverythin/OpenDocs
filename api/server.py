@@ -107,7 +107,7 @@ def _resolve_formats(fmt_str: str) -> list[OutputFormat]:
             OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
             OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
             OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-            OutputFormat.FAQ, OutputFormat.ARCHITECTURE,
+            OutputFormat.FAQ, OutputFormat.ARCHITECTURE, OutputFormat.MINDMAP,
         ]
     try:
         return [OutputFormat(fmt_str)]

@@ -295,6 +295,7 @@ def _regenerate(
         "social": OutputFormat.SOCIAL,
         "faq": OutputFormat.FAQ,
         "architecture": OutputFormat.ARCHITECTURE,
+        "mindmap": OutputFormat.MINDMAP,
     }
 
     out_formats = None

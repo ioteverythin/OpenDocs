@@ -31,6 +31,7 @@ class OutputFormat(str, Enum):
     SOCIAL = "social"
     FAQ = "faq"
     ARCHITECTURE = "architecture"
+    MINDMAP = "mindmap"
     ALL = "all"
 
 
@@ -234,6 +235,10 @@ class PipelineResult(BaseModel):
     @property
     def faq_path(self) -> Optional[Path]:
         return self._path_for(OutputFormat.FAQ)
+
+    @property
+    def mindmap_path(self) -> Optional[Path]:
+        return self._path_for(OutputFormat.MINDMAP)
 
     def _path_for(self, fmt: OutputFormat) -> Optional[Path]:
         for r in self.results:

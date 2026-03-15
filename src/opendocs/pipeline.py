@@ -28,6 +28,7 @@ from .generators.table_sorter import TableSorter
 from .generators.themes import get_theme, DEFAULT_THEME
 from .generators.word_generator import WordGenerator
 from .generators.architecture_generator import ArchitectureGenerator
+from .generators.mindmap_generator import MindmapGenerator
 
 console = Console()
 
@@ -44,6 +45,7 @@ _GENERATORS = {
     OutputFormat.SOCIAL: SocialGenerator,
     OutputFormat.FAQ: FaqGenerator,
     OutputFormat.ARCHITECTURE: ArchitectureGenerator,
+    OutputFormat.MINDMAP: MindmapGenerator,
 }
 
 
@@ -127,7 +129,7 @@ class Pipeline:
                 OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
                 OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
                 OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-                OutputFormat.FAQ, OutputFormat.ARCHITECTURE,
+                OutputFormat.FAQ, OutputFormat.ARCHITECTURE, OutputFormat.MINDMAP,
             ]
 
         result = PipelineResult(source=source)
@@ -246,7 +248,7 @@ class Pipeline:
                 OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
                 OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
                 OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-                OutputFormat.FAQ, OutputFormat.ARCHITECTURE,
+                OutputFormat.FAQ, OutputFormat.ARCHITECTURE, OutputFormat.MINDMAP,
             ]
 
         result = PipelineResult(source=str(folder))
