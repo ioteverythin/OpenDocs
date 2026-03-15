@@ -1,4 +1,4 @@
-"""Fetch README content from GitHub repositories or local files."""
+"""Fetch README content from GitHub repositories, npm packages, or local files."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ _GITHUB_API = "https://api.github.com/repos"
 _GITHUB_URL_RE = re.compile(
     r"(?:https?://)?github\.com/(?P<owner>[^/]+)/(?P<repo>[^/\s#?]+)"
 )
+_NPM_REGISTRY = "https://registry.npmjs.org"
 
 # Typical README filenames in priority order
 _README_NAMES = [
@@ -48,6 +49,11 @@ def is_github_url(source: str) -> bool:
     return bool(_GITHUB_URL_RE.search(source))
 
 
+def is_npm_source(source: str) -> bool:
+    """Return True if *source* is an npm package reference (``npm:<package>``)."""
+    return source.startswith("npm:")
+
+
 # ---------------------------------------------------------------------------
 # Fetcher
 # ---------------------------------------------------------------------------
@@ -66,6 +72,7 @@ class ReadmeFetcher:
 
         *source* can be:
         - A GitHub URL  (``https://github.com/owner/repo``)
+        - An npm package reference (``npm:axios``, ``npm:@scope/pkg``)
         - A local file path (``./README.md`` or ``C:\\path\\to\\README.md``)
 
         Returns
@@ -73,6 +80,8 @@ class ReadmeFetcher:
         tuple[str, str]
             ``(markdown_content, repo_or_file_name)``
         """
+        if is_npm_source(source):
+            return self._fetch_npm(source[4:])  # strip "npm:"
         if is_github_url(source):
             return self._fetch_github(source)
         return self._fetch_local(source)
@@ -109,6 +118,45 @@ class ReadmeFetcher:
             f"Could not find a README in {owner}/{repo}. "
             "Make sure the repository exists and is public (or supply a token)."
         )
+
+    def _fetch_npm(self, package_name: str) -> tuple[str, str]:
+        """Fetch the README for an npm package from the public registry.
+
+        Parameters
+        ----------
+        package_name
+            Package name as-is, e.g. ``axios`` or ``@scope/pkg``.
+            An optional version specifier is stripped: ``axios@1.6.0`` → ``axios``.
+        """
+        # Strip version specifier if present (e.g. "axios@1.6.0" → "axios")
+        # Scoped packages like "@scope/pkg" must NOT be split on the first "@"
+        if "@" in package_name.lstrip("@"):
+            package_name = package_name.rsplit("@", 1)[0]
+
+        url = f"{_NPM_REGISTRY}/{package_name}"
+        try:
+            resp = httpx.get(url, timeout=self.timeout, follow_redirects=True)
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 404:
+                raise FileNotFoundError(
+                    f"npm package '{package_name}' not found on the registry."
+                ) from exc
+            raise FileNotFoundError(
+                f"npm registry returned {exc.response.status_code} for '{package_name}'."
+            ) from exc
+        except httpx.HTTPError as exc:
+            raise FileNotFoundError(
+                f"Could not reach npm registry for '{package_name}': {exc}"
+            ) from exc
+
+        data = resp.json()
+        readme: str = data.get("readme", "")
+        if not readme:
+            raise FileNotFoundError(
+                f"npm package '{package_name}' exists but has no README on the registry."
+            )
+        return readme, package_name
 
     @staticmethod
     def _fetch_local(path_str: str) -> tuple[str, str]:

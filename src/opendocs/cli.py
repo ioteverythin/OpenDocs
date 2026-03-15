@@ -21,7 +21,7 @@ BANNER = r"""
 | |_| | |_) |  __/ | | | |_| | (_) | (__\__ \
  \___/| .__/ \___|_| |_|____/ \___/ \___|___/
       |_|
-  README → Docs Pipeline  v0.7.0
+  README → Docs Pipeline  v0.8.0
 """
 
 FORMAT_MAP = {
@@ -41,14 +41,14 @@ FORMAT_MAP = {
 
 
 @click.group()
-@click.version_option(version="0.7.0", prog_name="opendocs")
+@click.version_option(version="0.8.0", prog_name="opendocs")
 def main():
-    """opendocs — Convert GitHub READMEs, Markdown files, and Jupyter Notebooks into multi-format documentation."""
+    """opendocs — Convert GitHub READMEs, npm packages, Markdown files, and Jupyter Notebooks into multi-format documentation."""
     pass
 
 
 @main.command()
-@click.argument("source")
+@click.argument("source", metavar="SOURCE")
 @click.option(
     "-f", "--format",
     "fmt",
@@ -227,12 +227,13 @@ def generate(
     confluence_token: str | None,
     confluence_parent: str | None,
 ):
-    """Generate documentation from a GitHub README, local Markdown file,
+    """Generate documentation from a GitHub README, npm package, local Markdown file,
     Jupyter Notebook, or an entire folder of .md/.ipynb files.
 
     SOURCE can be:
-      - A GitHub URL (e.g., https://github.com/owner/repo)
-      - A local Markdown file or .ipynb notebook (use --local)
+      - A GitHub URL        (e.g., https://github.com/owner/repo)
+      - An npm package      (e.g., npm:axios  or  npm:@scope/pkg)
+      - A local file/notebook  (use --local flag)
       - A local folder path — all .md/.ipynb files will be merged
     """
     console.print(BANNER)

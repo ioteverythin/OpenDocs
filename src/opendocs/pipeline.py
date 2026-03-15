@@ -6,7 +6,7 @@ from pathlib import Path
 
 from rich.console import Console
 
-from .core.fetcher import ReadmeFetcher, is_github_url
+from .core.fetcher import ReadmeFetcher, is_github_url, is_npm_source
 from .core.models import DocumentModel, GenerationResult, OutputFormat, PipelineResult
 from .core.notebook_parser import NotebookParser, is_notebook
 from .core.parser import ReadmeParser
@@ -146,22 +146,30 @@ class Pipeline:
 
         # -- Check if source is a Jupyter Notebook ------------------------
         is_nb = (local or not is_github_url(source)) and is_notebook(source)
+        is_npm = not local and is_npm_source(source)
 
         # -- Step 1: Fetch README -----------------------------------------
-        console.print(f"\n[bold blue]{'Loading notebook' if is_nb else 'Fetching README'} from:[/] {source}")
+        _fetch_label = "Loading notebook" if is_nb else ("Fetching npm package" if is_npm else "Fetching README")
+        console.print(f"\n[bold blue]{_fetch_label} from:[/] {source}")
         try:
             if local:
                 content, name = self.fetcher._fetch_local(source)
                 repo_url = ""
             else:
                 content, name = self.fetcher.fetch(source)
-                repo_url = source if is_github_url(source) else ""
+                if is_github_url(source):
+                    repo_url = source
+                elif is_npm:
+                    repo_url = f"https://www.npmjs.com/package/{name}"
+                else:
+                    repo_url = ""
         except Exception as exc:
             console.print(f"[bold red]Fetch failed:[/] {exc}")
             reset_theme()
             return result
 
-        console.print(f"[green][OK][/] Fetched {'notebook' if is_nb else 'README'} ({len(content):,} chars)")
+        _fetched_label = "notebook" if is_nb else ("npm README" if is_npm else "README")
+        console.print(f"[green][OK][/] Fetched {_fetched_label} ({len(content):,} chars)")
 
         # -- Step 2: Parse ------------------------------------------------
         if is_nb:
