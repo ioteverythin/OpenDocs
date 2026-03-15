@@ -21,7 +21,7 @@ BANNER = r"""
 | |_| | |_) |  __/ | | | |_| | (_) | (__\__ \
  \___/| .__/ \___|_| |_|____/ \___/ \___|___/
       |_|
-  README → Docs Pipeline  v0.5.0
+  README → Docs Pipeline  v0.7.0
 """
 
 FORMAT_MAP = {
@@ -41,7 +41,7 @@ FORMAT_MAP = {
 
 
 @click.group()
-@click.version_option(version="0.5.0", prog_name="opendocs")
+@click.version_option(version="0.7.0", prog_name="opendocs")
 def main():
     """opendocs — Convert GitHub READMEs, Markdown files, and Jupyter Notebooks into multi-format documentation."""
     pass
@@ -140,6 +140,62 @@ def main():
     default=True,
     help="Include cell outputs when parsing Jupyter Notebooks (default: yes).",
 )
+@click.option(
+    "--folder-recursive/--no-folder-recursive",
+    "folder_recursive",
+    default=True,
+    help="When SOURCE is a folder, scan sub-directories too (default: yes).",
+)
+@click.option(
+    "--folder-title",
+    default=None,
+    help="Override the merged document title when SOURCE is a folder.",
+)
+# ---- Notion publish --------------------------------------------------
+@click.option(
+    "--publish-notion",
+    "notion_page_id",
+    default=None,
+    envvar="NOTION_PAGE_ID",
+    help="Publish generated docs to this Notion page ID or URL.",
+)
+@click.option(
+    "--notion-token",
+    envvar="NOTION_TOKEN",
+    default=None,
+    help="Notion integration token (or set NOTION_TOKEN env var).",
+)
+# ---- Confluence publish ----------------------------------------------
+@click.option(
+    "--publish-confluence",
+    "confluence_space",
+    default=None,
+    envvar="CONFLUENCE_SPACE",
+    help="Publish generated docs to this Confluence space key (e.g. PROJ).",
+)
+@click.option(
+    "--confluence-url",
+    envvar="CONFLUENCE_URL",
+    default=None,
+    help="Confluence base URL, e.g. https://yourorg.atlassian.net/wiki",
+)
+@click.option(
+    "--confluence-user",
+    envvar="CONFLUENCE_USER",
+    default=None,
+    help="Confluence account email (or set CONFLUENCE_USER env var).",
+)
+@click.option(
+    "--confluence-token",
+    envvar="CONFLUENCE_TOKEN",
+    default=None,
+    help="Atlassian API token (or set CONFLUENCE_TOKEN env var).",
+)
+@click.option(
+    "--confluence-parent",
+    default=None,
+    help="Confluence parent page title to nest new page under.",
+)
 def generate(
     source: str,
     fmt: str,
@@ -161,11 +217,23 @@ def generate(
     department: str | None,
     confidentiality: str | None,
     include_outputs: bool,
+    folder_recursive: bool,
+    folder_title: str | None,
+    notion_page_id: str | None,
+    notion_token: str | None,
+    confluence_space: str | None,
+    confluence_url: str | None,
+    confluence_user: str | None,
+    confluence_token: str | None,
+    confluence_parent: str | None,
 ):
-    """Generate documentation from a GitHub README, local Markdown file, or Jupyter Notebook.
+    """Generate documentation from a GitHub README, local Markdown file,
+    Jupyter Notebook, or an entire folder of .md/.ipynb files.
 
-    SOURCE can be a GitHub URL (e.g., https://github.com/owner/repo),
-    a local Markdown file, or a .ipynb notebook when used with --local.
+    SOURCE can be:
+      - A GitHub URL (e.g., https://github.com/owner/repo)
+      - A local Markdown file or .ipynb notebook (use --local)
+      - A local folder path — all .md/.ipynb files will be merged
     """
     console.print(BANNER)
 
@@ -197,22 +265,104 @@ def generate(
     else:
         formats = [chosen]
 
-    # Run pipeline
+    # Run pipeline — folder path or single file/URL
     pipeline = Pipeline(github_token=token)
-    result = pipeline.run(
-        source,
-        output_dir=output_dir,
-        formats=formats,
-        local=local,
-        theme_name=theme_name,
-        mode=mode,
-        api_key=api_key,
-        model=model,
-        base_url=base_url,
-        sort_tables=sort_tables,
-        provider=llm_provider,
-        template_vars=tvars,
-    )
+    source_path = Path(source)
+
+    if source_path.is_dir():
+        # Multi-file folder mode
+        result = pipeline.run_folder(
+            source_path,
+            output_dir=output_dir,
+            formats=formats,
+            title=folder_title,
+            recursive=folder_recursive,
+            theme_name=theme_name,
+            mode=mode,
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            sort_tables=sort_tables,
+            provider=llm_provider,
+            template_vars=tvars,
+        )
+    else:
+        result = pipeline.run(
+            source,
+            output_dir=output_dir,
+            formats=formats,
+            local=local,
+            theme_name=theme_name,
+            mode=mode,
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            sort_tables=sort_tables,
+            provider=llm_provider,
+            template_vars=tvars,
+        )
+
+    # ---- Post-generation publishing ------------------------------------
+    # Find the best Markdown file to publish (blog_post.md preferred)
+    def _find_markdown_output() -> Path | None:
+        md_candidates = [
+            r.output_path for r in result.results
+            if r.success and r.output_path.suffix == ".md"
+        ]
+        # Prefer blog_post over analysis_report over any other .md
+        for candidate in md_candidates:
+            if "blog" in candidate.stem.lower():
+                return candidate
+        return md_candidates[0] if md_candidates else None
+
+    if notion_page_id:
+        if not notion_token:
+            console.print("[yellow]WARNING: --publish-notion requires --notion-token (or NOTION_TOKEN env var). Skipping.[/]")
+        else:
+            md_file = _find_markdown_output()
+            if not md_file:
+                console.print("[yellow]WARNING: No Markdown output found to publish to Notion.[/]")
+            else:
+                try:
+                    from .publishers import NotionPublisher
+                    console.print("[bold blue]Publishing to Notion...[/]")
+                    pub = NotionPublisher(token=notion_token, page_id=notion_page_id)
+                    url = pub.publish(md_file)
+                    console.print(f"[green][OK][/] Notion page created → {url}")
+                except ImportError:
+                    console.print("[red]notion-client not installed. Run: pip install opendocs[publish][/]")
+                except Exception as exc:
+                    console.print(f"[red]Notion publish failed: {exc}[/]")
+
+    if confluence_space:
+        missing = [n for n, v in [
+            ("--confluence-url", confluence_url),
+            ("--confluence-user", confluence_user),
+            ("--confluence-token", confluence_token),
+        ] if not v]
+        if missing:
+            console.print(f"[yellow]WARNING: Confluence publish requires {', '.join(missing)}. Skipping.[/]")
+        else:
+            md_file = _find_markdown_output()
+            if not md_file:
+                console.print("[yellow]WARNING: No Markdown output found to publish to Confluence.[/]")
+            else:
+                try:
+                    from .publishers import ConfluencePublisher
+                    console.print("[bold blue]Publishing to Confluence...[/]")
+                    pub = ConfluencePublisher(
+                        url=confluence_url,
+                        username=confluence_user,
+                        token=confluence_token,
+                        space_key=confluence_space,
+                        parent_page_title=confluence_parent,
+                    )
+                    url = pub.publish(md_file)
+                    console.print(f"[green][OK][/] Confluence page created/updated → {url}")
+                except ImportError:
+                    console.print("[red]requests not installed. Run: pip install opendocs[publish][/]")
+                except Exception as exc:
+                    console.print(f"[red]Confluence publish failed: {exc}[/]")
 
     # Exit code
     if not any(r.success for r in result.results):

@@ -186,6 +186,111 @@ class Pipeline:
             f"{len(doc.mermaid_diagrams)} diagrams"
         )
 
+        return self._execute_pipeline(
+            doc, result, output_path, formats, theme, tvars,
+            sort_tables=sort_tables, mode=mode, api_key=api_key,
+            model=model, base_url=base_url, provider=provider,
+        )
+
+    # ------------------------------------------------------------------
+    def run_folder(
+        self,
+        folder: str | Path,
+        *,
+        output_dir: str | Path = "./output",
+        formats: list[OutputFormat] | None = None,
+        title: str | None = None,
+        recursive: bool = True,
+        theme_name: str = "corporate",
+        mode: str = "basic",
+        api_key: str | None = None,
+        model: str = "gpt-4o-mini",
+        base_url: str | None = None,
+        sort_tables: str = "smart",
+        provider: str = "openai",
+        template_vars: TemplateVars | None = None,
+        config_path: str | None = None,
+    ) -> PipelineResult:
+        """Merge all .md/.ipynb files in *folder* and run the full pipeline.
+
+        Parameters
+        ----------
+        folder
+            Path to a directory containing Markdown / Notebook files.
+        output_dir
+            Directory where generated files will be written.
+        formats
+            Which formats to generate.  Defaults to all.
+        title
+            Override the merged document title.  Defaults to the folder name.
+        recursive
+            Scan sub-directories as well (default: ``True``).
+        All other keyword arguments are the same as :meth:`run`.
+        """
+        from .core.folder_merger import merge_folder
+
+        folder = Path(folder).resolve()
+        output_path = Path(output_dir).resolve()
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        if formats is None:
+            formats = [
+                OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
+                OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
+                OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
+                OutputFormat.FAQ, OutputFormat.ARCHITECTURE,
+            ]
+
+        result = PipelineResult(source=str(folder))
+
+        theme = get_theme(theme_name)
+        apply_theme(theme)
+        console.print(f"[dim]Theme:[/] [bold]{theme_name}[/bold]")
+
+        tvars = template_vars or EMPTY_VARS
+        if config_path and not template_vars:
+            tvars = load_template_vars(config_path)
+
+        console.print(f"\n[bold blue]Merging folder:[/] {folder}")
+        try:
+            doc = merge_folder(folder, recursive=recursive, title=title)
+        except Exception as exc:
+            console.print(f"[bold red]Folder merge failed:[/] {exc}")
+            reset_theme()
+            return result
+
+        n_files = len(doc.sections)
+        console.print(
+            f"[green][OK][/] Merged {n_files} source file(s) → "
+            f"{len(doc.all_blocks)} blocks, "
+            f"{len(doc.mermaid_diagrams)} diagrams"
+        )
+
+        return self._execute_pipeline(
+            doc, result, output_path, formats, theme, tvars,
+            sort_tables=sort_tables, mode=mode, api_key=api_key,
+            model=model, base_url=base_url, provider=provider,
+        )
+
+    # ------------------------------------------------------------------
+    def _execute_pipeline(
+        self,
+        doc: DocumentModel,
+        result: PipelineResult,
+        output_path: Path,
+        formats: list[OutputFormat],
+        theme,
+        tvars: TemplateVars,
+        *,
+        sort_tables: str = "smart",
+        mode: str = "basic",
+        api_key: str | None = None,
+        model: str = "gpt-4o-mini",
+        base_url: str | None = None,
+        provider: str = "openai",
+    ) -> PipelineResult:
+        """Run pipeline steps 2b–end on an already-parsed ``DocumentModel``."""
+
         # -- Step 2b: Sort tables ----------------------------------------
         if sort_tables != "none":
             console.print(f"[bold blue]Sorting tables...[/] [dim](strategy={sort_tables})[/]")
