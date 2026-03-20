@@ -10,9 +10,9 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
 from ...core.knowledge_graph import KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
 
 
 @dataclass

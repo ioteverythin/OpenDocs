@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
 from typing import Any
+
+from pydantic import BaseModel, Field
 
 
 class APIEndpoint(BaseModel):
     """A single API endpoint discovered in the repository."""
+
     method: str = ""
     path: str = ""
     description: str = ""
@@ -15,6 +17,7 @@ class APIEndpoint(BaseModel):
 
 class GitCommit(BaseModel):
     """A single git commit entry."""
+
     hash: str = ""
     short: str = ""
     author: str = ""
@@ -25,6 +28,7 @@ class GitCommit(BaseModel):
 
 class GitHistory(BaseModel):
     """Git history extracted for a date range."""
+
     since: str = ""
     until: str = ""
     commits: list[GitCommit] = Field(default_factory=list)

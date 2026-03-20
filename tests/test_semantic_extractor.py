@@ -41,7 +41,6 @@ class TestSemanticExtractor:
 
     def test_technologies_discovered(self, sample_doc):
         """The sample README mentions Python, MQTT, etc."""
-        from opendocs.core.knowledge_graph import EntityType
 
         extractor = SemanticExtractor()
         kg = extractor.extract(sample_doc)

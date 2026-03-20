@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseSkill
+from ..models.document_model import DocumentType, DraftDocument
 from ..models.repo_model import RepoKnowledgeModel
-from ..models.document_model import DraftDocument, DocumentType
+from .base import BaseSkill
 
 
 class ProposalSkill(BaseSkill):
@@ -63,8 +63,7 @@ class ProposalSkill(BaseSkill):
         content = chat_text(system, context, **llm_config)
         self.logger.info("LLM-generated Proposal: %d chars", len(content))
 
-        sections = [line.lstrip("# ").strip() for line in content.splitlines()
-                     if line.startswith("## ")]
+        sections = [line.lstrip("# ").strip() for line in content.splitlines() if line.startswith("## ")]
 
         return DraftDocument(
             doc_type=DocumentType.PROPOSAL,
@@ -95,8 +94,10 @@ class ProposalSkill(BaseSkill):
         # --- Solution Overview ---
         sections.append("Solution Overview")
         parts.append("## Solution Overview\n")
-        parts.append(f"**{m.project_name}** provides a comprehensive solution "
-                     f"built with {', '.join(m.tech_stack[:5]) if m.tech_stack else 'modern technologies'}.\n")
+        parts.append(
+            f"**{m.project_name}** provides a comprehensive solution "
+            f"built with {', '.join(m.tech_stack[:5]) if m.tech_stack else 'modern technologies'}.\n"
+        )
         if m.features:
             parts.append("### Key Capabilities\n")
             for f in m.features[:10]:
@@ -146,7 +147,9 @@ class ProposalSkill(BaseSkill):
         parts.append(f"- **Codebase Size:** {file_count} files")
         parts.append(f"- **Dependencies:** {dep_count} packages")
         parts.append(f"- **Complexity:** {complexity}")
-        parts.append(f"- **Estimated Effort:** {'8-12' if complexity == 'High' else '4-8' if complexity == 'Medium' else '2-4'} person-weeks")
+        parts.append(
+            f"- **Estimated Effort:** {'8-12' if complexity == 'High' else '4-8' if complexity == 'Medium' else '2-4'} person-weeks"
+        )
         parts.append("")
 
         # --- Risks ---

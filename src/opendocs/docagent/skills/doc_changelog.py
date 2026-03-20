@@ -6,10 +6,9 @@ import re
 from collections import defaultdict
 from typing import Any
 
+from ..models.document_model import DocumentType, DraftDocument
+from ..models.repo_model import RepoKnowledgeModel
 from .base import BaseSkill
-from ..models.repo_model import GitHistory, RepoKnowledgeModel
-from ..models.document_model import DraftDocument, DocumentType
-
 
 # PR title prefixes → category mapping
 _CATEGORY_PATTERNS: list[tuple[str, str]] = [
@@ -54,9 +53,7 @@ class ChangelogSkill(BaseSkill):
     def run(self, *, repo_model: RepoKnowledgeModel, **kwargs: Any) -> DraftDocument:
         use_llm: bool = kwargs.get("use_llm", False)
         llm_config: dict[str, Any] = kwargs.get("llm_config") or {}
-        has_history = repo_model.git_history and (
-            repo_model.git_history.commits or repo_model.git_history.merges
-        )
+        has_history = repo_model.git_history and (repo_model.git_history.commits or repo_model.git_history.merges)
 
         if has_history:
             self.logger.info("Git history available — generating real changelog")
@@ -80,7 +77,9 @@ class ChangelogSkill(BaseSkill):
     # ==================================================================
 
     def _run_history_llm(
-        self, m: RepoKnowledgeModel, llm_config: dict[str, Any],
+        self,
+        m: RepoKnowledgeModel,
+        llm_config: dict[str, Any],
     ) -> DraftDocument:
         from ..llm_client import chat_text
 
@@ -99,9 +98,7 @@ class ChangelogSkill(BaseSkill):
 
         tag_lines = [f"- {t['tag']} ({t.get('date', '')[:10]})" for t in hist.tags[:20]]
 
-        contrib_lines = [
-            f"- {c['author']}: {c['commits']} commits" for c in hist.contributors[:15]
-        ]
+        contrib_lines = [f"- {c['author']}: {c['commits']} commits" for c in hist.contributors[:15]]
 
         stats = hist.stats
         stats_summary = (
@@ -118,13 +115,11 @@ class ChangelogSkill(BaseSkill):
             f"Period: {period}\n"
             f"Stats: {stats_summary}\n\n"
             f"## Merged Pull Requests / Merge Commits ({len(hist.merges)} total)\n"
-            + "\n".join(merge_lines[:100]) + "\n\n"
-            f"## All Commits ({len(hist.commits)} total, showing first 150)\n"
-            + "\n".join(commit_lines[:150]) + "\n\n"
-            f"## Tags / Releases ({len(hist.tags)} total)\n"
-            + "\n".join(tag_lines) + "\n\n"
-            f"## Contributors ({len(hist.contributors)})\n"
-            + "\n".join(contrib_lines) + "\n"
+            + "\n".join(merge_lines[:100])
+            + "\n\n"
+            f"## All Commits ({len(hist.commits)} total, showing first 150)\n" + "\n".join(commit_lines[:150]) + "\n\n"
+            f"## Tags / Releases ({len(hist.tags)} total)\n" + "\n".join(tag_lines) + "\n\n"
+            f"## Contributors ({len(hist.contributors)})\n" + "\n".join(contrib_lines) + "\n"
         )
 
         system = (
@@ -148,8 +143,7 @@ class ChangelogSkill(BaseSkill):
         content = chat_text(system, context, **{**llm_config, "max_tokens": 5000})
         self.logger.info("LLM history-based changelog: %d chars", len(content))
 
-        sections = [line.lstrip("# ").strip() for line in content.splitlines()
-                     if line.startswith("## ")]
+        sections = [line.lstrip("# ").strip() for line in content.splitlines() if line.startswith("## ")]
 
         return DraftDocument(
             doc_type=DocumentType.CHANGELOG,
@@ -199,9 +193,14 @@ class ChangelogSkill(BaseSkill):
             cat = _categorise_subject(entry.subject)
             pr_num = _extract_pr_number(entry.subject) or ""
             # Clean up merge commit subjects
-            clean_subject = re.sub(
-                r"^Merge pull request #\d+ from \S+\s*", "", entry.subject,
-            ).strip() or entry.subject
+            clean_subject = (
+                re.sub(
+                    r"^Merge pull request #\d+ from \S+\s*",
+                    "",
+                    entry.subject,
+                ).strip()
+                or entry.subject
+            )
             line = f"- {clean_subject}"
             if pr_num:
                 line += f" ({pr_num})"
@@ -212,10 +211,19 @@ class ChangelogSkill(BaseSkill):
         parts.append("## 📋 Changes\n")
         # Sort categories: features first, chores last
         priority = [
-            "✨ Features", "🐛 Bug Fixes", "⚡ Performance", "🔒 Security",
-            "⚠️ Breaking Changes", "♻️ Refactors", "📝 Documentation",
-            "🧪 Tests", "🏗️ CI / Build", "📦 Dependencies",
-            "🎨 Style", "🔧 Chores", "🔀 Other",
+            "✨ Features",
+            "🐛 Bug Fixes",
+            "⚡ Performance",
+            "🔒 Security",
+            "⚠️ Breaking Changes",
+            "♻️ Refactors",
+            "📝 Documentation",
+            "🧪 Tests",
+            "🏗️ CI / Build",
+            "📦 Dependencies",
+            "🎨 Style",
+            "🔧 Chores",
+            "🔀 Other",
         ]
         for cat in priority:
             items = categorised.get(cat, [])
@@ -249,9 +257,7 @@ class ChangelogSkill(BaseSkill):
             parts.append("| Date | Hash | Author | Subject |")
             parts.append("|------|------|--------|---------|")
             for c in hist.commits[:50]:
-                parts.append(
-                    f"| {c.date[:10]} | `{c.short}` | {c.author} | {c.subject} |"
-                )
+                parts.append(f"| {c.date[:10]} | `{c.short}` | {c.author} | {c.subject} |")
             if len(hist.commits) > 50:
                 parts.append(f"\n*...and {len(hist.commits) - 50} more commits*")
             parts.append("")
@@ -317,8 +323,7 @@ class ChangelogSkill(BaseSkill):
         content = chat_text(system, context, **{**llm_config, "max_tokens": 5000})
         self.logger.info("LLM-generated Changelog: %d chars", len(content))
 
-        sections = [line.lstrip("# ").strip() for line in content.splitlines()
-                     if line.startswith("## ")]
+        sections = [line.lstrip("# ").strip() for line in content.splitlines() if line.startswith("## ")]
 
         return DraftDocument(
             doc_type=DocumentType.CHANGELOG,

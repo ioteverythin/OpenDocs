@@ -28,7 +28,7 @@ class ConfluencePublishTool:
         self._api_url = f"{self.base_url}/wiki/rest/api/content"
 
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
-        page_tree: dict[str, Any] = params["page_tree_model"]
+        _page_tree: dict[str, Any] = params["page_tree_model"]
         space_key: str = params["space_key"]
         parent_page_id: str = params.get("parent_page_id", "")
 
@@ -43,8 +43,8 @@ class ConfluencePublishTool:
         return {
             "space_key": space_key,
             "parent_page_id": parent_page_id,
-            "page_url": "",             # TODO: root page URL
-            "page_id": "",              # TODO: root page ID
-            "pages_created": 0,         # TODO: count
-            "pages_updated": 0,         # TODO: count
+            "page_url": "",  # TODO: root page URL
+            "page_id": "",  # TODO: root page ID
+            "pages_created": 0,  # TODO: count
+            "pages_updated": 0,  # TODO: count
         }

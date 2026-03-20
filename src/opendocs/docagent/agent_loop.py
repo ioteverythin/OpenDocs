@@ -21,24 +21,24 @@ from typing import Any
 from .config import WorkspaceConfig
 from .models.document_model import DocumentType, DraftDocument, ExportFormat, ReviewFeedback
 from .models.repo_model import GitHistory, RepoKnowledgeModel
-from .tools.repo_tools import RepoTools
+from .skills.diagram_gen import DiagramGenSkill
+from .skills.doc_changelog import ChangelogSkill
+from .skills.doc_onboarding import OnboardingSkill
+from .skills.doc_prd import PRDSkill
+from .skills.doc_proposal import ProposalSkill
+from .skills.doc_report import ReportSkill
+from .skills.doc_slides import SlidesSkill
+from .skills.doc_sop import SOPSkill
+from .skills.doc_tech_debt import TechDebtSkill
+from .skills.model_builder import ModelBuilderSkill
+from .skills.renderer_export import RendererExportSkill
+from .skills.repo_crawler import RepoCrawlerSkill
+from .skills.repo_indexer import RepoIndexerSkill
+from .skills.reviewer_qa import ReviewerQASkill
 from .tools.analysis_tools import AnalysisTools
 from .tools.document_tools import DocumentTools
 from .tools.export_tools import ExportTools
-from .skills.repo_crawler import RepoCrawlerSkill
-from .skills.repo_indexer import RepoIndexerSkill
-from .skills.model_builder import ModelBuilderSkill
-from .skills.doc_prd import PRDSkill
-from .skills.doc_proposal import ProposalSkill
-from .skills.doc_sop import SOPSkill
-from .skills.doc_report import ReportSkill
-from .skills.doc_slides import SlidesSkill
-from .skills.doc_changelog import ChangelogSkill
-from .skills.doc_onboarding import OnboardingSkill
-from .skills.doc_tech_debt import TechDebtSkill
-from .skills.reviewer_qa import ReviewerQASkill
-from .skills.renderer_export import RendererExportSkill
-from .skills.diagram_gen import DiagramGenSkill
+from .tools.repo_tools import RepoTools
 
 logger = logging.getLogger("docagent.loop")
 
@@ -58,13 +58,14 @@ _DOC_SKILLS: dict[DocumentType, type] = {
 @dataclass
 class AgentResult:
     """Final result of an agent run."""
+
     session_id: str = ""
     repo_url: str = ""
     repo_model_path: str = ""
-    drafts: dict[str, str] = field(default_factory=dict)       # type → draft path
-    outputs: dict[str, list[str]] = field(default_factory=dict) # type → [output paths]
-    diagrams: dict[str, str] = field(default_factory=dict)      # type → diagram png path
-    reviews: dict[str, dict] = field(default_factory=dict)      # type → review summary
+    drafts: dict[str, str] = field(default_factory=dict)  # type → draft path
+    outputs: dict[str, list[str]] = field(default_factory=dict)  # type → [output paths]
+    diagrams: dict[str, str] = field(default_factory=dict)  # type → diagram png path
+    reviews: dict[str, dict] = field(default_factory=dict)  # type → review summary
     elapsed_seconds: float = 0.0
     errors: list[str] = field(default_factory=list)
 
@@ -165,7 +166,7 @@ class AgentLoop:
         # STEP 2: Plan
         # ══════════════════════════════════════════════════════════════
         logger.info("[Step 2/7] Plan — building execution plan")
-        plan = self._step_plan(request)
+        _plan = self._step_plan(request)
 
         # ══════════════════════════════════════════════════════════════
         # STEP 3: Gather — crawl + index
@@ -177,7 +178,9 @@ class AgentLoop:
             logger.info("  Full-depth clone for git history (--since=%s)", since)
         try:
             gather_result = self._step_gather(
-                url, repo_tools, analysis_tools,
+                url,
+                repo_tools,
+                analysis_tools,
                 full_history=needs_history,
             )
         except Exception as exc:
@@ -191,14 +194,13 @@ class AgentLoop:
         logger.info("[Step 4/7] Model — building repository knowledge model")
         try:
             repo_model = self._step_model(
-                url, gather_result,
+                url,
+                gather_result,
                 self._workspace.index_dir(sid),
                 use_llm=use_llm,
                 llm_config=llm_config,
             )
-            result.repo_model_path = str(
-                self._workspace.index_dir(sid) / "repo_model.json"
-            )
+            result.repo_model_path = str(self._workspace.index_dir(sid) / "repo_model.json")
         except Exception as exc:
             result.errors.append(f"Model building failed: {exc}")
             result.elapsed_seconds = time.time() - t0
@@ -212,8 +214,10 @@ class AgentLoop:
                 repo_model.git_history = git_hist
                 logger.info(
                     "  Git history: %d commits, %d merges, %d tags, %d contributors",
-                    len(git_hist.commits), len(git_hist.merges),
-                    len(git_hist.tags), len(git_hist.contributors),
+                    len(git_hist.commits),
+                    len(git_hist.merges),
+                    len(git_hist.tags),
+                    len(git_hist.contributors),
                 )
             except Exception as exc:
                 logger.warning("Git history collection failed: %s", exc)
@@ -225,8 +229,10 @@ class AgentLoop:
         logger.info("[Step 4.5] Diagrams — generating architecture diagrams")
         diagrams_dir = self._workspace.index_dir(sid) / "diagrams"
         diagram_paths = self._step_diagrams(
-            repo_model, diagrams_dir,
-            use_llm=use_llm, llm_config=llm_config,
+            repo_model,
+            diagrams_dir,
+            use_llm=use_llm,
+            llm_config=llm_config,
         )
         for dtype, dpath in diagram_paths.items():
             if dpath:
@@ -237,8 +243,11 @@ class AgentLoop:
         # ══════════════════════════════════════════════════════════════
         logger.info("[Step 5/7] Draft — generating documents")
         drafts = self._step_draft(
-            request["doc_types"], repo_model, doc_tools,
-            use_llm=use_llm, llm_config=llm_config,
+            request["doc_types"],
+            repo_model,
+            doc_tools,
+            use_llm=use_llm,
+            llm_config=llm_config,
             diagram_paths=diagram_paths,
         )
 
@@ -252,8 +261,11 @@ class AgentLoop:
         # ══════════════════════════════════════════════════════════════
         logger.info("[Step 6/7] Review — running QA checks")
         final_drafts = self._step_review(
-            drafts, doc_tools, max_rounds=max_review_rounds,
-            use_llm=use_llm, llm_config=llm_config,
+            drafts,
+            doc_tools,
+            max_rounds=max_review_rounds,
+            use_llm=use_llm,
+            llm_config=llm_config,
         )
         for draft in final_drafts:
             result.drafts[draft.doc_type.value] = str(
@@ -266,7 +278,9 @@ class AgentLoop:
         logger.info("[Step 7/7] Export — rendering output files")
         for draft in final_drafts:
             paths = self._step_export(
-                draft, export_tools, request["export_formats"],
+                draft,
+                export_tools,
+                request["export_formats"],
                 diagram_paths=diagram_paths,
             )
             result.outputs[draft.doc_type.value] = [str(p) for p in paths]
@@ -319,7 +333,8 @@ class AgentLoop:
         # Crawl
         crawler = RepoCrawlerSkill()
         crawl_result = crawler.run(
-            repo_tools=repo_tools, url=url,
+            repo_tools=repo_tools,
+            url=url,
             full_history=full_history,
         )
 
@@ -404,20 +419,26 @@ class AgentLoop:
             current = draft
             for round_num in range(1, max_rounds + 1):
                 feedback: ReviewFeedback = reviewer.run(
-                    draft=current, doc_tools=doc_tools,
-                    use_llm=use_llm, llm_config=llm_config or {},
+                    draft=current,
+                    doc_tools=doc_tools,
+                    use_llm=use_llm,
+                    llm_config=llm_config or {},
                 )
                 if feedback.passed:
                     logger.info("  %s passed review (round %d)", current.doc_type.value, round_num)
                     break
                 logger.info(
                     "  %s needs refinement (round %d): %d issues, %d missing",
-                    current.doc_type.value, round_num,
-                    len(feedback.issues), len(feedback.missing_sections),
+                    current.doc_type.value,
+                    round_num,
+                    len(feedback.issues),
+                    len(feedback.missing_sections),
                 )
                 current = doc_tools.refine(
-                    current, feedback,
-                    use_llm=use_llm, llm_config=llm_config or {},
+                    current,
+                    feedback,
+                    use_llm=use_llm,
+                    llm_config=llm_config or {},
                 )
                 doc_tools.save_draft(current)
             final.append(current)
@@ -500,8 +521,10 @@ class AgentLoop:
         """Inject diagram image references into the draft Markdown."""
         # Only inject for doc types that benefit from diagrams
         if draft.doc_type not in (
-            DocumentType.PRD, DocumentType.PROPOSAL,
-            DocumentType.REPORT, DocumentType.SLIDES,
+            DocumentType.PRD,
+            DocumentType.PROPOSAL,
+            DocumentType.REPORT,
+            DocumentType.SLIDES,
         ):
             return draft
 

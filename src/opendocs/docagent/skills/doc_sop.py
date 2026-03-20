@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseSkill
+from ..models.document_model import DocumentType, DraftDocument
 from ..models.repo_model import RepoKnowledgeModel
-from ..models.document_model import DraftDocument, DocumentType
+from .base import BaseSkill
 
 
 class SOPSkill(BaseSkill):
@@ -62,8 +62,7 @@ class SOPSkill(BaseSkill):
         content = chat_text(system, context, **llm_config)
         self.logger.info("LLM-generated SOP: %d chars", len(content))
 
-        sections = [line.lstrip("# ").strip() for line in content.splitlines()
-                     if line.startswith("## ")]
+        sections = [line.lstrip("# ").strip() for line in content.splitlines() if line.startswith("## ")]
 
         return DraftDocument(
             doc_type=DocumentType.SOP,

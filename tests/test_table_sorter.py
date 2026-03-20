@@ -2,31 +2,23 @@
 
 from __future__ import annotations
 
-import pytest
-
 from opendocs.core.models import (
     DocumentModel,
     Section,
     TableBlock,
-    ParagraphBlock,
 )
 from opendocs.generators.table_sorter import (
     TableSorter,
-    SortStrategy,
-    _extract_number,
     _classify_table,
-    _sort_key_alpha,
-    _sort_key_numeric,
+    _extract_number,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _make_doc_with_table(
-    headers: list[str], rows: list[list[str]]
-) -> DocumentModel:
+
+def _make_doc_with_table(headers: list[str], rows: list[list[str]]) -> DocumentModel:
     """Create a minimal DocumentModel with a single table."""
     block = TableBlock(headers=headers, rows=rows)
     section = Section(title="Test", level=1, blocks=[block])
@@ -39,6 +31,7 @@ def _make_doc_with_table(
 # ---------------------------------------------------------------------------
 # _extract_number
 # ---------------------------------------------------------------------------
+
 
 class TestExtractNumber:
     def test_plain_integer(self):
@@ -74,6 +67,7 @@ class TestExtractNumber:
 # ---------------------------------------------------------------------------
 # _classify_table
 # ---------------------------------------------------------------------------
+
 
 class TestClassifyTable:
     def test_api_table(self):
@@ -112,6 +106,7 @@ class TestClassifyTable:
 # ---------------------------------------------------------------------------
 # Sort strategies
 # ---------------------------------------------------------------------------
+
 
 class TestAlphaSort:
     def test_sort_by_first_column(self):
@@ -252,6 +247,7 @@ class TestNoneSort:
 # Full document processing
 # ---------------------------------------------------------------------------
 
+
 class TestDocumentProcessing:
     def test_process_sorts_all_tables(self):
         sorter = TableSorter("alpha")
@@ -310,6 +306,7 @@ class TestDocumentProcessing:
 # ---------------------------------------------------------------------------
 # Preserve headers
 # ---------------------------------------------------------------------------
+
 
 class TestPreservation:
     def test_headers_preserved(self):

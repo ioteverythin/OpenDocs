@@ -6,10 +6,10 @@ import pytest
 
 from opendocs.core.fetcher import ReadmeFetcher, is_github_url, parse_github_url
 
-
 # ---------------------------------------------------------------------------
 # URL parsing
 # ---------------------------------------------------------------------------
+
 
 class TestParseGithubUrl:
     def test_standard_url(self):
@@ -44,6 +44,7 @@ class TestIsGithubUrl:
 # ---------------------------------------------------------------------------
 # Local fetch
 # ---------------------------------------------------------------------------
+
 
 class TestLocalFetch:
     def test_fetch_local_file(self, tmp_path):

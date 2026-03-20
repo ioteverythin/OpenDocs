@@ -8,14 +8,13 @@ Usage:
 from __future__ import annotations
 
 import logging
-import sys
 from pathlib import Path
 
 import click
 from rich.console import Console
-from rich.table import Table as RichTable
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.table import Table as RichTable
 
 from .agent_loop import AgentLoop
 from .config import WorkspaceConfig
@@ -82,7 +81,20 @@ def main():
 @click.option(
     "--docs",
     "doc_choice",
-    type=click.Choice(["all", "prd", "proposal", "sop", "report", "slides", "changelog", "onboarding", "tech-debt"], case_sensitive=False),
+    type=click.Choice(
+        [
+            "all",
+            "prd",
+            "proposal",
+            "sop",
+            "report",
+            "slides",
+            "changelog",
+            "onboarding",
+            "tech-debt",
+        ],
+        case_sensitive=False,
+    ),
     default="all",
     help="Document type(s) to generate.",
 )
@@ -130,10 +142,31 @@ def main():
     "theme_name",
     type=click.Choice(
         [
-            "corporate", "ocean", "sunset", "dark", "minimal", "emerald", "royal",
-            "slate", "rose", "nordic", "cyber", "terracotta", "sapphire", "mint",
-            "monochrome", "aurora", "carbon", "lavender", "graphite", "obsidian",
-            "coral", "zen", "nebula", "sand", "glacier",
+            "corporate",
+            "ocean",
+            "sunset",
+            "dark",
+            "minimal",
+            "emerald",
+            "royal",
+            "slate",
+            "rose",
+            "nordic",
+            "cyber",
+            "terracotta",
+            "sapphire",
+            "mint",
+            "monochrome",
+            "aurora",
+            "carbon",
+            "lavender",
+            "graphite",
+            "obsidian",
+            "coral",
+            "zen",
+            "nebula",
+            "sand",
+            "glacier",
         ],
         case_sensitive=False,
     ),
@@ -178,6 +211,7 @@ def generate(
 
     # Resolve LLM mode
     import os
+
     if mode == "llm":
         use_llm = True
     elif mode == "deterministic":
@@ -217,17 +251,19 @@ def generate(
     if since_date:
         history_label = f"\n[bold]History:[/]    {since_date} → {until_date or 'now'}"
 
-    console.print(Panel(
-        f"[bold]Repository:[/] {url}\n"
-        f"[bold]Documents:[/]  {', '.join(d.value for d in doc_types)}\n"
-        f"[bold]Formats:[/]    {', '.join(f.value for f in export_formats)}\n"
-        f"[bold]Theme:[/]      {theme_name}\n"
-        f"[bold]Mode:[/]       {mode_label}{provider_label}"
-        + (f"\n[bold]Model:[/]      {llm_model}" if use_llm else "")
-        + history_label,
-        title="[bold green]DocAgent — New Session[/]",
-        border_style="green",
-    ))
+    console.print(
+        Panel(
+            f"[bold]Repository:[/] {url}\n"
+            f"[bold]Documents:[/]  {', '.join(d.value for d in doc_types)}\n"
+            f"[bold]Formats:[/]    {', '.join(f.value for f in export_formats)}\n"
+            f"[bold]Theme:[/]      {theme_name}\n"
+            f"[bold]Mode:[/]       {mode_label}{provider_label}"
+            + (f"\n[bold]Model:[/]      {llm_model}" if use_llm else "")
+            + history_label,
+            title="[bold green]DocAgent — New Session[/]",
+            border_style="green",
+        )
+    )
 
     # Run agent loop
     agent = AgentLoop(workspace=ws)

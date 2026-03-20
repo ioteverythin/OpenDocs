@@ -19,13 +19,14 @@ from pydantic import BaseModel, Field
 from ..core.knowledge_graph import KnowledgeGraph
 from ..core.models import DocumentModel
 
-
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
 
+
 class AgentRole(str, Enum):
     """Well-known roles in the Planner → Executor → Critic loop."""
+
     PLANNER = "planner"
     EXECUTOR = "executor"
     CRITIC = "critic"
@@ -43,6 +44,7 @@ class AgentRole(str, Enum):
 
 class ToolCallStatus(str, Enum):
     """Outcome of a single tool invocation."""
+
     PENDING = "pending"
     SUCCESS = "success"
     FAILED = "failed"
@@ -53,6 +55,7 @@ class ToolCallStatus(str, Enum):
 # Tool call model
 # ---------------------------------------------------------------------------
 
+
 class ToolCall(BaseModel):
     """A single MCP tool invocation requested by an agent.
 
@@ -61,9 +64,9 @@ class ToolCall(BaseModel):
     """
 
     id: str = Field(default_factory=lambda: uuid.uuid4().hex[:12])
-    tool_name: str                    # e.g. "diagram.render", "repo.search"
+    tool_name: str  # e.g. "diagram.render", "repo.search"
     parameters: dict[str, Any] = Field(default_factory=dict)
-    expected_output_type: str = ""    # e.g. "svg", "json", "markdown"
+    expected_output_type: str = ""  # e.g. "svg", "json", "markdown"
     status: ToolCallStatus = ToolCallStatus.PENDING
     result: Any = None
     error: Optional[str] = None
@@ -73,6 +76,7 @@ class ToolCall(BaseModel):
 # ---------------------------------------------------------------------------
 # Plan models
 # ---------------------------------------------------------------------------
+
 
 class PlanStep(BaseModel):
     """One step in an agent's execution plan."""
@@ -94,9 +98,7 @@ class AgentPlan(BaseModel):
     """
 
     plan_id: str = Field(default_factory=lambda: uuid.uuid4().hex[:12])
-    created_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
-    )
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     goal: str = ""
     steps: list[PlanStep] = Field(default_factory=list)
     metadata: dict[str, Any] = Field(default_factory=dict)
@@ -118,6 +120,7 @@ class AgentPlan(BaseModel):
 # Result models
 # ---------------------------------------------------------------------------
 
+
 class AgentResult(BaseModel):
     """The output of a single agent execution."""
 
@@ -135,10 +138,12 @@ class AgentResult(BaseModel):
 # Repo profile — lightweight repo summary fed to agents
 # ---------------------------------------------------------------------------
 
+
 class RepoSignal(BaseModel):
     """A detected signal about the repo (e.g. 'has docker-compose')."""
-    signal_type: str          # e.g. "docker-compose", "terraform", "ml-training"
-    file_path: str = ""       # evidence source
+
+    signal_type: str  # e.g. "docker-compose", "terraform", "ml-training"
+    file_path: str = ""  # evidence source
     confidence: float = 1.0
     details: dict[str, Any] = Field(default_factory=dict)
 
@@ -155,7 +160,7 @@ class RepoProfile(BaseModel):
     description: str = ""
     primary_language: str = ""
     languages: list[str] = Field(default_factory=list)
-    file_tree: list[str] = Field(default_factory=list)     # path list
+    file_tree: list[str] = Field(default_factory=list)  # path list
     signals: list[RepoSignal] = Field(default_factory=list)
     readme_summary: str = ""
     license: str = ""
@@ -169,6 +174,7 @@ class RepoProfile(BaseModel):
 # ---------------------------------------------------------------------------
 # Abstract base agent
 # ---------------------------------------------------------------------------
+
 
 class AgentBase(ABC):
     """Base class for all agents in the agentic pipeline.

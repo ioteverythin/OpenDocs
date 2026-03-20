@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseSkill
+from ..models.document_model import DocumentType, DraftDocument
 from ..models.repo_model import RepoKnowledgeModel
-from ..models.document_model import DraftDocument, DocumentType
+from .base import BaseSkill
 
 
 class TechDebtSkill(BaseSkill):
@@ -38,23 +38,22 @@ class TechDebtSkill(BaseSkill):
         for path, content in list(m.key_files.items())[:15]:
             key_file_summary += f"\n--- {path} ---\n{content[:500]}\n"
 
-        deps_summary = "\n".join(
-            f"- {k}: {v}" for k, v in list(m.dependencies.items())[:30]
-        )
+        deps_summary = "\n".join(f"- {k}: {v}" for k, v in list(m.dependencies.items())[:30])
 
         # Compute basic structural signals
         file_count = len(m.file_tree)
         test_files = [f for f in m.file_tree if "test" in f.lower()]
-        config_files = [f for f in m.file_tree if any(
-            f.endswith(ext) for ext in [".yml", ".yaml", ".toml", ".cfg", ".ini", ".json"]
-        ) and not f.startswith(".git")]
-        doc_files = [f for f in m.file_tree if any(
-            f.lower().endswith(ext) for ext in [".md", ".rst", ".txt"]
-        )]
+        config_files = [
+            f
+            for f in m.file_tree
+            if any(f.endswith(ext) for ext in [".yml", ".yaml", ".toml", ".cfg", ".ini", ".json"])
+            and not f.startswith(".git")
+        ]
+        doc_files = [f for f in m.file_tree if any(f.lower().endswith(ext) for ext in [".md", ".rst", ".txt"])]
 
         structural_signals = (
             f"Total files: {file_count}\n"
-            f"Test files: {len(test_files)} ({100*len(test_files)/max(file_count,1):.0f}%)\n"
+            f"Test files: {len(test_files)} ({100 * len(test_files) / max(file_count, 1):.0f}%)\n"
             f"Config files: {len(config_files)}\n"
             f"Documentation files: {len(doc_files)}\n"
             f"Has CI/CD: {'Yes' if m.ci_cd else 'No'}\n"
@@ -105,8 +104,7 @@ class TechDebtSkill(BaseSkill):
         content = chat_text(system, context, **{**llm_config, "max_tokens": 6000})
         self.logger.info("LLM-generated Tech Debt Report: %d chars", len(content))
 
-        sections = [line.lstrip("# ").strip() for line in content.splitlines()
-                     if line.startswith("## ")]
+        sections = [line.lstrip("# ").strip() for line in content.splitlines() if line.startswith("## ")]
 
         return DraftDocument(
             doc_type=DocumentType.TECH_DEBT,
@@ -245,8 +243,10 @@ class TechDebtSkill(BaseSkill):
             for comp in m.architecture_components:
                 parts.append(f"- {comp}")
         else:
-            parts.append("⚠️ No clear architecture components detected — may indicate a "
-                         "monolithic or poorly structured codebase.\n")
+            parts.append(
+                "⚠️ No clear architecture components detected — may indicate a "
+                "monolithic or poorly structured codebase.\n"
+            )
         parts.append("")
 
         # --- CI/CD Debt ---

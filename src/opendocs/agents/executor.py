@@ -8,7 +8,6 @@ pointers, and returns them to the orchestrator.
 from __future__ import annotations
 
 import time
-from pathlib import Path
 from typing import Any
 
 from ..core.knowledge_graph import KnowledgeGraph
@@ -126,6 +125,7 @@ class ExecutorAgent(AgentBase):
             # 4. Register evidence if present in result
             if isinstance(result, dict) and "evidence_pointer" in result:
                 from .evidence import EvidencePointer
+
                 ptr_data = result["evidence_pointer"]
                 if isinstance(ptr_data, dict):
                     ptr = EvidencePointer(**ptr_data)

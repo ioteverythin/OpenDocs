@@ -5,13 +5,13 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from ..core.knowledge_graph import KnowledgeGraph
 from ..core.models import DocumentModel, GenerationResult, OutputFormat
 from ..core.template_vars import EMPTY_VARS, TemplateVars
-from .themes import DEFAULT_THEME, Theme
 from .styles import apply_theme
+from .themes import DEFAULT_THEME, Theme
 
 # Pre-compiled regex for stripping HTML tags
 _HTML_TAG_RE = re.compile(r"<[^>]+>")

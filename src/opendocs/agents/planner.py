@@ -8,13 +8,11 @@ sub-agents to activate based on detected repo signals.
 
 from __future__ import annotations
 
-import json
 import time
 from typing import Any
 
 from ..core.knowledge_graph import KnowledgeGraph
 from ..core.models import DocumentModel
-from .llm_client import chat_json
 from .base import (
     AgentBase,
     AgentPlan,
@@ -24,7 +22,7 @@ from .base import (
     RepoProfile,
     ToolCall,
 )
-
+from .llm_client import chat_json
 
 # ---------------------------------------------------------------------------
 # Signal → sub-agent routing table
@@ -96,7 +94,7 @@ class PlannerAgent(AgentBase):
                     activated_agents=activated_agents,
                 )
                 llm_used = True
-            except Exception as exc:
+            except Exception:
                 # Fallback to deterministic
                 built_plan = self._build_plan(
                     repo_profile=repo_profile,
@@ -141,12 +139,10 @@ class PlannerAgent(AgentBase):
     ) -> AgentPlan:
         """LLM-powered plan construction."""
         entities_str = ", ".join(e.name for e in knowledge_graph.entities[:25])
-        relations_str = ", ".join(
-            f"{r.source_id}->{r.target_id}" for r in knowledge_graph.relations[:20]
-        )
+        relations_str = ", ".join(f"{r.source_id}->{r.target_id}" for r in knowledge_graph.relations[:20])
         signals_str = ", ".join(s.signal_type for s in repo_profile.signals) or "none"
         agents_str = ", ".join(a.value for a in activated_agents) or "none"
-        mermaid_spec = knowledge_graph.to_mermaid(max_entities=30)
+        _mermaid_spec = knowledge_graph.to_mermaid(max_entities=30)
 
         system = (
             "You are a documentation planning agent. You produce JSON execution plans "
@@ -156,13 +152,13 @@ class PlannerAgent(AgentBase):
             "Available specialized sub-agents: " + agents_str + "\n\n"
             "IMPORTANT RULES:\n"
             "1. You MUST use the specialized sub-agent roles for steps they can handle.\n"
-            "   - Use \"microservices\" role for Docker, K8s, service architecture steps.\n"
-            "   - Use \"ml\" role for ML models, training, inference steps.\n"
-            "   - Use \"infra\" role for Terraform, Helm, cloud infra steps.\n"
-            "   - Use \"event_driven\" role for Kafka, SQS, message queue steps.\n"
-            "   - Use \"data_engineering\" role for Airflow, dbt, Spark, pipeline steps.\n"
-            "2. Only use \"executor\" role for generic steps not covered by a specialized agent.\n"
-            "3. Always end with a \"critic\" step.\n"
+            '   - Use "microservices" role for Docker, K8s, service architecture steps.\n'
+            '   - Use "ml" role for ML models, training, inference steps.\n'
+            '   - Use "infra" role for Terraform, Helm, cloud infra steps.\n'
+            '   - Use "event_driven" role for Kafka, SQS, message queue steps.\n'
+            '   - Use "data_engineering" role for Airflow, dbt, Spark, pipeline steps.\n'
+            '2. Only use "executor" role for generic steps not covered by a specialized agent.\n'
+            '3. Always end with a "critic" step.\n'
             "4. Each step should produce a concrete documentation artifact.\n\n"
             "Return JSON with keys: goal (string), reasoning (string), "
             "steps (array of objects with: step_number, description, agent_role "
@@ -185,7 +181,10 @@ class PlannerAgent(AgentBase):
         )
 
         data = await chat_json(
-            system=system, user=user, model=self.model, max_tokens=4096,
+            system=system,
+            user=user,
+            model=self.model,
+            max_tokens=4096,
         )
 
         # Parse LLM response into AgentPlan
@@ -199,27 +198,33 @@ class PlannerAgent(AgentBase):
 
             tool_calls = []
             for raw_tc in raw_step.get("tool_calls", []):
-                tool_calls.append(ToolCall(
-                    tool_name=raw_tc.get("tool_name", ""),
-                    parameters=raw_tc.get("parameters", {}),
-                ))
+                tool_calls.append(
+                    ToolCall(
+                        tool_name=raw_tc.get("tool_name", ""),
+                        parameters=raw_tc.get("parameters", {}),
+                    )
+                )
 
-            steps.append(PlanStep(
-                step_number=raw_step.get("step_number", len(steps) + 1),
-                description=raw_step.get("description", ""),
-                agent_role=role,
-                tool_calls=tool_calls,
-                expected_output=raw_step.get("expected_output", ""),
-            ))
+            steps.append(
+                PlanStep(
+                    step_number=raw_step.get("step_number", len(steps) + 1),
+                    description=raw_step.get("description", ""),
+                    agent_role=role,
+                    tool_calls=tool_calls,
+                    expected_output=raw_step.get("expected_output", ""),
+                )
+            )
 
         # Ensure we have a critic step at the end
         if not steps or steps[-1].agent_role != AgentRole.CRITIC:
-            steps.append(PlanStep(
-                step_number=len(steps) + 1,
-                description="Validate all artifacts against evidence pointers",
-                agent_role=AgentRole.CRITIC,
-                expected_output="Evidence coverage report",
-            ))
+            steps.append(
+                PlanStep(
+                    step_number=len(steps) + 1,
+                    description="Validate all artifacts against evidence pointers",
+                    agent_role=AgentRole.CRITIC,
+                    expected_output="Evidence coverage report",
+                )
+            )
 
         return AgentPlan(
             goal=data.get("goal", f"Enhanced docs for {repo_profile.repo_name}"),
@@ -245,80 +250,97 @@ class PlannerAgent(AgentBase):
 
         # Step 1: Gather evidence from repo
         step_num += 1
-        steps.append(PlanStep(
-            step_number=step_num,
-            description="Search repo for architecture-relevant files",
-            agent_role=AgentRole.EXECUTOR,
-            tool_calls=[
-                ToolCall(
-                    tool_name="repo.search",
-                    parameters={"query": "docker|kubernetes|terraform|setup|config", "max_results": 50},
-                    expected_output_type="json",
-                ),
-            ],
-            expected_output="List of architecture-relevant file paths",
-        ))
+        steps.append(
+            PlanStep(
+                step_number=step_num,
+                description="Search repo for architecture-relevant files",
+                agent_role=AgentRole.EXECUTOR,
+                tool_calls=[
+                    ToolCall(
+                        tool_name="repo.search",
+                        parameters={
+                            "query": "docker|kubernetes|terraform|setup|config",
+                            "max_results": 50,
+                        },
+                        expected_output_type="json",
+                    ),
+                ],
+                expected_output="List of architecture-relevant file paths",
+            )
+        )
 
         # Step 2: Generate KG-based architecture diagram
         step_num += 1
         mermaid_spec = knowledge_graph.to_mermaid(max_entities=30)
-        steps.append(PlanStep(
-            step_number=step_num,
-            description="Render architecture diagram from knowledge graph",
-            agent_role=AgentRole.EXECUTOR,
-            tool_calls=[
-                ToolCall(
-                    tool_name="diagram.render",
-                    parameters={"type": "mermaid", "spec": mermaid_spec, "output_format": "svg"},
-                    expected_output_type="svg",
-                ),
-            ],
-            depends_on=[],
-            expected_output="SVG architecture diagram",
-        ))
+        steps.append(
+            PlanStep(
+                step_number=step_num,
+                description="Render architecture diagram from knowledge graph",
+                agent_role=AgentRole.EXECUTOR,
+                tool_calls=[
+                    ToolCall(
+                        tool_name="diagram.render",
+                        parameters={
+                            "type": "mermaid",
+                            "spec": mermaid_spec,
+                            "output_format": "svg",
+                        },
+                        expected_output_type="svg",
+                    ),
+                ],
+                depends_on=[],
+                expected_output="SVG architecture diagram",
+            )
+        )
 
         # Step 3: Activate each specialized sub-agent
         for agent_role in activated_agents:
             step_num += 1
-            steps.append(PlanStep(
-                step_number=step_num,
-                description=f"Run {agent_role.value} sub-agent for domain-specific analysis",
-                agent_role=agent_role,
-                tool_calls=[],  # sub-agents generate their own tool calls
-                depends_on=[1],
-                expected_output=f"Domain diagrams + sections from {agent_role.value}",
-            ))
+            steps.append(
+                PlanStep(
+                    step_number=step_num,
+                    description=f"Run {agent_role.value} sub-agent for domain-specific analysis",
+                    agent_role=agent_role,
+                    tool_calls=[],  # sub-agents generate their own tool calls
+                    depends_on=[1],
+                    expected_output=f"Domain diagrams + sections from {agent_role.value}",
+                )
+            )
 
         # Step 4: Refine documents with enhanced content
         step_num += 1
-        steps.append(PlanStep(
-            step_number=step_num,
-            description="Refine Word document with agent-generated content",
-            agent_role=AgentRole.EXECUTOR,
-            tool_calls=[
-                ToolCall(
-                    tool_name="docx.refine",
-                    parameters={
-                        "instructions": "Incorporate architecture diagrams and domain-specific sections",
-                        "references_to_KG": [e.id for e in knowledge_graph.entities[:20]],
-                    },
-                    expected_output_type="docx",
-                ),
-            ],
-            depends_on=[s.step_number for s in steps[1:]],
-            expected_output="Enhanced Word document",
-        ))
+        steps.append(
+            PlanStep(
+                step_number=step_num,
+                description="Refine Word document with agent-generated content",
+                agent_role=AgentRole.EXECUTOR,
+                tool_calls=[
+                    ToolCall(
+                        tool_name="docx.refine",
+                        parameters={
+                            "instructions": "Incorporate architecture diagrams and domain-specific sections",
+                            "references_to_KG": [e.id for e in knowledge_graph.entities[:20]],
+                        },
+                        expected_output_type="docx",
+                    ),
+                ],
+                depends_on=[s.step_number for s in steps[1:]],
+                expected_output="Enhanced Word document",
+            )
+        )
 
         # Step 5: Critic validation
         step_num += 1
-        steps.append(PlanStep(
-            step_number=step_num,
-            description="Validate all artifacts against evidence pointers",
-            agent_role=AgentRole.CRITIC,
-            tool_calls=[],
-            depends_on=[step_num - 1],
-            expected_output="Evidence coverage report",
-        ))
+        steps.append(
+            PlanStep(
+                step_number=step_num,
+                description="Validate all artifacts against evidence pointers",
+                agent_role=AgentRole.CRITIC,
+                tool_calls=[],
+                depends_on=[step_num - 1],
+                expected_output="Evidence coverage report",
+            )
+        )
 
         return AgentPlan(
             goal=f"Generate enhanced documentation for {repo_profile.repo_name}",

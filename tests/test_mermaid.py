@@ -2,27 +2,22 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
+from opendocs.core.models import (
+    DocumentMetadata,
+    DocumentModel,
+    ImageBlock,
+    MermaidBlock,
+    Section,
+)
+from opendocs.generators.diagram_extractor import DiagramExtractor, ImageCache
 from opendocs.generators.mermaid_renderer import (
     MermaidRenderer,
     _diagram_hash,
     _pako_deflate_base64,
     _plain_base64,
 )
-from opendocs.generators.diagram_extractor import DiagramExtractor, ImageCache
-from opendocs.core.models import (
-    DocumentModel,
-    DocumentMetadata,
-    Section,
-    MermaidBlock,
-    ImageBlock,
-    ParagraphBlock,
-)
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -35,6 +30,7 @@ FAKE_PNG = b"\x89PNG\r\n\x1a\n" + b"\x00" * 200  # fake but valid-looking PNG he
 # ---------------------------------------------------------------------------
 # MermaidRenderer – encoding helpers
 # ---------------------------------------------------------------------------
+
 
 class TestEncodingHelpers:
     def test_pako_deflate_base64_returns_string(self):
@@ -62,6 +58,7 @@ class TestEncodingHelpers:
 # ---------------------------------------------------------------------------
 # MermaidRenderer – render via mermaid.ink (mocked)
 # ---------------------------------------------------------------------------
+
 
 class TestMermaidRendererInk:
     def test_render_success(self, tmp_path):
@@ -140,6 +137,7 @@ class TestMermaidRendererInk:
 # MermaidRenderer – download_image
 # ---------------------------------------------------------------------------
 
+
 class TestDownloadImage:
     def test_download_success(self, tmp_path):
         renderer = MermaidRenderer(cache_dir=tmp_path, backend="ink")
@@ -188,6 +186,7 @@ class TestDownloadImage:
 # ImageCache
 # ---------------------------------------------------------------------------
 
+
 class TestImageCache:
     def test_get_mermaid(self, tmp_path):
         cache = ImageCache()
@@ -210,6 +209,7 @@ class TestImageCache:
 # DiagramExtractor (mocked renderer)
 # ---------------------------------------------------------------------------
 
+
 class TestDiagramExtractorWithRenderer:
     def _make_doc_with_diagrams(self, n_diagrams=2, n_images=1):
         blocks = []
@@ -219,10 +219,12 @@ class TestDiagramExtractorWithRenderer:
             blocks.append(MermaidBlock(code=code))
             diagrams.append(code)
         for i in range(n_images):
-            blocks.append(ImageBlock(
-                alt=f"Image {i}",
-                src=f"https://example.com/img_{i}.png",
-            ))
+            blocks.append(
+                ImageBlock(
+                    alt=f"Image {i}",
+                    src=f"https://example.com/img_{i}.png",
+                )
+            )
 
         return DocumentModel(
             metadata=DocumentMetadata(repo_name="Test"),
@@ -235,10 +237,12 @@ class TestDiagramExtractorWithRenderer:
         doc = self._make_doc_with_diagrams(2, 0)
 
         mock_renderer = MagicMock()
-        mock_renderer.render_batch = MagicMock(return_value={
-            0: tmp_path / "d0.png",
-            1: tmp_path / "d1.png",
-        })
+        mock_renderer.render_batch = MagicMock(
+            return_value={
+                0: tmp_path / "d0.png",
+                1: tmp_path / "d1.png",
+            }
+        )
         mock_renderer.render = MagicMock(return_value=None)
 
         extractor = DiagramExtractor(renderer=mock_renderer)
@@ -273,7 +277,9 @@ class TestDiagramExtractorWithRenderer:
 
         extractor = DiagramExtractor(renderer=mock_renderer)
         paths, cache = extractor.extract(
-            doc, tmp_path, kg_mermaid="graph TD\n    KG-->Entities",
+            doc,
+            tmp_path,
+            kg_mermaid="graph TD\n    KG-->Entities",
         )
 
         assert cache.kg_diagram == kg_png

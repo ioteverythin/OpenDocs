@@ -39,8 +39,8 @@ class DocxRefineTool:
             "instructions": instructions,
             "kg_refs": kg_refs,
             "source_path": source_path,
-            "output_path": "",          # TODO: path to refined docx
-            "sections_refined": 0,      # TODO: count
+            "output_path": "",  # TODO: path to refined docx
+            "sections_refined": 0,  # TODO: count
         }
 
 
@@ -69,6 +69,6 @@ class PptxRefineTool:
             "instructions": instructions,
             "kg_refs": kg_refs,
             "source_path": source_path,
-            "output_path": "",          # TODO: path to refined pptx
-            "slides_refined": 0,        # TODO: count
+            "output_path": "",  # TODO: path to refined pptx
+            "slides_refined": 0,  # TODO: count
         }

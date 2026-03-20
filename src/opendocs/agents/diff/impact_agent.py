@@ -12,14 +12,15 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
-from ...core.knowledge_graph import Entity, KnowledgeGraph, Relation
+from ...core.knowledge_graph import Entity, KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
 from .diff_agent import DiffSummary
 
 
 class DeltaKind(str, Enum):
     """Type of change to a KG element."""
+
     ADD = "add"
     UPDATE = "update"
     REMOVE = "remove"
@@ -28,6 +29,7 @@ class DeltaKind(str, Enum):
 @dataclass
 class EntityDelta:
     """A planned change to a KG entity."""
+
     entity_id: str
     kind: DeltaKind
     entity_name: str = ""
@@ -38,6 +40,7 @@ class EntityDelta:
 @dataclass
 class RelationDelta:
     """A planned change to a KG relation."""
+
     source_id: str
     target_id: str
     kind: DeltaKind
@@ -48,6 +51,7 @@ class RelationDelta:
 @dataclass
 class ImpactReport:
     """The impact of a diff on the knowledge graph."""
+
     entity_deltas: list[EntityDelta] = field(default_factory=list)
     relation_deltas: list[RelationDelta] = field(default_factory=list)
     impacted_output_formats: list[str] = field(default_factory=list)
@@ -104,12 +108,10 @@ class ImpactAgent(AgentBase):
             artifacts={
                 "impact_report": {
                     "entity_deltas": [
-                        {"id": d.entity_id, "kind": d.kind.value, "reason": d.reason}
-                        for d in report.entity_deltas
+                        {"id": d.entity_id, "kind": d.kind.value, "reason": d.reason} for d in report.entity_deltas
                     ],
                     "relation_deltas": [
-                        {"src": d.source_id, "tgt": d.target_id, "kind": d.kind.value}
-                        for d in report.relation_deltas
+                        {"src": d.source_id, "tgt": d.target_id, "kind": d.kind.value} for d in report.relation_deltas
                     ],
                     "impacted_formats": report.impacted_output_formats,
                     "total_deltas": report.total_deltas,
@@ -155,35 +157,43 @@ class ImpactAgent(AgentBase):
                 else:
                     kind = DeltaKind.UPDATE
 
-                entity_deltas.append(EntityDelta(
-                    entity_id=entity.id,
-                    kind=kind,
-                    entity_name=entity.name,
-                    reason=f"File {fd.path} was {fd.status}",
-                    affected_files=[fd.path],
-                ))
+                entity_deltas.append(
+                    EntityDelta(
+                        entity_id=entity.id,
+                        kind=kind,
+                        entity_name=entity.name,
+                        reason=f"File {fd.path} was {fd.status}",
+                        affected_files=[fd.path],
+                    )
+                )
 
             # If a changed file has no KG entity, it might be new → ADD
             if not matching_entities and fd.status == "added":
-                entity_deltas.append(EntityDelta(
-                    entity_id=f"new:{fd.path}",
-                    kind=DeltaKind.ADD,
-                    entity_name=fd.path,
-                    reason=f"New file {fd.path} has no KG entity yet",
-                    affected_files=[fd.path],
-                ))
+                entity_deltas.append(
+                    EntityDelta(
+                        entity_id=f"new:{fd.path}",
+                        kind=DeltaKind.ADD,
+                        entity_name=fd.path,
+                        reason=f"New file {fd.path} has no KG entity yet",
+                        affected_files=[fd.path],
+                    )
+                )
 
         # Trace downstream relations
         affected_entity_ids = {d.entity_id for d in entity_deltas}
         for relation in knowledge_graph.relations:
             if relation.source_id in affected_entity_ids or relation.target_id in affected_entity_ids:
-                relation_deltas.append(RelationDelta(
-                    source_id=relation.source_id,
-                    target_id=relation.target_id,
-                    kind=DeltaKind.UPDATE,
-                    relation_type=relation.relation_type.value if hasattr(relation.relation_type, 'value') else str(relation.relation_type),
-                    reason="Connected entity was modified",
-                ))
+                relation_deltas.append(
+                    RelationDelta(
+                        source_id=relation.source_id,
+                        target_id=relation.target_id,
+                        kind=DeltaKind.UPDATE,
+                        relation_type=relation.relation_type.value
+                        if hasattr(relation.relation_type, "value")
+                        else str(relation.relation_type),
+                        reason="Connected entity was modified",
+                    )
+                )
 
         # All formats potentially impacted if any entity changed
         if entity_deltas:
@@ -198,9 +208,7 @@ class ImpactAgent(AgentBase):
             confidence=confidence,
         )
 
-    def _extract_diff_summary(
-        self, prior_results: list[AgentResult] | None
-    ) -> DiffSummary | None:
+    def _extract_diff_summary(self, prior_results: list[AgentResult] | None) -> DiffSummary | None:
         """Try to find a DiffSummary in prior results."""
         if not prior_results:
             return None

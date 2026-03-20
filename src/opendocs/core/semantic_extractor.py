@@ -19,16 +19,12 @@ from .knowledge_graph import (
 )
 from .models import (
     CodeBlock,
-    ContentBlock,
     DocumentModel,
     HeadingBlock,
     ListBlock,
-    MermaidBlock,
     ParagraphBlock,
-    Section,
     TableBlock,
 )
-
 
 # ---------------------------------------------------------------------------
 # Technology dictionaries (curated)
@@ -224,6 +220,7 @@ _MERMAID_NODE_RE = re.compile(r"(\w+)\[([^\]]+)\]")
 # Extractor
 # ---------------------------------------------------------------------------
 
+
 class SemanticExtractor:
     """Deterministic semantic entity and relation extractor.
 
@@ -297,108 +294,167 @@ class SemanticExtractor:
             if self._word_match(name, full_text):
                 canonical = props.get("canonical", name.title())
                 eid = self._make_id("lang", canonical)
-                kg.add_entity(Entity(
-                    id=eid, name=canonical,
-                    entity_type=EntityType.LANGUAGE,
-                    properties=props, confidence=0.9,
-                ))
-                kg.add_relation(Relation(
-                    source_id="project_root", target_id=eid,
-                    relation_type=RelationType.USES, confidence=0.9,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=canonical,
+                        entity_type=EntityType.LANGUAGE,
+                        properties=props,
+                        confidence=0.9,
+                    )
+                )
+                kg.add_relation(
+                    Relation(
+                        source_id="project_root",
+                        target_id=eid,
+                        relation_type=RelationType.USES,
+                        confidence=0.9,
+                    )
+                )
 
         for name, props in _FRAMEWORKS.items():
             if self._word_match(name, full_text):
                 canonical = props.get("canonical", name.title())
                 eid = self._make_id("fw", canonical)
-                kg.add_entity(Entity(
-                    id=eid, name=canonical,
-                    entity_type=EntityType.FRAMEWORK,
-                    properties=props, confidence=0.85,
-                ))
-                kg.add_relation(Relation(
-                    source_id="project_root", target_id=eid,
-                    relation_type=RelationType.USES, confidence=0.85,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=canonical,
+                        entity_type=EntityType.FRAMEWORK,
+                        properties=props,
+                        confidence=0.85,
+                    )
+                )
+                kg.add_relation(
+                    Relation(
+                        source_id="project_root",
+                        target_id=eid,
+                        relation_type=RelationType.USES,
+                        confidence=0.85,
+                    )
+                )
 
         for name, props in _DATABASES.items():
             if self._word_match(name, full_text):
                 canonical = props.get("canonical", name.title())
                 eid = self._make_id("db", canonical)
-                kg.add_entity(Entity(
-                    id=eid, name=canonical,
-                    entity_type=EntityType.DATABASE,
-                    properties=props, confidence=0.9,
-                ))
-                kg.add_relation(Relation(
-                    source_id="project_root", target_id=eid,
-                    relation_type=RelationType.STORES_IN, confidence=0.8,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=canonical,
+                        entity_type=EntityType.DATABASE,
+                        properties=props,
+                        confidence=0.9,
+                    )
+                )
+                kg.add_relation(
+                    Relation(
+                        source_id="project_root",
+                        target_id=eid,
+                        relation_type=RelationType.STORES_IN,
+                        confidence=0.8,
+                    )
+                )
 
         for name, props in _PROTOCOLS.items():
             if self._word_match(name, full_text):
                 canonical = props.get("canonical", name.upper())
                 eid = self._make_id("proto", canonical)
-                kg.add_entity(Entity(
-                    id=eid, name=canonical,
-                    entity_type=EntityType.PROTOCOL,
-                    properties=props, confidence=0.9,
-                ))
-                kg.add_relation(Relation(
-                    source_id="project_root", target_id=eid,
-                    relation_type=RelationType.COMMUNICATES_VIA, confidence=0.85,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=canonical,
+                        entity_type=EntityType.PROTOCOL,
+                        properties=props,
+                        confidence=0.9,
+                    )
+                )
+                kg.add_relation(
+                    Relation(
+                        source_id="project_root",
+                        target_id=eid,
+                        relation_type=RelationType.COMMUNICATES_VIA,
+                        confidence=0.85,
+                    )
+                )
 
         for name, props in _CLOUD_SERVICES.items():
             if name.lower() in full_text:
                 canonical = props.get("canonical", name.title())
                 eid = self._make_id("cloud", canonical)
-                kg.add_entity(Entity(
-                    id=eid, name=canonical,
-                    entity_type=EntityType.CLOUD_SERVICE,
-                    properties=props, confidence=0.85,
-                ))
-                kg.add_relation(Relation(
-                    source_id="project_root", target_id=eid,
-                    relation_type=RelationType.INTEGRATES_WITH, confidence=0.8,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=canonical,
+                        entity_type=EntityType.CLOUD_SERVICE,
+                        properties=props,
+                        confidence=0.85,
+                    )
+                )
+                kg.add_relation(
+                    Relation(
+                        source_id="project_root",
+                        target_id=eid,
+                        relation_type=RelationType.INTEGRATES_WITH,
+                        confidence=0.8,
+                    )
+                )
 
         for name, props in _HARDWARE.items():
             if self._word_match(name, full_text):
                 canonical = props.get("canonical", name.title())
                 eid = self._make_id("hw", canonical)
-                kg.add_entity(Entity(
-                    id=eid, name=canonical,
-                    entity_type=EntityType.HARDWARE,
-                    properties=props, confidence=0.9,
-                ))
-                kg.add_relation(Relation(
-                    source_id="project_root", target_id=eid,
-                    relation_type=RelationType.USES, confidence=0.85,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=canonical,
+                        entity_type=EntityType.HARDWARE,
+                        properties=props,
+                        confidence=0.9,
+                    )
+                )
+                kg.add_relation(
+                    Relation(
+                        source_id="project_root",
+                        target_id=eid,
+                        relation_type=RelationType.USES,
+                        confidence=0.85,
+                    )
+                )
 
         for name, props in _PLATFORMS.items():
             if self._word_match(name, full_text):
                 canonical = props.get("canonical", name.title())
                 eid = self._make_id("plat", canonical)
-                kg.add_entity(Entity(
-                    id=eid, name=canonical,
-                    entity_type=EntityType.PLATFORM,
-                    properties=props, confidence=0.8,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=canonical,
+                        entity_type=EntityType.PLATFORM,
+                        properties=props,
+                        confidence=0.8,
+                    )
+                )
 
         for name, canonical in _LICENSES.items():
             if name in full_text:
                 eid = self._make_id("lic", canonical)
-                kg.add_entity(Entity(
-                    id=eid, name=canonical,
-                    entity_type=EntityType.LICENSE_TYPE,
-                    confidence=0.95,
-                ))
-                kg.add_relation(Relation(
-                    source_id="project_root", target_id=eid,
-                    relation_type=RelationType.LICENSED_UNDER, confidence=0.95,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=canonical,
+                        entity_type=EntityType.LICENSE_TYPE,
+                        confidence=0.95,
+                    )
+                )
+                kg.add_relation(
+                    Relation(
+                        source_id="project_root",
+                        target_id=eid,
+                        relation_type=RelationType.LICENSED_UNDER,
+                        confidence=0.95,
+                    )
+                )
                 break  # Usually only one license
 
     # ------------------------------------------------------------------
@@ -408,12 +464,20 @@ class SemanticExtractor:
     def _extract_from_code_blocks(self, doc: DocumentModel, kg: KnowledgeGraph) -> None:
         # Only real programming languages, not data formats
         lang_to_type = {
-            "python": "Python", "py": "Python",
-            "javascript": "JavaScript", "js": "JavaScript",
-            "typescript": "TypeScript", "ts": "TypeScript",
-            "java": "Java", "go": "Go", "rust": "Rust",
-            "ruby": "Ruby", "php": "PHP", "bash": "Bash",
-            "shell": "Shell", "dockerfile": "Docker",
+            "python": "Python",
+            "py": "Python",
+            "javascript": "JavaScript",
+            "js": "JavaScript",
+            "typescript": "TypeScript",
+            "ts": "TypeScript",
+            "java": "Java",
+            "go": "Go",
+            "rust": "Rust",
+            "ruby": "Ruby",
+            "php": "PHP",
+            "bash": "Bash",
+            "shell": "Shell",
+            "dockerfile": "Docker",
         }
 
         for block in doc.all_blocks:
@@ -422,11 +486,14 @@ class SemanticExtractor:
                 if lang_key in lang_to_type:
                     name = lang_to_type[lang_key]
                     eid = self._make_id("lang", name)
-                    kg.add_entity(Entity(
-                        id=eid, name=name,
-                        entity_type=EntityType.LANGUAGE,
-                        confidence=0.95,
-                    ))
+                    kg.add_entity(
+                        Entity(
+                            id=eid,
+                            name=name,
+                            entity_type=EntityType.LANGUAGE,
+                            confidence=0.95,
+                        )
+                    )
 
                 # Extract config keys
                 if lang_key in ("yaml", "yml", "json", "toml"):
@@ -439,12 +506,15 @@ class SemanticExtractor:
             key = m.group(1)
             if len(key) > 2 and key not in ("type", "name", "version", "description"):
                 eid = self._make_id("cfg", key)
-                kg.add_entity(Entity(
-                    id=eid, name=key,
-                    entity_type=EntityType.CONFIGURATION,
-                    properties={"format": "yaml/json"},
-                    confidence=0.7,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=key,
+                        entity_type=EntityType.CONFIGURATION,
+                        properties={"format": "yaml/json"},
+                        confidence=0.7,
+                    )
+                )
 
     # ------------------------------------------------------------------
     # Pass 4: Tables
@@ -467,7 +537,10 @@ class SemanticExtractor:
 
     def _extract_api_table(self, table: TableBlock, kg: KnowledgeGraph) -> None:
         headers_lower = [h.lower() for h in table.headers]
-        path_col = next((i for i, h in enumerate(headers_lower) if "endpoint" in h or "path" in h or "route" in h), None)
+        path_col = next(
+            (i for i, h in enumerate(headers_lower) if "endpoint" in h or "path" in h or "route" in h),
+            None,
+        )
         method_col = next((i for i, h in enumerate(headers_lower) if "method" in h), None)
         desc_col = next((i for i, h in enumerate(headers_lower) if "description" in h or "desc" in h), None)
 
@@ -478,21 +551,31 @@ class SemanticExtractor:
                 desc = row[desc_col].strip() if desc_col is not None and desc_col < len(row) else ""
 
                 eid = self._make_id("api", f"{method}_{path}")
-                kg.add_entity(Entity(
-                    id=eid, name=f"{method} {path}" if method else path,
-                    entity_type=EntityType.API_ENDPOINT,
-                    properties={"path": path, "method": method, "description": desc},
-                    confidence=0.95,
-                ))
-                kg.add_relation(Relation(
-                    source_id="project_root", target_id=eid,
-                    relation_type=RelationType.EXPOSES, confidence=0.95,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=f"{method} {path}" if method else path,
+                        entity_type=EntityType.API_ENDPOINT,
+                        properties={"path": path, "method": method, "description": desc},
+                        confidence=0.95,
+                    )
+                )
+                kg.add_relation(
+                    Relation(
+                        source_id="project_root",
+                        target_id=eid,
+                        relation_type=RelationType.EXPOSES,
+                        confidence=0.95,
+                    )
+                )
 
     def _extract_metric_table(self, table: TableBlock, kg: KnowledgeGraph) -> None:
         headers_lower = [h.lower() for h in table.headers]
         name_col = next((i for i, h in enumerate(headers_lower) if "metric" in h or "name" in h), 0)
-        value_col = next((i for i, h in enumerate(headers_lower) if "value" in h), 1 if len(headers_lower) > 1 else None)
+        value_col = next(
+            (i for i, h in enumerate(headers_lower) if "value" in h),
+            1 if len(headers_lower) > 1 else None,
+        )
 
         for row in table.rows:
             if name_col < len(row):
@@ -500,12 +583,15 @@ class SemanticExtractor:
                 metric_val = row[value_col].strip() if value_col is not None and value_col < len(row) else ""
 
                 eid = self._make_id("metric", metric_name)
-                kg.add_entity(Entity(
-                    id=eid, name=metric_name,
-                    entity_type=EntityType.METRIC,
-                    properties={"value": metric_val},
-                    confidence=0.9,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=metric_name,
+                        entity_type=EntityType.METRIC,
+                        properties={"value": metric_val},
+                        confidence=0.9,
+                    )
+                )
 
     # ------------------------------------------------------------------
     # Pass 5: Mermaid diagrams
@@ -518,13 +604,16 @@ class SemanticExtractor:
                 node_id = m.group(1).strip()
                 node_label = m.group(2).strip()
                 eid = self._make_id("comp", node_label)
-                kg.add_entity(Entity(
-                    id=eid, name=node_label,
-                    entity_type=EntityType.COMPONENT,
-                    properties={"mermaid_id": node_id},
-                    source_text=code,
-                    confidence=0.85,
-                ))
+                kg.add_entity(
+                    Entity(
+                        id=eid,
+                        name=node_label,
+                        entity_type=EntityType.COMPONENT,
+                        properties={"mermaid_id": node_id},
+                        source_text=code,
+                        confidence=0.85,
+                    )
+                )
 
             # Extract edges
             for m in _MERMAID_EDGE_RE.finditer(code):
@@ -539,18 +628,24 @@ class SemanticExtractor:
                 # Ensure entities exist
                 for eid, name in [(src_id, src), (tgt_id, tgt)]:
                     if not kg.get_entity(eid):
-                        kg.add_entity(Entity(
-                            id=eid, name=name,
-                            entity_type=EntityType.COMPONENT,
-                            confidence=0.7,
-                        ))
+                        kg.add_entity(
+                            Entity(
+                                id=eid,
+                                name=name,
+                                entity_type=EntityType.COMPONENT,
+                                confidence=0.7,
+                            )
+                        )
 
-                kg.add_relation(Relation(
-                    source_id=src_id, target_id=tgt_id,
-                    relation_type=RelationType.CONNECTS_TO,
-                    properties={"label": label} if label else {},
-                    confidence=0.8,
-                ))
+                kg.add_relation(
+                    Relation(
+                        source_id=src_id,
+                        target_id=tgt_id,
+                        relation_type=RelationType.CONNECTS_TO,
+                        properties={"label": label} if label else {},
+                        confidence=0.8,
+                    )
+                )
 
     def _find_mermaid_entity(self, mermaid_ref: str, kg: KnowledgeGraph) -> str | None:
         """Find an entity ID matching a mermaid node reference."""
@@ -570,8 +665,7 @@ class SemanticExtractor:
         for block in doc.all_blocks:
             if isinstance(block, HeadingBlock):
                 in_features = any(
-                    kw in block.text.lower()
-                    for kw in ["feature", "highlights", "capabilities", "what it does"]
+                    kw in block.text.lower() for kw in ["feature", "highlights", "capabilities", "what it does"]
                 )
             elif isinstance(block, ListBlock) and in_features:
                 for item in block.items[:15]:  # Cap at 15
@@ -580,16 +674,23 @@ class SemanticExtractor:
                     name = clean.split(":")[0].split("—")[0].split("–")[0].strip()[:80]
                     if len(name) > 3:
                         eid = self._make_id("feat", name)
-                        kg.add_entity(Entity(
-                            id=eid, name=name,
-                            entity_type=EntityType.FEATURE,
-                            properties={"description": clean[:200]},
-                            confidence=0.75,
-                        ))
-                        kg.add_relation(Relation(
-                            source_id="project_root", target_id=eid,
-                            relation_type=RelationType.PROVIDES, confidence=0.75,
-                        ))
+                        kg.add_entity(
+                            Entity(
+                                id=eid,
+                                name=name,
+                                entity_type=EntityType.FEATURE,
+                                properties={"description": clean[:200]},
+                                confidence=0.75,
+                            )
+                        )
+                        kg.add_relation(
+                            Relation(
+                                source_id="project_root",
+                                target_id=eid,
+                                relation_type=RelationType.PROVIDES,
+                                confidence=0.75,
+                            )
+                        )
 
     # ------------------------------------------------------------------
     # Pass 7: Metrics from text
@@ -601,15 +702,18 @@ class SemanticExtractor:
                 for m in _METRIC_RE.finditer(block.text):
                     value = m.group(1)
                     unit = m.group(2)
-                    context = block.text[max(0, m.start() - 30):m.end() + 20].strip()
+                    context = block.text[max(0, m.start() - 30) : m.end() + 20].strip()
                     eid = self._make_id("metric", f"{value}{unit}")
-                    kg.add_entity(Entity(
-                        id=eid, name=f"{value} {unit}",
-                        entity_type=EntityType.METRIC,
-                        properties={"value": value, "unit": unit, "context": context},
-                        source_text=context,
-                        confidence=0.7,
-                    ))
+                    kg.add_entity(
+                        Entity(
+                            id=eid,
+                            name=f"{value} {unit}",
+                            entity_type=EntityType.METRIC,
+                            properties={"value": value, "unit": unit, "context": context},
+                            source_text=context,
+                            confidence=0.7,
+                        )
+                    )
 
     # ------------------------------------------------------------------
     # Pass 8: API endpoints from text
@@ -626,22 +730,29 @@ class SemanticExtractor:
             for m in _API_PATH_RE.finditer(text):
                 path = m.group(1).strip("`").strip()
                 # Check for adjacent HTTP method
-                before = text[max(0, m.start() - 10):m.start()]
+                before = text[max(0, m.start() - 10) : m.start()]
                 method_m = _HTTP_METHOD_RE.search(before)
                 method = method_m.group(1) if method_m else ""
 
                 eid = self._make_id("api", f"{method}_{path}")
                 if not kg.get_entity(eid):
-                    kg.add_entity(Entity(
-                        id=eid, name=f"{method} {path}" if method else path,
-                        entity_type=EntityType.API_ENDPOINT,
-                        properties={"path": path, "method": method},
-                        confidence=0.8,
-                    ))
-                    kg.add_relation(Relation(
-                        source_id="project_root", target_id=eid,
-                        relation_type=RelationType.EXPOSES, confidence=0.8,
-                    ))
+                    kg.add_entity(
+                        Entity(
+                            id=eid,
+                            name=f"{method} {path}" if method else path,
+                            entity_type=EntityType.API_ENDPOINT,
+                            properties={"path": path, "method": method},
+                            confidence=0.8,
+                        )
+                    )
+                    kg.add_relation(
+                        Relation(
+                            source_id="project_root",
+                            target_id=eid,
+                            relation_type=RelationType.EXPOSES,
+                            confidence=0.8,
+                        )
+                    )
 
     # ------------------------------------------------------------------
     # Pass 9: Infer relationships
@@ -657,21 +768,27 @@ class SemanticExtractor:
         for comp in components:
             for db in databases:
                 if db.name.lower() in comp.name.lower() or comp.name.lower() in db.name.lower():
-                    kg.add_relation(Relation(
-                        source_id=comp.id, target_id=db.id,
-                        relation_type=RelationType.STORES_IN,
-                        confidence=0.6,
-                    ))
+                    kg.add_relation(
+                        Relation(
+                            source_id=comp.id,
+                            target_id=db.id,
+                            relation_type=RelationType.STORES_IN,
+                            confidence=0.6,
+                        )
+                    )
 
         # Components → Protocols
         for comp in components:
             for proto in protocols:
                 if proto.name.lower() in comp.name.lower():
-                    kg.add_relation(Relation(
-                        source_id=comp.id, target_id=proto.id,
-                        relation_type=RelationType.COMMUNICATES_VIA,
-                        confidence=0.6,
-                    ))
+                    kg.add_relation(
+                        Relation(
+                            source_id=comp.id,
+                            target_id=proto.id,
+                            relation_type=RelationType.COMMUNICATES_VIA,
+                            confidence=0.6,
+                        )
+                    )
 
         # Hardware → Platform (runs_on)
         hardware = kg.entities_of_type(EntityType.HARDWARE)
@@ -680,11 +797,14 @@ class SemanticExtractor:
             for plat in platforms:
                 if any(kw in plat.name.lower() for kw in ["linux", "ubuntu"]):
                     if hw.properties.get("type") == "sbc":
-                        kg.add_relation(Relation(
-                            source_id=hw.id, target_id=plat.id,
-                            relation_type=RelationType.RUNS_ON,
-                            confidence=0.5,
-                        ))
+                        kg.add_relation(
+                            Relation(
+                                source_id=hw.id,
+                                target_id=plat.id,
+                                relation_type=RelationType.RUNS_ON,
+                                confidence=0.5,
+                            )
+                        )
 
     # ------------------------------------------------------------------
     # Summary
@@ -738,8 +858,8 @@ class SemanticExtractor:
             # - preceded/followed by comma in a tech list
             # - in an install command
             tech_patterns = [
-                r"```\s*" + re.escape(word) + r"\b",       # code fence
-                r"`" + re.escape(word) + r"`",               # inline code
+                r"```\s*" + re.escape(word) + r"\b",  # code fence
+                r"`" + re.escape(word) + r"`",  # inline code
                 r"(?:written\s+in|built\s+with|using|language[s]?[:\s]+\w*\s*)" + re.escape(word) + r"\b",
             ]
             for tp in tech_patterns:

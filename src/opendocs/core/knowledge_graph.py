@@ -16,10 +16,10 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Entity types
 # ---------------------------------------------------------------------------
+
 
 class EntityType(str, Enum):
     """Classification of extracted entities."""
@@ -47,6 +47,7 @@ class EntityType(str, Enum):
 # Relation types
 # ---------------------------------------------------------------------------
 
+
 class RelationType(str, Enum):
     """Types of relationships between entities."""
 
@@ -69,6 +70,7 @@ class RelationType(str, Enum):
 # ---------------------------------------------------------------------------
 # Core KG models
 # ---------------------------------------------------------------------------
+
 
 class Entity(BaseModel):
     """A semantic entity extracted from the README."""
@@ -117,9 +119,9 @@ class KnowledgeGraph(BaseModel):
     extraction_stats: dict[str, int] = Field(default_factory=dict)
 
     # -- LLM-enhanced content (populated by LLMContentEnhancer) ----------
-    llm_blog: str = ""                           # Full blog post prose
+    llm_blog: str = ""  # Full blog post prose
     llm_faq: list[dict[str, str]] = Field(default_factory=list)  # [{q:, a:}]
-    llm_sections: dict[str, str] = Field(default_factory=dict)   # title -> rewritten prose
+    llm_sections: dict[str, str] = Field(default_factory=dict)  # title -> rewritten prose
 
     # -- Query helpers ---------------------------------------------------
 
@@ -185,9 +187,7 @@ class KnowledgeGraph(BaseModel):
         """
         entities = self.entities
         if max_entities > 0 and len(entities) > max_entities:
-            entities = sorted(
-                entities, key=lambda e: e.confidence, reverse=True
-            )[:max_entities]
+            entities = sorted(entities, key=lambda e: e.confidence, reverse=True)[:max_entities]
 
         valid_ids = {e.id for e in entities}
 
@@ -199,10 +199,22 @@ class KnowledgeGraph(BaseModel):
 
         # Architectural group ordering (most important first)
         type_order = [
-            "Project", "Component", "Feature", "Framework",
-            "Technology", "Language", "Cloud Service", "Platform",
-            "Database", "Api Endpoint", "Protocol", "Configuration",
-            "Metric", "Hardware", "Person Org", "License",
+            "Project",
+            "Component",
+            "Feature",
+            "Framework",
+            "Technology",
+            "Language",
+            "Cloud Service",
+            "Platform",
+            "Database",
+            "Api Endpoint",
+            "Protocol",
+            "Configuration",
+            "Metric",
+            "Hardware",
+            "Person Org",
+            "License",
             "Prerequisite",
         ]
 
@@ -214,7 +226,7 @@ class KnowledgeGraph(BaseModel):
             if not ents:
                 continue
             safe_sg = type_label.replace(" ", "_")
-            lines.append(f"    subgraph {safe_sg}[\"{type_label}\"]")
+            lines.append(f'    subgraph {safe_sg}["{type_label}"]')
             for e in ents[:8]:  # cap per group for readability
                 safe_id = e.id.replace("-", "_").replace(" ", "_")
                 safe_name = e.name.replace('"', "'")
@@ -226,7 +238,7 @@ class KnowledgeGraph(BaseModel):
             if not ents:
                 continue
             safe_sg = type_label.replace(" ", "_")
-            lines.append(f"    subgraph {safe_sg}[\"{type_label}\"]")
+            lines.append(f'    subgraph {safe_sg}["{type_label}"]')
             for e in ents[:8]:
                 safe_id = e.id.replace("-", "_").replace(" ", "_")
                 safe_name = e.name.replace('"', "'")

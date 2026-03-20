@@ -48,6 +48,7 @@ _MERMAID_INK_MAX_CHARS = 8_000  # rough safe limit before URL-length issues
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _pako_deflate_base64(text: str) -> str:
     """Compress text using zlib deflate (pako-compatible) and return
     URL-safe base64 encoding — the format mermaid.ink expects.
@@ -78,7 +79,9 @@ def _mmdc_available() -> bool:
     try:
         result = subprocess.run(
             ["npx", "--yes", "@mermaid-js/mermaid-cli", "--version"],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True,
+            text=True,
+            timeout=15,
         )
         return result.returncode == 0
     except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -88,6 +91,7 @@ def _mmdc_available() -> bool:
 # ---------------------------------------------------------------------------
 # Main renderer
 # ---------------------------------------------------------------------------
+
 
 class MermaidRenderer:
     """Render Mermaid diagrams to PNG image files.
@@ -218,10 +222,10 @@ class MermaidRenderer:
                 data = resp.content
                 # Basic raster image validation (check magic bytes)
                 if not (
-                    data[:8].startswith(b"\x89PNG")       # PNG
-                    or data[:2] == b"\xff\xd8"            # JPEG
-                    or data[:6] in (b"GIF87a", b"GIF89a") # GIF
-                    or data[:4] == b"RIFF"                # WebP
+                    data[:8].startswith(b"\x89PNG")  # PNG
+                    or data[:2] == b"\xff\xd8"  # JPEG
+                    or data[:6] in (b"GIF87a", b"GIF89a")  # GIF
+                    or data[:4] == b"RIFF"  # WebP
                 ):
                     logger.warning("Skipping non-raster image (%s): %s", ct, url)
                     return None
@@ -281,13 +285,20 @@ class MermaidRenderer:
         else:
             cmd = ["npx", "--yes", "@mermaid-js/mermaid-cli"]
 
-        cmd.extend([
-            "-i", str(tmp_input),
-            "-o", str(output_path),
-            "-t", self.theme,
-            "-b", "transparent",
-            "--scale", "2",
-        ])
+        cmd.extend(
+            [
+                "-i",
+                str(tmp_input),
+                "-o",
+                str(output_path),
+                "-t",
+                self.theme,
+                "-b",
+                "transparent",
+                "--scale",
+                "2",
+            ]
+        )
 
         try:
             result = subprocess.run(

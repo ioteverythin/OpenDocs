@@ -15,14 +15,14 @@ doc_tools      — docx.refine, pptx.refine
 publish_tools  — confluence.publish
 """
 
-from .contracts import ToolContract, ToolParameter, TOOL_REGISTRY
-from .repo_tools import RepoSearchTool, RepoReadTool, RepoDiffTool, RepoSummarizeTool
-from .diagram_tools import DiagramRenderTool
 from .chart_tools import ChartGenerateTool
-from .figma_tools import FigmaCreateFrameTool, FigmaAddNodesTool
-from .image_tools import ImageGenerateTool
+from .contracts import TOOL_REGISTRY, ToolContract, ToolParameter
+from .diagram_tools import DiagramRenderTool
 from .doc_tools import DocxRefineTool, PptxRefineTool
+from .figma_tools import FigmaAddNodesTool, FigmaCreateFrameTool
+from .image_tools import ImageGenerateTool
 from .publish_tools import ConfluencePublishTool
+from .repo_tools import RepoDiffTool, RepoReadTool, RepoSearchTool, RepoSummarizeTool
 
 __all__ = [
     "ToolContract",

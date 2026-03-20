@@ -73,8 +73,8 @@ class ExportTools:
         """Attempt to use the OpenDocs Word generator."""
         try:
             from opendocs.core.parser import ReadmeParser
-            from opendocs.generators.word_generator import WordGenerator
             from opendocs.generators.themes import get_theme
+            from opendocs.generators.word_generator import WordGenerator
 
             parser = ReadmeParser()
             doc_model = parser.parse(
@@ -131,7 +131,7 @@ class ExportTools:
         if not label_to_path:
             return
 
-        placeholder_re = re.compile(r'^\[Image:\s*(.+?)\]$')
+        placeholder_re = re.compile(r"^\[Image:\s*(.+?)\]$")
 
         doc = DocxDocument(str(docx_path))
         replaced = 0
@@ -177,7 +177,7 @@ class ExportTools:
         doc = DocxDocument()
 
         # Regex to detect Markdown image references: ![alt](path)
-        img_pattern = re.compile(r'^!\[([^\]]*)\]\(([^)]+)\)$')
+        img_pattern = re.compile(r"^!\[([^\]]*)\]\(([^)]+)\)$")
 
         for line in draft.content.splitlines():
             stripped = line.strip()
@@ -189,11 +189,12 @@ class ExportTools:
                 img_path = img_match.group(2)
                 try:
                     from pathlib import Path as P
+
                     p = P(img_path)
-                    if p.exists() and p.suffix.lower() in ('.png', '.jpg', '.jpeg', '.gif'):
+                    if p.exists() and p.suffix.lower() in (".png", ".jpg", ".jpeg", ".gif"):
                         doc.add_picture(str(p), width=Inches(5.5))
                         if alt_text:
-                            doc.add_paragraph(alt_text, style='Caption')
+                            doc.add_paragraph(alt_text, style="Caption")
                         logger.info("Embedded diagram: %s", alt_text or img_path)
                         continue
                 except Exception as exc:
@@ -253,7 +254,7 @@ class ExportTools:
     def _fallback_pdf(self, draft: DraftDocument, out_path: Path) -> Path:
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet
-        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 
         doc = SimpleDocTemplate(str(out_path), pagesize=A4)
         styles = getSampleStyleSheet()

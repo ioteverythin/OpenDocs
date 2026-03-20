@@ -7,7 +7,7 @@ from pathlib import Path
 from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE
-from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.enum.text import PP_ALIGN
 from pptx.util import Emu, Inches, Pt
 
 from ..core.models import (
@@ -16,7 +16,6 @@ from ..core.models import (
     ContentBlock,
     DocumentModel,
     GenerationResult,
-    HeadingBlock,
     ImageBlock,
     ListBlock,
     MermaidBlock,
@@ -46,9 +45,7 @@ class PptxGenerator(BaseGenerator):
             prs.save(str(output_path))
             return GenerationResult(format=self.format, output_path=output_path)
         except Exception as exc:
-            return GenerationResult(
-                format=self.format, output_path=output_path, success=False, error=str(exc)
-            )
+            return GenerationResult(format=self.format, output_path=output_path, success=False, error=str(exc))
 
     # ------------------------------------------------------------------
     # Builder
@@ -96,22 +93,31 @@ class PptxGenerator(BaseGenerator):
         self._add_rect(slide, 0, 0, Inches(0.5), prs.slide_height, Colors.ACCENT)
 
         # Title
-        title_text = (self.tvars.project_name if self.tvars.has_values
-                       else doc.metadata.repo_name) or "Project Overview"
+        title_text = (
+            self.tvars.project_name if self.tvars.has_values else doc.metadata.repo_name
+        ) or "Project Overview"
         self._add_textbox(
             slide,
             text=title_text,
-            left=Inches(1.5), top=Inches(1.8),
-            width=Inches(10), height=Inches(1.5),
-            font_size=Pt(48), bold=True,
-            color=Colors.WHITE, alignment=PP_ALIGN.LEFT,
+            left=Inches(1.5),
+            top=Inches(1.8),
+            width=Inches(10),
+            height=Inches(1.5),
+            font_size=Pt(48),
+            bold=True,
+            color=Colors.WHITE,
+            alignment=PP_ALIGN.LEFT,
             font_name=Fonts.HEADING,
         )
 
         # Subtitle divider
         self._add_rect(
-            slide, Inches(1.5), Inches(3.5),
-            Inches(3), Inches(0.06), Colors.ACCENT,
+            slide,
+            Inches(1.5),
+            Inches(3.5),
+            Inches(3),
+            Inches(0.06),
+            Colors.ACCENT,
         )
 
         # Description
@@ -119,10 +125,13 @@ class PptxGenerator(BaseGenerator):
             self._add_textbox(
                 slide,
                 text=doc.metadata.description[:180],
-                left=Inches(1.5), top=Inches(3.8),
-                width=Inches(9), height=Inches(1.2),
+                left=Inches(1.5),
+                top=Inches(3.8),
+                width=Inches(9),
+                height=Inches(1.2),
                 font_size=Pt(18),
-                color=Colors.PRIMARY_LIGHT, alignment=PP_ALIGN.LEFT,
+                color=Colors.PRIMARY_LIGHT,
+                alignment=PP_ALIGN.LEFT,
             )
 
         # Footer info — with template variables
@@ -133,23 +142,34 @@ class PptxGenerator(BaseGenerator):
             footer_parts.append(f"Author: {self.tvars.author}")
         if self.tvars.version:
             footer_parts.append(f"v{self.tvars.version}")
-        date_str = (self.tvars.date if self.tvars.has_values
-                     else (doc.metadata.generated_at[:10] if doc.metadata.generated_at else ""))
+        date_str = (
+            self.tvars.date
+            if self.tvars.has_values
+            else (doc.metadata.generated_at[:10] if doc.metadata.generated_at else "")
+        )
         if date_str:
             footer_parts.append(date_str)
         footer_text = "  ·  ".join(footer_parts)
         self._add_textbox(
-            slide, text=footer_text,
-            left=Inches(1.5), top=Inches(6.5),
-            width=Inches(8), height=Inches(0.4),
+            slide,
+            text=footer_text,
+            left=Inches(1.5),
+            top=Inches(6.5),
+            width=Inches(8),
+            height=Inches(0.4),
             font_size=Pt(11),
-            color=Colors.MUTED, alignment=PP_ALIGN.LEFT,
+            color=Colors.MUTED,
+            alignment=PP_ALIGN.LEFT,
         )
 
         # Bottom accent bar
         self._add_rect(
-            slide, 0, Emu(prs.slide_height - Inches(0.08)),
-            prs.slide_width, Inches(0.08), Colors.ACCENT,
+            slide,
+            0,
+            Emu(prs.slide_height - Inches(0.08)),
+            prs.slide_width,
+            Inches(0.08),
+            Colors.ACCENT,
         )
 
     def _add_agenda_slide(self, prs: Presentation, titles: list[str]) -> None:
@@ -160,17 +180,26 @@ class PptxGenerator(BaseGenerator):
 
         # Title
         self._add_textbox(
-            slide, text="Agenda",
-            left=Inches(0.8), top=Inches(0.4),
-            width=Inches(11), height=Inches(1),
-            font_size=Pt(36), bold=True, color=Colors.PRIMARY_DARK,
+            slide,
+            text="Agenda",
+            left=Inches(0.8),
+            top=Inches(0.4),
+            width=Inches(11),
+            height=Inches(1),
+            font_size=Pt(36),
+            bold=True,
+            color=Colors.PRIMARY_DARK,
             font_name=Fonts.HEADING,
         )
 
         # Underline
         self._add_rect(
-            slide, Inches(0.8), Inches(1.3),
-            Inches(2), Inches(0.05), Colors.ACCENT,
+            slide,
+            Inches(0.8),
+            Inches(1.3),
+            Inches(2),
+            Inches(0.05),
+            Colors.ACCENT,
         )
 
         # Numbered items
@@ -180,10 +209,14 @@ class PptxGenerator(BaseGenerator):
         body = "\n\n".join(lines)
 
         self._add_textbox(
-            slide, text=body,
-            left=Inches(1.2), top=Inches(1.8),
-            width=Inches(10), height=Inches(5),
-            font_size=Pt(17), color=Colors.TEXT,
+            slide,
+            text=body,
+            left=Inches(1.2),
+            top=Inches(1.8),
+            width=Inches(10),
+            height=Inches(5),
+            font_size=Pt(17),
+            color=Colors.TEXT,
         )
 
     def _add_section_divider(self, prs: Presentation, title: str) -> None:
@@ -193,24 +226,37 @@ class PptxGenerator(BaseGenerator):
 
         # Accent stripe across the middle
         self._add_rect(
-            slide, 0, Inches(3.3),
-            prs.slide_width, Inches(0.06), Colors.ACCENT,
+            slide,
+            0,
+            Inches(3.3),
+            prs.slide_width,
+            Inches(0.06),
+            Colors.ACCENT,
         )
 
         # Section title
         self._add_textbox(
-            slide, text=title,
-            left=Inches(1.5), top=Inches(2.2),
-            width=Inches(10), height=Inches(1),
-            font_size=Pt(40), bold=True,
-            color=Colors.WHITE, alignment=PP_ALIGN.LEFT,
+            slide,
+            text=title,
+            left=Inches(1.5),
+            top=Inches(2.2),
+            width=Inches(10),
+            height=Inches(1),
+            font_size=Pt(40),
+            bold=True,
+            color=Colors.WHITE,
+            alignment=PP_ALIGN.LEFT,
             font_name=Fonts.HEADING,
         )
 
         # Decorative corner
         self._add_rect(
-            slide, Inches(1.5), Inches(3.6),
-            Inches(1.5), Inches(0.04), Colors.ACCENT,
+            slide,
+            Inches(1.5),
+            Inches(3.6),
+            Inches(1.5),
+            Inches(0.04),
+            Colors.ACCENT,
         )
 
     def _add_summary_slide(self, prs: Presentation, doc: DocumentModel) -> None:
@@ -220,16 +266,25 @@ class PptxGenerator(BaseGenerator):
         self._add_rect(slide, 0, 0, Inches(0.15), prs.slide_height, Colors.PRIMARY)
 
         self._add_textbox(
-            slide, text="Document Summary",
-            left=Inches(0.8), top=Inches(0.4),
-            width=Inches(11), height=Inches(1),
-            font_size=Pt(32), bold=True, color=Colors.PRIMARY_DARK,
+            slide,
+            text="Document Summary",
+            left=Inches(0.8),
+            top=Inches(0.4),
+            width=Inches(11),
+            height=Inches(1),
+            font_size=Pt(32),
+            bold=True,
+            color=Colors.PRIMARY_DARK,
             font_name=Fonts.HEADING,
         )
 
         self._add_rect(
-            slide, Inches(0.8), Inches(1.3),
-            Inches(2.5), Inches(0.05), Colors.ACCENT,
+            slide,
+            Inches(0.8),
+            Inches(1.3),
+            Inches(2.5),
+            Inches(0.05),
+            Colors.ACCENT,
         )
 
         # Stat cards
@@ -244,24 +299,37 @@ class PptxGenerator(BaseGenerator):
             left = Inches(1.0 + i * 3)
             # Card background
             self._add_rounded_rect(
-                slide, left, Inches(2.2),
-                Inches(2.5), Inches(2.5), Colors.BG_LIGHT,
+                slide,
+                left,
+                Inches(2.2),
+                Inches(2.5),
+                Inches(2.5),
+                Colors.BG_LIGHT,
             )
             # Value
             self._add_textbox(
-                slide, text=value,
-                left=left, top=Inches(2.6),
-                width=Inches(2.5), height=Inches(1.2),
-                font_size=Pt(42), bold=True,
-                color=Colors.PRIMARY_DARK, alignment=PP_ALIGN.CENTER,
+                slide,
+                text=value,
+                left=left,
+                top=Inches(2.6),
+                width=Inches(2.5),
+                height=Inches(1.2),
+                font_size=Pt(42),
+                bold=True,
+                color=Colors.PRIMARY_DARK,
+                alignment=PP_ALIGN.CENTER,
             )
             # Label
             self._add_textbox(
-                slide, text=label,
-                left=left, top=Inches(3.8),
-                width=Inches(2.5), height=Inches(0.6),
+                slide,
+                text=label,
+                left=left,
+                top=Inches(3.8),
+                width=Inches(2.5),
+                height=Inches(0.6),
                 font_size=Pt(14),
-                color=Colors.MUTED, alignment=PP_ALIGN.CENTER,
+                color=Colors.MUTED,
+                alignment=PP_ALIGN.CENTER,
             )
 
     def _add_closing_slide(self, prs: Presentation, doc: DocumentModel) -> None:
@@ -272,39 +340,60 @@ class PptxGenerator(BaseGenerator):
         self._add_rect(slide, 0, 0, Inches(0.5), prs.slide_height, Colors.ACCENT)
 
         self._add_textbox(
-            slide, text="Thank You",
-            left=Inches(1.5), top=Inches(2.0),
-            width=Inches(10), height=Inches(1.5),
-            font_size=Pt(52), bold=True,
-            color=Colors.WHITE, alignment=PP_ALIGN.LEFT,
+            slide,
+            text="Thank You",
+            left=Inches(1.5),
+            top=Inches(2.0),
+            width=Inches(10),
+            height=Inches(1.5),
+            font_size=Pt(52),
+            bold=True,
+            color=Colors.WHITE,
+            alignment=PP_ALIGN.LEFT,
             font_name=Fonts.HEADING,
         )
 
         self._add_rect(
-            slide, Inches(1.5), Inches(3.6),
-            Inches(3), Inches(0.06), Colors.ACCENT,
+            slide,
+            Inches(1.5),
+            Inches(3.6),
+            Inches(3),
+            Inches(0.06),
+            Colors.ACCENT,
         )
 
         if doc.metadata.repo_url:
             self._add_textbox(
-                slide, text=doc.metadata.repo_url,
-                left=Inches(1.5), top=Inches(4.0),
-                width=Inches(9), height=Inches(0.6),
+                slide,
+                text=doc.metadata.repo_url,
+                left=Inches(1.5),
+                top=Inches(4.0),
+                width=Inches(9),
+                height=Inches(0.6),
                 font_size=Pt(16),
-                color=Colors.PRIMARY_LIGHT, alignment=PP_ALIGN.LEFT,
+                color=Colors.PRIMARY_LIGHT,
+                alignment=PP_ALIGN.LEFT,
             )
 
         self._add_textbox(
-            slide, text="Auto-generated by opendocs",
-            left=Inches(1.5), top=Inches(6.5),
-            width=Inches(8), height=Inches(0.4),
+            slide,
+            text="Auto-generated by opendocs",
+            left=Inches(1.5),
+            top=Inches(6.5),
+            width=Inches(8),
+            height=Inches(0.4),
             font_size=Pt(11),
-            color=Colors.MUTED, alignment=PP_ALIGN.LEFT,
+            color=Colors.MUTED,
+            alignment=PP_ALIGN.LEFT,
         )
 
         self._add_rect(
-            slide, 0, Emu(prs.slide_height - Inches(0.08)),
-            prs.slide_width, Inches(0.08), Colors.ACCENT,
+            slide,
+            0,
+            Emu(prs.slide_height - Inches(0.08)),
+            prs.slide_width,
+            Inches(0.08),
+            Colors.ACCENT,
         )
 
     # ------------------------------------------------------------------
@@ -338,15 +427,24 @@ class PptxGenerator(BaseGenerator):
 
             # Section title with underline
             self._add_textbox(
-                slide, text=section.title,
-                left=Inches(0.8), top=Inches(0.3),
-                width=Inches(11), height=Inches(0.9),
-                font_size=Pt(28), bold=True, color=Colors.PRIMARY_DARK,
+                slide,
+                text=section.title,
+                left=Inches(0.8),
+                top=Inches(0.3),
+                width=Inches(11),
+                height=Inches(0.9),
+                font_size=Pt(28),
+                bold=True,
+                color=Colors.PRIMARY_DARK,
                 font_name=Fonts.HEADING,
             )
             self._add_rect(
-                slide, Inches(0.8), Inches(1.15),
-                Inches(2), Inches(0.04), Colors.ACCENT,
+                slide,
+                Inches(0.8),
+                Inches(1.15),
+                Inches(2),
+                Inches(0.04),
+                Colors.ACCENT,
             )
 
             # Add diagram/image slides
@@ -372,7 +470,10 @@ class PptxGenerator(BaseGenerator):
     def _add_rich_body(self, slide, parts: list[str]) -> None:
         """Add body content with proper spacing."""
         txbox = slide.shapes.add_textbox(
-            Inches(1.0), Inches(1.5), Inches(11), Inches(5.3),
+            Inches(1.0),
+            Inches(1.5),
+            Inches(11),
+            Inches(5.3),
         )
         tf = txbox.text_frame
         tf.word_wrap = True
@@ -395,17 +496,24 @@ class PptxGenerator(BaseGenerator):
             self._add_rect(slide, 0, 0, Inches(13.333), Inches(0.06), Colors.ACCENT)
 
             self._add_textbox(
-                slide, text=f"Diagram {idx + 1}",
-                left=Inches(0.8), top=Inches(0.2),
-                width=Inches(10), height=Inches(0.6),
-                font_size=Pt(22), bold=True, color=Colors.PRIMARY_DARK,
+                slide,
+                text=f"Diagram {idx + 1}",
+                left=Inches(0.8),
+                top=Inches(0.2),
+                width=Inches(10),
+                height=Inches(0.6),
+                font_size=Pt(22),
+                bold=True,
+                color=Colors.PRIMARY_DARK,
             )
 
             # Center the image on the slide
             slide.shapes.add_picture(
                 str(img_path),
-                left=Inches(1.5), top=Inches(1.0),
-                width=Inches(10), height=Inches(5.8),
+                left=Inches(1.5),
+                top=Inches(1.0),
+                width=Inches(10),
+                height=Inches(5.8),
             )
 
     def _add_image_slide(self, prs: Presentation, block: ImageBlock) -> None:
@@ -418,16 +526,23 @@ class PptxGenerator(BaseGenerator):
 
                 caption = block.alt or "Image"
                 self._add_textbox(
-                    slide, text=f"  {caption}",
-                    left=Inches(0.8), top=Inches(0.2),
-                    width=Inches(10), height=Inches(0.6),
-                    font_size=Pt(20), bold=True, color=Colors.PRIMARY_DARK,
+                    slide,
+                    text=f"  {caption}",
+                    left=Inches(0.8),
+                    top=Inches(0.2),
+                    width=Inches(10),
+                    height=Inches(0.6),
+                    font_size=Pt(20),
+                    bold=True,
+                    color=Colors.PRIMARY_DARK,
                 )
 
                 slide.shapes.add_picture(
                     str(img_path),
-                    left=Inches(1.5), top=Inches(1.0),
-                    width=Inches(10), height=Inches(5.5),
+                    left=Inches(1.5),
+                    top=Inches(1.0),
+                    width=Inches(10),
+                    height=Inches(5.5),
                 )
             except Exception:
                 pass  # Skip corrupt / unsupported image files
@@ -478,8 +593,12 @@ class PptxGenerator(BaseGenerator):
 
     @staticmethod
     def _add_textbox(
-        slide, text: str,
-        left, top, width, height,
+        slide,
+        text: str,
+        left,
+        top,
+        width,
+        height,
         font_size=Pt(14),
         bold: bool = False,
         color: tuple = Colors.TEXT,
@@ -511,7 +630,11 @@ class PptxGenerator(BaseGenerator):
     def _add_rect(slide, left, top, width, height, color: tuple):
         """Add a solid rectangle shape (used for accent bars / stripes)."""
         shape = slide.shapes.add_shape(
-            MSO_SHAPE.RECTANGLE, left, top, width, height,
+            MSO_SHAPE.RECTANGLE,
+            left,
+            top,
+            width,
+            height,
         )
         shape.fill.solid()
         shape.fill.fore_color.rgb = RGBColor(*color)
@@ -522,7 +645,11 @@ class PptxGenerator(BaseGenerator):
     def _add_rounded_rect(slide, left, top, width, height, color: tuple):
         """Add a rounded rectangle (card-style)."""
         shape = slide.shapes.add_shape(
-            MSO_SHAPE.ROUNDED_RECTANGLE, left, top, width, height,
+            MSO_SHAPE.ROUNDED_RECTANGLE,
+            left,
+            top,
+            width,
+            height,
         )
         shape.fill.solid()
         shape.fill.fore_color.rgb = RGBColor(*color)
@@ -548,10 +675,15 @@ class PptxGenerator(BaseGenerator):
 
         # Title
         self._add_textbox(
-            slide, text="Knowledge Graph",
-            left=Inches(0.8), top=Inches(0.3),
-            width=Inches(11), height=Inches(0.8),
-            font_size=Pt(32), bold=True, color=Colors.HEADING,
+            slide,
+            text="Knowledge Graph",
+            left=Inches(0.8),
+            top=Inches(0.3),
+            width=Inches(11),
+            height=Inches(0.8),
+            font_size=Pt(32),
+            bold=True,
+            color=Colors.HEADING,
         )
 
         # Stats summary on left
@@ -563,10 +695,14 @@ class PptxGenerator(BaseGenerator):
             f"LLM-Extracted: {stats.get('llm_entities', 0)}"
         )
         self._add_textbox(
-            slide, text=stats_text,
-            left=Inches(0.8), top=Inches(1.4),
-            width=Inches(3.5), height=Inches(2),
-            font_size=Pt(16), color=Colors.TEXT,
+            slide,
+            text=stats_text,
+            left=Inches(0.8),
+            top=Inches(1.4),
+            width=Inches(3.5),
+            height=Inches(2),
+            font_size=Pt(16),
+            color=Colors.TEXT,
         )
 
         # Entity types on right — cap to fit slide
@@ -580,10 +716,14 @@ class PptxGenerator(BaseGenerator):
 
         if type_lines:
             self._add_textbox(
-                slide, text="\n".join(type_lines[:8]),
-                left=Inches(5), top=Inches(1.4),
-                width=Inches(7.5), height=Inches(5.5),
-                font_size=Pt(13), color=Colors.TEXT,
+                slide,
+                text="\n".join(type_lines[:8]),
+                left=Inches(5),
+                top=Inches(1.4),
+                width=Inches(7.5),
+                height=Inches(5.5),
+                font_size=Pt(13),
+                color=Colors.TEXT,
             )
 
         # Add KG diagram image slide if available
@@ -592,15 +732,22 @@ class PptxGenerator(BaseGenerator):
             diagram_slide = prs.slides.add_slide(prs.slide_layouts[6])
             self._add_rect(diagram_slide, 0, 0, Inches(13.333), Inches(0.06), Colors.ACCENT)
             self._add_textbox(
-                diagram_slide, text="Architecture Graph",
-                left=Inches(0.8), top=Inches(0.2),
-                width=Inches(10), height=Inches(0.6),
-                font_size=Pt(26), bold=True, color=Colors.PRIMARY_DARK,
+                diagram_slide,
+                text="Architecture Graph",
+                left=Inches(0.8),
+                top=Inches(0.2),
+                width=Inches(10),
+                height=Inches(0.6),
+                font_size=Pt(26),
+                bold=True,
+                color=Colors.PRIMARY_DARK,
             )
             diagram_slide.shapes.add_picture(
                 str(kg_img),
-                left=Inches(1.0), top=Inches(1.0),
-                width=Inches(11), height=Inches(6),
+                left=Inches(1.0),
+                top=Inches(1.0),
+                width=Inches(11),
+                height=Inches(6),
             )
 
         # -- LLM Summary slide (if summaries are present) --
@@ -619,7 +766,7 @@ class PptxGenerator(BaseGenerator):
             return
 
         SLIDE_W = Inches(13.333)
-        SLIDE_H = Inches(7.5)
+        _SLIDE_H = Inches(7.5)
 
         # ── Slide 1: Executive Summary ──────────────────────────────
         if kg.executive_summary:
@@ -627,16 +774,25 @@ class PptxGenerator(BaseGenerator):
             self._add_rect(slide, 0, 0, SLIDE_W, Inches(0.08), Colors.SLIDE_ACCENT_BAR)
 
             self._add_textbox(
-                slide, text="AI-Generated Executive Summary",
-                left=Inches(0.8), top=Inches(0.3),
-                width=Inches(11), height=Inches(0.7),
-                font_size=Pt(28), bold=True, color=Colors.HEADING,
+                slide,
+                text="AI-Generated Executive Summary",
+                left=Inches(0.8),
+                top=Inches(0.3),
+                width=Inches(11),
+                height=Inches(0.7),
+                font_size=Pt(28),
+                bold=True,
+                color=Colors.HEADING,
             )
 
             # Accent underline
             self._add_rect(
-                slide, Inches(0.8), Inches(1.05),
-                Inches(3), Inches(0.04), Colors.ACCENT,
+                slide,
+                Inches(0.8),
+                Inches(1.05),
+                Inches(3),
+                Inches(0.04),
+                Colors.ACCENT,
             )
 
             # Summary text — large readable area
@@ -646,18 +802,26 @@ class PptxGenerator(BaseGenerator):
                 summary = summary[:600].rsplit(" ", 1)[0] + "…"
 
             self._add_textbox(
-                slide, text=summary,
-                left=Inches(0.8), top=Inches(1.4),
-                width=Inches(11.5), height=Inches(5.2),
-                font_size=Pt(16), color=Colors.TEXT,
+                slide,
+                text=summary,
+                left=Inches(0.8),
+                top=Inches(1.4),
+                width=Inches(11.5),
+                height=Inches(5.2),
+                font_size=Pt(16),
+                color=Colors.TEXT,
             )
 
             # Footer
             self._add_textbox(
-                slide, text="Generated by LLM semantic analysis",
-                left=Inches(0.8), top=Inches(6.8),
-                width=Inches(8), height=Inches(0.4),
-                font_size=Pt(10), color=Colors.MUTED,
+                slide,
+                text="Generated by LLM semantic analysis",
+                left=Inches(0.8),
+                top=Inches(6.8),
+                width=Inches(8),
+                height=Inches(0.4),
+                font_size=Pt(10),
+                color=Colors.MUTED,
             )
 
         # ── Slides 2+: Stakeholder Views (one per persona) ──────────
@@ -671,33 +835,36 @@ class PptxGenerator(BaseGenerator):
             if not content or content.strip().startswith("["):
                 continue
 
-            title, accent_color = persona_config.get(
-                persona, (f"{persona.title()} View", Colors.PRIMARY)
-            )
+            title, accent_color = persona_config.get(persona, (f"{persona.title()} View", Colors.PRIMARY))
 
             slide = prs.slides.add_slide(prs.slide_layouts[6])
             self._add_rect(slide, 0, 0, SLIDE_W, Inches(0.08), Colors.SLIDE_ACCENT_BAR)
 
             # Title
             self._add_textbox(
-                slide, text=title,
-                left=Inches(0.8), top=Inches(0.3),
-                width=Inches(11), height=Inches(0.7),
-                font_size=Pt(26), bold=True, color=Colors.HEADING,
+                slide,
+                text=title,
+                left=Inches(0.8),
+                top=Inches(0.3),
+                width=Inches(11),
+                height=Inches(0.7),
+                font_size=Pt(26),
+                bold=True,
+                color=Colors.HEADING,
             )
 
             # Colored accent underline
             self._add_rect(
-                slide, Inches(0.8), Inches(1.05),
-                Inches(2.5), Inches(0.04), accent_color,
+                slide,
+                Inches(0.8),
+                Inches(1.05),
+                Inches(2.5),
+                Inches(0.04),
+                accent_color,
             )
 
             # Parse bullet points from the content
-            raw_lines = [
-                ln.strip().lstrip("-•●▸ ").strip()
-                for ln in content.strip().split("\n")
-                if ln.strip()
-            ]
+            raw_lines = [ln.strip().lstrip("-•●▸ ").strip() for ln in content.strip().split("\n") if ln.strip()]
 
             # Limit to what fits on one slide (max ~6 bullets)
             display_lines = raw_lines[:6]
@@ -706,8 +873,10 @@ class PptxGenerator(BaseGenerator):
 
             # Build a text frame with properly formatted bullets
             txbox = slide.shapes.add_textbox(
-                Inches(1.0), Inches(1.4),
-                Inches(11.3), Inches(5.5),
+                Inches(1.0),
+                Inches(1.4),
+                Inches(11.3),
+                Inches(5.5),
             )
             tf = txbox.text_frame
             tf.word_wrap = True
@@ -725,8 +894,12 @@ class PptxGenerator(BaseGenerator):
 
             # Footer
             self._add_textbox(
-                slide, text="Generated by LLM semantic analysis",
-                left=Inches(0.8), top=Inches(7.0),
-                width=Inches(8), height=Inches(0.35),
-                font_size=Pt(10), color=Colors.MUTED,
+                slide,
+                text="Generated by LLM semantic analysis",
+                left=Inches(0.8),
+                top=Inches(7.0),
+                width=Inches(8),
+                height=Inches(0.35),
+                font_size=Pt(10),
+                color=Colors.MUTED,
             )

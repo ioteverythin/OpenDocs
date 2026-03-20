@@ -12,11 +12,11 @@ Sub-agents:
 - **InfraAgent**: Terraform / Helm / K8s / Pulumi resource graphs.
 """
 
-from .microservices_agent import MicroservicesAgent
-from .event_driven_agent import EventDrivenAgent
-from .ml_agent import MLAgent
 from .data_engineering_agent import DataEngineeringAgent
+from .event_driven_agent import EventDrivenAgent
 from .infra_agent import InfraAgent
+from .microservices_agent import MicroservicesAgent
+from .ml_agent import MLAgent
 
 __all__ = [
     "MicroservicesAgent",

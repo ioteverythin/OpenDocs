@@ -80,6 +80,7 @@ def _first_paragraph(section: Section) -> str:
 # JSON tree builder
 # ---------------------------------------------------------------------------
 
+
 def _section_to_json(section: Section, depth: int = 1) -> dict:
     """Recursively convert a Section to a ``{ name, description, children }`` dict."""
     node: dict = {"name": section.title or "(untitled)"}
@@ -124,6 +125,7 @@ def _doc_to_json(doc: DocumentModel) -> dict:
 # Mermaid mindmap builder
 # ---------------------------------------------------------------------------
 
+
 def _render_mermaid(doc: DocumentModel) -> str:
     """Render the document section tree as a Mermaid mindmap string."""
     lines: list[str] = ["mindmap"]
@@ -158,6 +160,7 @@ def _render_mermaid(doc: DocumentModel) -> str:
 # ---------------------------------------------------------------------------
 # Generator
 # ---------------------------------------------------------------------------
+
 
 class MindmapGenerator(BaseGenerator):
     """DocumentModel → Mermaid mindmap + hierarchical JSON."""
@@ -218,8 +221,7 @@ class MindmapGenerator(BaseGenerator):
         total_sections = len(doc.sections)
         total_nodes = sum(1 + len(s.subsections) for s in doc.sections)
         lines.append(
-            f"**{total_sections} top-level sections · {total_nodes} nodes · "
-            f"{len(doc.all_blocks)} content blocks**"
+            f"**{total_sections} top-level sections · {total_nodes} nodes · {len(doc.all_blocks)} content blocks**"
         )
         lines.append("")
 

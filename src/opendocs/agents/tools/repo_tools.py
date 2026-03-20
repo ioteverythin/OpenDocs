@@ -22,13 +22,13 @@ class _RepoToolBase(ABC):
         self.repo_path = Path(repo_path)
 
     @abstractmethod
-    async def execute(self, params: dict[str, Any]) -> Any:
-        ...
+    async def execute(self, params: dict[str, Any]) -> Any: ...
 
 
 # ---------------------------------------------------------------------------
 # repo.search
 # ---------------------------------------------------------------------------
+
 
 class RepoSearchTool(_RepoToolBase):
     """Search repository files by keyword / regex.
@@ -39,8 +39,8 @@ class RepoSearchTool(_RepoToolBase):
 
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
         query: str = params["query"]
-        file_pattern: str = params.get("file_pattern", "**/*")
-        max_results: int = params.get("max_results", 20)
+        _file_pattern: str = params.get("file_pattern", "**/*")
+        _max_results: int = params.get("max_results", 20)
 
         # TODO: implement actual grep/ripgrep search over repo_path
         #       For now, return a placeholder structure.
@@ -59,6 +59,7 @@ class RepoSearchTool(_RepoToolBase):
 # ---------------------------------------------------------------------------
 # repo.read
 # ---------------------------------------------------------------------------
+
 
 class RepoReadTool(_RepoToolBase):
     """Read a file or line range from the repository.
@@ -105,6 +106,7 @@ class RepoReadTool(_RepoToolBase):
 # repo.diff
 # ---------------------------------------------------------------------------
 
+
 class RepoDiffTool(_RepoToolBase):
     """Get the diff between two git refs.
 
@@ -135,17 +137,18 @@ class RepoDiffTool(_RepoToolBase):
         return {
             "ref1": ref1,
             "ref2": ref2,
-            "files_changed": [],        # TODO: list of {path, additions, deletions}
+            "files_changed": [],  # TODO: list of {path, additions, deletions}
             "summary": diff_stat,
             "additions": 0,
             "deletions": 0,
-            "evidence_pointers": [],    # per-hunk evidence
+            "evidence_pointers": [],  # per-hunk evidence
         }
 
 
 # ---------------------------------------------------------------------------
 # repo.summarize
 # ---------------------------------------------------------------------------
+
 
 class RepoSummarizeTool(_RepoToolBase):
     """Generate a concise summary of a file or directory.
@@ -156,7 +159,7 @@ class RepoSummarizeTool(_RepoToolBase):
 
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
         rel_path: str = params["path"]
-        max_tokens: int = params.get("max_tokens", 500)
+        _max_tokens: int = params.get("max_tokens", 500)
 
         full_path = self.repo_path / rel_path
         if not full_path.exists():
@@ -167,6 +170,6 @@ class RepoSummarizeTool(_RepoToolBase):
         # TODO: attach evidence pointer to source file/dir
         return {
             "path": rel_path,
-            "summary": "",              # TODO: LLM-generated summary
-            "evidence_pointer": None,   # TODO: EvidencePointer
+            "summary": "",  # TODO: LLM-generated summary
+            "evidence_pointer": None,  # TODO: EvidencePointer
         }

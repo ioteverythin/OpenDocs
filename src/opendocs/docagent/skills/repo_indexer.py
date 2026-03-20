@@ -5,9 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .base import BaseSkill
-from ..tools.repo_tools import RepoTools
 from ..tools.analysis_tools import AnalysisTools
+from ..tools.repo_tools import RepoTools
+from .base import BaseSkill
 
 
 class RepoIndexerSkill(BaseSkill):
@@ -17,13 +17,25 @@ class RepoIndexerSkill(BaseSkill):
 
     # Files we always try to read
     _PRIORITY_FILES = [
-        "README.md", "readme.md", "Readme.md",
-        "package.json", "pyproject.toml", "setup.py", "setup.cfg",
-        "Cargo.toml", "go.mod", "pom.xml",
-        "Makefile", "Dockerfile",
-        "docker-compose.yml", "docker-compose.yaml",
-        ".github/workflows/ci.yml", ".github/workflows/main.yml",
-        "LICENSE", "CHANGELOG.md", "CONTRIBUTING.md",
+        "README.md",
+        "readme.md",
+        "Readme.md",
+        "package.json",
+        "pyproject.toml",
+        "setup.py",
+        "setup.cfg",
+        "Cargo.toml",
+        "go.mod",
+        "pom.xml",
+        "Makefile",
+        "Dockerfile",
+        "docker-compose.yml",
+        "docker-compose.yaml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/main.yml",
+        "LICENSE",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
     ]
 
     def run(
@@ -56,12 +68,24 @@ class RepoIndexerSkill(BaseSkill):
         source_files = [f for f in files if Path(f).suffix.lower() in source_exts]
 
         # Prioritise entry points and main files
-        priority_names = {"main", "app", "index", "server", "cli", "__init__",
-                          "manage", "wsgi", "asgi", "setup"}
-        source_files.sort(key=lambda f: (
-            0 if Path(f).stem.lower() in priority_names else 1,
-            len(f.split("/")),  # prefer shallower files
-        ))
+        priority_names = {
+            "main",
+            "app",
+            "index",
+            "server",
+            "cli",
+            "__init__",
+            "manage",
+            "wsgi",
+            "asgi",
+            "setup",
+        }
+        source_files.sort(
+            key=lambda f: (
+                0 if Path(f).stem.lower() in priority_names else 1,
+                len(f.split("/")),  # prefer shallower files
+            )
+        )
 
         for sf in source_files[:20]:  # Read top 20 source files
             if sf not in key_files:
@@ -85,7 +109,8 @@ class RepoIndexerSkill(BaseSkill):
 
         self.logger.info(
             "Indexed: %d key files, %d techs, %d commands",
-            len(key_files), len(tech_stack),
+            len(key_files),
+            len(tech_stack),
             sum(len(v) for v in commands.values()),
         )
 

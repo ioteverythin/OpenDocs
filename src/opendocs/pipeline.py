@@ -12,23 +12,23 @@ from .core.notebook_parser import NotebookParser, is_notebook
 from .core.parser import ReadmeParser
 from .core.semantic_extractor import SemanticExtractor
 from .core.template_vars import EMPTY_VARS, TemplateVars, load_template_vars
-from .generators.diagram_extractor import DiagramExtractor, ImageCache
-from .generators.mermaid_renderer import MermaidRenderer
+from .generators.architecture_generator import ArchitectureGenerator
 from .generators.blog_generator import BlogGenerator
 from .generators.changelog_generator import ChangelogGenerator
+from .generators.diagram_extractor import DiagramExtractor
 from .generators.faq_generator import FaqGenerator
 from .generators.jira_generator import JiraGenerator
 from .generators.latex_generator import LatexGenerator
+from .generators.mermaid_renderer import MermaidRenderer
+from .generators.mindmap_generator import MindmapGenerator
 from .generators.onepager_generator import OnePagerGenerator
 from .generators.pdf_generator import PdfGenerator
 from .generators.pptx_generator import PptxGenerator
 from .generators.social_generator import SocialGenerator
 from .generators.styles import apply_theme, reset_theme
 from .generators.table_sorter import TableSorter
-from .generators.themes import get_theme, DEFAULT_THEME
+from .generators.themes import get_theme
 from .generators.word_generator import WordGenerator
-from .generators.architecture_generator import ArchitectureGenerator
-from .generators.mindmap_generator import MindmapGenerator
 
 console = Console()
 
@@ -126,10 +126,18 @@ class Pipeline:
 
         if formats is None:
             formats = [
-                OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
-                OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
-                OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-                OutputFormat.FAQ, OutputFormat.ARCHITECTURE, OutputFormat.MINDMAP,
+                OutputFormat.WORD,
+                OutputFormat.PDF,
+                OutputFormat.PPTX,
+                OutputFormat.BLOG,
+                OutputFormat.JIRA,
+                OutputFormat.CHANGELOG,
+                OutputFormat.LATEX,
+                OutputFormat.ONEPAGER,
+                OutputFormat.SOCIAL,
+                OutputFormat.FAQ,
+                OutputFormat.ARCHITECTURE,
+                OutputFormat.MINDMAP,
             ]
 
         result = PipelineResult(source=source)
@@ -197,9 +205,18 @@ class Pipeline:
         )
 
         return self._execute_pipeline(
-            doc, result, output_path, formats, theme, tvars,
-            sort_tables=sort_tables, mode=mode, api_key=api_key,
-            model=model, base_url=base_url, provider=provider,
+            doc,
+            result,
+            output_path,
+            formats,
+            theme,
+            tvars,
+            sort_tables=sort_tables,
+            mode=mode,
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            provider=provider,
         )
 
     # ------------------------------------------------------------------
@@ -245,10 +262,18 @@ class Pipeline:
 
         if formats is None:
             formats = [
-                OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
-                OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
-                OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-                OutputFormat.FAQ, OutputFormat.ARCHITECTURE, OutputFormat.MINDMAP,
+                OutputFormat.WORD,
+                OutputFormat.PDF,
+                OutputFormat.PPTX,
+                OutputFormat.BLOG,
+                OutputFormat.JIRA,
+                OutputFormat.CHANGELOG,
+                OutputFormat.LATEX,
+                OutputFormat.ONEPAGER,
+                OutputFormat.SOCIAL,
+                OutputFormat.FAQ,
+                OutputFormat.ARCHITECTURE,
+                OutputFormat.MINDMAP,
             ]
 
         result = PipelineResult(source=str(folder))
@@ -277,9 +302,18 @@ class Pipeline:
         )
 
         return self._execute_pipeline(
-            doc, result, output_path, formats, theme, tvars,
-            sort_tables=sort_tables, mode=mode, api_key=api_key,
-            model=model, base_url=base_url, provider=provider,
+            doc,
+            result,
+            output_path,
+            formats,
+            theme,
+            tvars,
+            sort_tables=sort_tables,
+            mode=mode,
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            provider=provider,
         )
 
     # ------------------------------------------------------------------
@@ -307,9 +341,8 @@ class Pipeline:
             sorter = TableSorter(strategy=sort_tables)
             doc = sorter.process(doc)
             from .core.models import TableBlock as _TB
-            n_tables = sum(
-                1 for b in doc.all_blocks if isinstance(b, _TB)
-            )
+
+            n_tables = sum(1 for b in doc.all_blocks if isinstance(b, _TB))
             console.print(f"[green][OK][/] {n_tables} table(s) sorted")
 
         # -- Step 3: Semantic extraction ----------------------------------
@@ -325,9 +358,13 @@ class Pipeline:
                     from .llm.llm_extractor import LLMExtractor, LLMSummarizer
 
                     # -- Entity extraction via LLM --
-                    console.print(f"[bold blue]Running LLM extraction...[/] [dim](provider={provider}, model={model})[/]")
+                    console.print(
+                        f"[bold blue]Running LLM extraction...[/] [dim](provider={provider}, model={model})[/]"
+                    )
                     llm_extractor = LLMExtractor(
-                        api_key=api_key, model=model, base_url=base_url,
+                        api_key=api_key,
+                        model=model,
+                        base_url=base_url,
                         provider=provider,
                     )
                     llm_kg = llm_extractor.extract(doc)
@@ -337,7 +374,9 @@ class Pipeline:
                     # -- Executive & stakeholder summaries --
                     console.print("[bold blue]Generating LLM summaries...[/]")
                     summarizer = LLMSummarizer(
-                        api_key=api_key, model=model, base_url=base_url,
+                        api_key=api_key,
+                        model=model,
+                        base_url=base_url,
                         provider=provider,
                     )
                     summarizer.enrich(doc, kg)
@@ -348,7 +387,9 @@ class Pipeline:
 
                     console.print("[bold blue]Running LLM content enhancement...[/]")
                     enhancer = LLMContentEnhancer(
-                        api_key=api_key, model=model, base_url=base_url,
+                        api_key=api_key,
+                        model=model,
+                        base_url=base_url,
                         provider=provider,
                     )
                     enhancer.enrich(doc, kg)
@@ -368,10 +409,7 @@ class Pipeline:
                     console.print(f"[yellow]WARNING: LLM extraction failed: {exc}[/]")
 
         stats = kg.compute_stats()
-        console.print(
-            f"[green][OK][/] KG: {stats['total_entities']} entities, "
-            f"{stats['total_relations']} relations"
-        )
+        console.print(f"[green][OK][/] KG: {stats['total_entities']} entities, {stats['total_relations']} relations")
 
         # -- Step 4: Render diagrams & download images --------------------
         console.print("[bold blue]Rendering diagrams & downloading images...[/]")
@@ -382,7 +420,9 @@ class Pipeline:
         kg_mermaid = kg.to_mermaid(max_entities=30) if kg.entities else None
 
         diagram_paths, image_cache = diagram_extractor.extract(
-            doc, output_path, kg_mermaid=kg_mermaid,
+            doc,
+            output_path,
+            kg_mermaid=kg_mermaid,
         )
 
         n_rendered = len(image_cache.mermaid_images)

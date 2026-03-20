@@ -38,14 +38,14 @@ import json
 import re
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Model
 # ---------------------------------------------------------------------------
+
 
 class TemplateVars(BaseModel):
     """Variables that can be injected into generated documents."""
@@ -119,9 +119,14 @@ class TemplateVars(BaseModel):
     def has_values(self) -> bool:
         """True if at least one meaningful variable is set."""
         return bool(
-            self.project_name or self.author or self.version
-            or self.organisation or self.department
-            or self.confidentiality or self.logo_path or self.custom
+            self.project_name
+            or self.author
+            or self.version
+            or self.organisation
+            or self.department
+            or self.confidentiality
+            or self.logo_path
+            or self.custom
         )
 
     @property
@@ -154,6 +159,7 @@ class TemplateVars(BaseModel):
 # ---------------------------------------------------------------------------
 # Loader — config file (YAML / JSON) + CLI overrides
 # ---------------------------------------------------------------------------
+
 
 def load_template_vars(
     config_path: str | Path | None = None,
@@ -192,12 +198,10 @@ def load_template_vars(
         if path.suffix in (".yaml", ".yml"):
             try:
                 import yaml
+
                 data = yaml.safe_load(raw) or {}
             except ImportError:
-                raise ImportError(
-                    "PyYAML is required to read YAML config files. "
-                    "Install it with: pip install pyyaml"
-                )
+                raise ImportError("PyYAML is required to read YAML config files. Install it with: pip install pyyaml")
         elif path.suffix == ".json":
             data = json.loads(raw)
         elif path.suffix == ".toml":
@@ -213,12 +217,10 @@ def load_template_vars(
             except json.JSONDecodeError:
                 try:
                     import yaml
+
                     data = yaml.safe_load(raw) or {}
                 except ImportError:
-                    raise ValueError(
-                        f"Cannot parse config file {path}. "
-                        "Use .json, .yaml, or .toml format."
-                    )
+                    raise ValueError(f"Cannot parse config file {path}. Use .json, .yaml, or .toml format.")
 
     # -- Apply CLI overrides (take precedence) ----------------------------
     overrides = {

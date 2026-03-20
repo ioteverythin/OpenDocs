@@ -13,9 +13,7 @@ import httpx
 
 _GITHUB_RAW = "https://raw.githubusercontent.com"
 _GITHUB_API = "https://api.github.com/repos"
-_GITHUB_URL_RE = re.compile(
-    r"(?:https?://)?github\.com/(?P<owner>[^/]+)/(?P<repo>[^/\s#?]+)"
-)
+_GITHUB_URL_RE = re.compile(r"(?:https?://)?github\.com/(?P<owner>[^/]+)/(?P<repo>[^/\s#?]+)")
 _NPM_REGISTRY = "https://registry.npmjs.org"
 
 # Typical README filenames in priority order
@@ -32,6 +30,7 @@ _README_NAMES = [
 # ---------------------------------------------------------------------------
 # Public helpers
 # ---------------------------------------------------------------------------
+
 
 def parse_github_url(url: str) -> tuple[str, str]:
     """Extract (owner, repo) from a GitHub URL.
@@ -57,6 +56,7 @@ def is_npm_source(source: str) -> bool:
 # ---------------------------------------------------------------------------
 # Fetcher
 # ---------------------------------------------------------------------------
+
 
 class ReadmeFetcher:
     """Fetches README content from a GitHub repo URL or a local path."""
@@ -139,23 +139,15 @@ class ReadmeFetcher:
             resp.raise_for_status()
         except httpx.HTTPStatusError as exc:
             if exc.response.status_code == 404:
-                raise FileNotFoundError(
-                    f"npm package '{package_name}' not found on the registry."
-                ) from exc
-            raise FileNotFoundError(
-                f"npm registry returned {exc.response.status_code} for '{package_name}'."
-            ) from exc
+                raise FileNotFoundError(f"npm package '{package_name}' not found on the registry.") from exc
+            raise FileNotFoundError(f"npm registry returned {exc.response.status_code} for '{package_name}'.") from exc
         except httpx.HTTPError as exc:
-            raise FileNotFoundError(
-                f"Could not reach npm registry for '{package_name}': {exc}"
-            ) from exc
+            raise FileNotFoundError(f"Could not reach npm registry for '{package_name}': {exc}") from exc
 
         data = resp.json()
         readme: str = data.get("readme", "")
         if not readme:
-            raise FileNotFoundError(
-                f"npm package '{package_name}' exists but has no README on the registry."
-            )
+            raise FileNotFoundError(f"npm package '{package_name}' exists but has no README on the registry.")
         return readme, package_name
 
     @staticmethod

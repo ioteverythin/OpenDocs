@@ -7,8 +7,8 @@ import logging
 from dataclasses import asdict
 from pathlib import Path
 
-from .config import WorkspaceConfig
 from .agent_loop import AgentResult
+from .config import WorkspaceConfig
 
 logger = logging.getLogger("docagent.session")
 

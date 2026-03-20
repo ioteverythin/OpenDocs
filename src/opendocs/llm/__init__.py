@@ -9,10 +9,10 @@ Falls back gracefully if not installed.
 """
 
 from .providers import (  # noqa: F401
-    get_provider,
-    get_async_provider,
-    SUPPORTED_PROVIDERS,
     DEFAULT_PROVIDER,
+    SUPPORTED_PROVIDERS,
     default_model_for,
+    get_async_provider,
+    get_provider,
     resolve_api_key,
 )

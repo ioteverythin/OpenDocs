@@ -71,9 +71,7 @@ class PdfGenerator(BaseGenerator):
     # Path 1 -- Word -> PDF (preferred)
     # ------------------------------------------------------------------
 
-    def _generate_via_word(
-        self, doc: DocumentModel, output_dir: Path, output_path: Path
-    ) -> GenerationResult:
+    def _generate_via_word(self, doc: DocumentModel, output_dir: Path, output_path: Path) -> GenerationResult:
         """Build a .docx with WordGenerator, convert to PDF, clean up."""
         from .word_generator import WordGenerator
 
@@ -126,9 +124,7 @@ class PdfGenerator(BaseGenerator):
     # Path 2 -- Pure ReportLab fallback
     # ------------------------------------------------------------------
 
-    def _generate_via_reportlab(
-        self, doc: DocumentModel, output_path: Path
-    ) -> GenerationResult:
+    def _generate_via_reportlab(self, doc: DocumentModel, output_path: Path) -> GenerationResult:
         """Build a PDF directly with ReportLab (fallback)."""
         try:
             self._mermaid_index = 0
@@ -186,11 +182,7 @@ class PdfGenerator(BaseGenerator):
         def _spans_to_html(spans: list[InlineSpan]) -> str:
             parts: list[str] = []
             for span in spans:
-                text = (
-                    span.text.replace("&", "&amp;")
-                    .replace("<", "&lt;")
-                    .replace(">", "&gt;")
-                )
+                text = span.text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 if span.is_link:
                     parts.append(f'<a href="{span.url}" color="#1565C0"><u>{text}</u></a>')
                 elif span.bold:
@@ -198,10 +190,7 @@ class PdfGenerator(BaseGenerator):
                 elif span.italic:
                     parts.append(f"<i>{text}</i>")
                 elif span.code:
-                    parts.append(
-                        f'<font face="{Fonts.CODE}" size="{Fonts.CODE_SIZE_PT}">'
-                        f"{text}</font>"
-                    )
+                    parts.append(f'<font face="{Fonts.CODE}" size="{Fonts.CODE_SIZE_PT}">{text}</font>')
                 else:
                     parts.append(text)
             return "".join(parts)
@@ -216,9 +205,7 @@ class PdfGenerator(BaseGenerator):
 
             def draw(self):
                 self.canv.setFillColor(_rgb(self._color))
-                self.canv.roundRect(
-                    0, 0, self.width, self.height, radius=1.5, fill=1, stroke=0
-                )
+                self.canv.roundRect(0, 0, self.width, self.height, radius=1.5, fill=1, stroke=0)
 
             def wrap(self, available_width, available_height):
                 return self.width, self.height + 4
@@ -251,11 +238,7 @@ class PdfGenerator(BaseGenerator):
                 return (self._font_size + 8) if self._label else 0
 
             def _natural_height(self):
-                return (
-                    self._label_height()
-                    + len(self._lines) * self._line_height()
-                    + self._padding * 2
-                )
+                return self._label_height() + len(self._lines) * self._line_height() + self._padding * 2
 
             def wrap(self, available_width, available_height):
                 return available_width, min(self._natural_height(), available_height)
@@ -299,9 +282,7 @@ class PdfGenerator(BaseGenerator):
                 if self._label:
                     lab_h = self._label_height()
                     self.canv.setFillColor(_rgb(Colors.PRIMARY_DARK))
-                    self.canv.roundRect(
-                        0, h - lab_h, w, lab_h, radius=4, fill=1, stroke=0
-                    )
+                    self.canv.roundRect(0, h - lab_h, w, lab_h, radius=4, fill=1, stroke=0)
                     self.canv.setFillColor(_rgb(Colors.WHITE))
                     self.canv.setFont(self._font, self._font_size - 1)
                     self.canv.drawString(p, h - lab_h + 4, self._label)
@@ -450,12 +431,7 @@ class PdfGenerator(BaseGenerator):
         story.append(AccentBar(width=2 * inch, height=3, color=Colors.PRIMARY))
         story.append(Spacer(1, 0.3 * inch))
         if doc.metadata.description:
-            safe_desc = (
-                doc.metadata.description[:350]
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-            )
+            safe_desc = doc.metadata.description[:350].replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             story.append(Paragraph(safe_desc, styles["Subtitle"]))
         story.append(Spacer(1, 0.8 * inch))
 
@@ -515,11 +491,7 @@ class PdfGenerator(BaseGenerator):
                 if block.spans:
                     html = _spans_to_html(block.spans)
                 else:
-                    html = (
-                        block.text.replace("&", "&amp;")
-                        .replace("<", "&lt;")
-                        .replace(">", "&gt;")
-                    )
+                    html = block.text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 story.append(Paragraph(html, styles["Normal"]))
                 story.append(Spacer(1, 0.06 * inch))
 
@@ -538,9 +510,7 @@ class PdfGenerator(BaseGenerator):
             elif isinstance(block, MermaidBlock):
                 idx = self._mermaid_index
                 self._mermaid_index += 1
-                img_path = (
-                    self.image_cache.get_mermaid(idx) if self.image_cache else None
-                )
+                img_path = self.image_cache.get_mermaid(idx) if self.image_cache else None
                 if img_path and img_path.exists():
                     from reportlab.platypus import Image as RLImage
 
@@ -562,62 +532,38 @@ class PdfGenerator(BaseGenerator):
                 render_table(block)
 
             elif isinstance(block, ListBlock):
-                pfn = (
-                    (lambda i: f"{i + 1}. ")
-                    if block.ordered
-                    else (lambda _: "●  ")
-                )
+                pfn = (lambda i: f"{i + 1}. ") if block.ordered else (lambda _: "●  ")
                 for i, item in enumerate(block.items):
                     bullet = (
                         f'<font color="#{Colors.PRIMARY[0]:02X}'
-                        f"{Colors.PRIMARY[1]:02X}{Colors.PRIMARY[2]:02X}\">"
+                        f'{Colors.PRIMARY[1]:02X}{Colors.PRIMARY[2]:02X}">'
                         f"{pfn(i)}</font>"
                     )
                     if block.rich_items and i < len(block.rich_items):
                         content = _spans_to_html(block.rich_items[i])
                     else:
-                        content = (
-                            item.replace("&", "&amp;")
-                            .replace("<", "&lt;")
-                            .replace(">", "&gt;")
-                        )
-                    story.append(
-                        Paragraph(f"{bullet}{content}", styles["ListItem"])
-                    )
+                        content = item.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+                    story.append(Paragraph(f"{bullet}{content}", styles["ListItem"]))
                 story.append(Spacer(1, 0.06 * inch))
 
             elif isinstance(block, BlockquoteBlock):
-                safe = (
-                    block.text.replace("&", "&amp;")
-                    .replace("<", "&lt;")
-                    .replace(">", "&gt;")
-                )
+                safe = block.text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 story.append(Paragraph(safe, styles["Blockquote"]))
                 story.append(Spacer(1, 0.06 * inch))
 
             elif isinstance(block, ImageBlock):
-                img_path = (
-                    self.image_cache.get_external(block.src)
-                    if self.image_cache
-                    else None
-                )
+                img_path = self.image_cache.get_external(block.src) if self.image_cache else None
                 if img_path and img_path.exists():
                     from reportlab.platypus import Image as RLImage
 
                     if block.alt:
-                        story.append(
-                            Paragraph(f"<i>{block.alt}</i>", styles["Normal"])
-                        )
+                        story.append(Paragraph(f"<i>{block.alt}</i>", styles["Normal"]))
                     img = RLImage(str(img_path), width=5.0 * inch, height=3.0 * inch)
                     img.hAlign = "CENTER"
                     story.append(img)
                     story.append(Spacer(1, 0.06 * inch))
                 else:
-                    story.append(
-                        Paragraph(
-                            f"<i>{block.alt or block.src}</i>", styles["Normal"]
-                        )
-                    )
+                    story.append(Paragraph(f"<i>{block.alt or block.src}</i>", styles["Normal"]))
 
             elif isinstance(block, ThematicBreakBlock):
                 story.append(
@@ -661,11 +607,7 @@ class PdfGenerator(BaseGenerator):
             if block.headers:
                 row_markup = []
                 for j, h in enumerate(block.headers):
-                    spans = (
-                        block.rich_headers[j]
-                        if block.rich_headers and j < len(block.rich_headers)
-                        else None
-                    )
+                    spans = block.rich_headers[j] if block.rich_headers and j < len(block.rich_headers) else None
                     row_markup.append(Paragraph(_cell_to_markup(h, spans), tbl_style))
                 data.append(row_markup)
             for row_i, row in enumerate(block.rows):
@@ -673,11 +615,7 @@ class PdfGenerator(BaseGenerator):
                 for j, val in enumerate(row):
                     spans = (
                         block.rich_rows[row_i][j]
-                        if (
-                            block.rich_rows
-                            and row_i < len(block.rich_rows)
-                            and j < len(block.rich_rows[row_i])
-                        )
+                        if (block.rich_rows and row_i < len(block.rich_rows) and j < len(block.rich_rows[row_i]))
                         else None
                     )
                     row_markup.append(Paragraph(_cell_to_markup(val, spans), tbl_style))
@@ -711,15 +649,11 @@ class PdfGenerator(BaseGenerator):
                 ]
                 for i in range(1, len(data)):
                     if i % 2 == 0:
-                        cmds.append(
-                            ("BACKGROUND", (0, i), (-1, i), _rgb(Colors.TABLE_ALT_ROW))
-                        )
+                        cmds.append(("BACKGROUND", (0, i), (-1, i), _rgb(Colors.TABLE_ALT_ROW)))
             else:
                 for i in range(len(data)):
                     if i % 2 == 0:
-                        cmds.append(
-                            ("BACKGROUND", (0, i), (-1, i), _rgb(Colors.TABLE_ALT_ROW))
-                        )
+                        cmds.append(("BACKGROUND", (0, i), (-1, i), _rgb(Colors.TABLE_ALT_ROW)))
             t.setStyle(TableStyle(cmds))
             story.append(t)
             story.append(Spacer(1, 0.15 * inch))
@@ -789,8 +723,16 @@ class PdfGenerator(BaseGenerator):
     # ------------------------------------------------------------------
 
     def _build_kg_reportlab(
-        self, story, styles, _rgb, AccentBar, ColoredBox,
-        Paragraph, Spacer, Table, TableStyle,
+        self,
+        story,
+        styles,
+        _rgb,
+        AccentBar,
+        ColoredBox,
+        Paragraph,
+        Spacer,
+        Table,
+        TableStyle,
     ):
         from reportlab.lib.units import inch
 
@@ -808,11 +750,7 @@ class PdfGenerator(BaseGenerator):
         if kg.executive_summary:
             story.append(Paragraph("Executive Summary", styles["Heading2"]))
             story.append(Spacer(1, 0.08 * inch))
-            safe = (
-                kg.executive_summary.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-            )
+            safe = kg.executive_summary.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             story.append(Paragraph(safe, styles["Blockquote"]))
             story.append(Spacer(1, 0.2 * inch))
 
@@ -833,16 +771,10 @@ class PdfGenerator(BaseGenerator):
                     line = line.strip()
                     if not line:
                         continue
-                    safe_line = (
-                        line.lstrip("- •* ")
-                        .replace("&", "&amp;")
-                        .replace("<", "&lt;")
-                        .replace(">", "&gt;")
-                    )
+                    safe_line = line.lstrip("- •* ").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                     is_bullet = line.startswith(("- ", "• ", "* "))
                     prefix = (
-                        f'<font color="#{Colors.ACCENT[0]:02X}{Colors.ACCENT[1]:02X}'
-                        f'{Colors.ACCENT[2]:02X}">●  </font>'
+                        f'<font color="#{Colors.ACCENT[0]:02X}{Colors.ACCENT[1]:02X}{Colors.ACCENT[2]:02X}">●  </font>'
                         if is_bullet
                         else ""
                     )
@@ -892,17 +824,9 @@ class PdfGenerator(BaseGenerator):
             )
             for e in entities[:8]:
                 conf = e.confidence
-                dot_color = (
-                    Colors.SUCCESS
-                    if conf >= 0.8
-                    else Colors.WARNING if conf >= 0.5 else Colors.DANGER
-                )
+                dot_color = Colors.SUCCESS if conf >= 0.8 else Colors.WARNING if conf >= 0.5 else Colors.DANGER
                 dot_hex = f"#{dot_color[0]:02X}{dot_color[1]:02X}{dot_color[2]:02X}"
-                safe_name = (
-                    e.name.replace("&", "&amp;")
-                    .replace("<", "&lt;")
-                    .replace(">", "&gt;")
-                )
+                safe_name = e.name.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                 story.append(
                     Paragraph(
                         f'&nbsp;&nbsp;&nbsp;&nbsp;<font color="{dot_hex}">●</font> '
@@ -925,9 +849,7 @@ class PdfGenerator(BaseGenerator):
             story.append(Spacer(1, 0.06 * inch))
 
         story.append(Spacer(1, 0.2 * inch))
-        story.append(
-            Paragraph("Auto-Generated Architecture Graph", styles["Heading2"])
-        )
+        story.append(Paragraph("Auto-Generated Architecture Graph", styles["Heading2"]))
         story.append(Spacer(1, 0.08 * inch))
         kg_img = self.image_cache.kg_diagram if self.image_cache else None
         if kg_img and kg_img.exists():

@@ -5,12 +5,11 @@ from __future__ import annotations
 from pathlib import Path
 
 from docx import Document as DocxDocument
-from docx.enum.section import WD_ORIENT
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
-from docx.oxml.ns import nsdecls, qn
-from docx.shared import Cm, Emu, Inches, Mm, Pt, RGBColor
+from docx.oxml.ns import qn
+from docx.shared import Inches, Pt, RGBColor
 
 from ..core.models import (
     BlockquoteBlock,
@@ -18,7 +17,6 @@ from ..core.models import (
     ContentBlock,
     DocumentModel,
     GenerationResult,
-    HeadingBlock,
     ImageBlock,
     InlineSpan,
     ListBlock,
@@ -151,9 +149,7 @@ class WordGenerator(BaseGenerator):
             docx.save(str(output_path))
             return GenerationResult(format=self.format, output_path=output_path)
         except Exception as exc:
-            return GenerationResult(
-                format=self.format, output_path=output_path, success=False, error=str(exc)
-            )
+            return GenerationResult(format=self.format, output_path=output_path, success=False, error=str(exc))
 
     # ------------------------------------------------------------------
     # Builder
@@ -417,11 +413,7 @@ class WordGenerator(BaseGenerator):
             _add_bottom_border(heading_p, Colors.ACCENT if level == 1 else Colors.PRIMARY_LIGHT)
 
         # -- LLM-polished prose (if available) ---------------------------
-        rewritten = (
-            self.kg.llm_sections.get(section.title, "")
-            if self.kg and self.kg.llm_sections
-            else ""
-        )
+        rewritten = self.kg.llm_sections.get(section.title, "") if self.kg and self.kg.llm_sections else ""
         if rewritten:
             # Add LLM-rewritten narrative as a styled overview paragraph,
             # then still render the original blocks (code, tables, etc.)
@@ -900,7 +892,8 @@ class WordGenerator(BaseGenerator):
                 # Show key properties
                 if entity.properties:
                     props_text = "  —  " + ", ".join(
-                        f"{k}: {v}" for k, v in list(entity.properties.items())[:3]
+                        f"{k}: {v}"
+                        for k, v in list(entity.properties.items())[:3]
                         if v and k not in ("url", "description")
                     )
                     if props_text.strip() != "—":

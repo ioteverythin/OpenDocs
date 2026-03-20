@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseSkill
+from ..models.document_model import DocumentType, DraftDocument
 from ..models.repo_model import RepoKnowledgeModel
-from ..models.document_model import DraftDocument, DocumentType
+from .base import BaseSkill
 
 
 class OnboardingSkill(BaseSkill):
@@ -39,7 +39,9 @@ class OnboardingSkill(BaseSkill):
             key_file_summary += f"\n--- {path} ---\n{content[:500]}\n"
 
         deps_summary = ", ".join(f"{k} {v}" for k, v in list(m.dependencies.items())[:25])
-        setup_summary = "\n".join(f"- {s}" for s in m.setup_instructions[:10]) if m.setup_instructions else "Not detected"
+        setup_summary = (
+            "\n".join(f"- {s}" for s in m.setup_instructions[:10]) if m.setup_instructions else "Not detected"
+        )
 
         # Categorise files for the "read these first" section
         file_tree_sample = "\n".join(m.file_tree[:60])
@@ -89,8 +91,7 @@ class OnboardingSkill(BaseSkill):
         content = chat_text(system, context, **{**llm_config, "max_tokens": 6000})
         self.logger.info("LLM-generated Onboarding Pack: %d chars", len(content))
 
-        sections = [line.lstrip("# ").strip() for line in content.splitlines()
-                     if line.startswith("## ")]
+        sections = [line.lstrip("# ").strip() for line in content.splitlines() if line.startswith("## ")]
 
         return DraftDocument(
             doc_type=DocumentType.ONBOARDING,
@@ -174,8 +175,14 @@ class OnboardingSkill(BaseSkill):
         parts.append("## 📖 Key Files to Read First\n")
         parts.append("Start your code exploration here:\n")
         priority_files = [
-            "README.md", "CONTRIBUTING.md", "setup.py", "pyproject.toml",
-            "package.json", "Makefile", "Dockerfile", "docker-compose.yml",
+            "README.md",
+            "CONTRIBUTING.md",
+            "setup.py",
+            "pyproject.toml",
+            "package.json",
+            "Makefile",
+            "Dockerfile",
+            "docker-compose.yml",
         ]
         shown_keys: set[str] = set()
         for pf in priority_files:

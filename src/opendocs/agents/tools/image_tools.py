@@ -40,9 +40,7 @@ class ImageGenerateTool:
         # TODO: add support for Stable Diffusion, Midjourney, etc.
         return {"error": f"Unsupported provider: {self.provider}"}
 
-    async def _generate_openai(
-        self, prompt: str, size: str
-    ) -> dict[str, Any]:
+    async def _generate_openai(self, prompt: str, size: str) -> dict[str, Any]:
         """Generate image via OpenAI DALL-E API."""
         # TODO: import openai
         # TODO: client = openai.AsyncOpenAI(api_key=self.api_key)
@@ -57,6 +55,6 @@ class ImageGenerateTool:
         return {
             "prompt": prompt,
             "size": size,
-            "image_url": "",            # TODO: from API response
-            "local_path": "",           # TODO: saved file path
+            "image_url": "",  # TODO: from API response
+            "local_path": "",  # TODO: saved file path
         }

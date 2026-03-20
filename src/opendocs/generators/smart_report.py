@@ -6,8 +6,8 @@ with LLM-generated summaries into a single analyst-grade document.
 
 from __future__ import annotations
 
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
 
 from ..core.knowledge_graph import EntityType, KnowledgeGraph
 from ..core.models import DocumentModel, GenerationResult, OutputFormat
@@ -130,8 +130,7 @@ def _build_report(doc: DocumentModel, kg: KnowledgeGraph) -> str:
         for e in entities:
             conf_icon = "HIGH" if e.confidence >= 0.8 else ("MED" if e.confidence >= 0.5 else "LOW")
             lines.append(
-                f"| {e.name} | {conf_icon} {e.confidence:.0%} "
-                f"| {e.extraction_method} | {e.source_section or '—'} |"
+                f"| {e.name} | {conf_icon} {e.confidence:.0%} | {e.extraction_method} | {e.source_section or '—'} |"
             )
         lines.append("")
 
@@ -147,8 +146,7 @@ def _build_report(doc: DocumentModel, kg: KnowledgeGraph) -> str:
             src_name = src.name if src else r.source_id
             tgt_name = tgt.name if tgt else r.target_id
             lines.append(
-                f"| {src_name} | {r.relation_type.value.replace('_', ' ')} "
-                f"| {tgt_name} | {r.confidence:.0%} |"
+                f"| {src_name} | {r.relation_type.value.replace('_', ' ')} | {tgt_name} | {r.confidence:.0%} |"
             )
         lines.append("")
 

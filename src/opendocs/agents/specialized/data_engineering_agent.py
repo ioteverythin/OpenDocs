@@ -9,10 +9,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
-from ..llm_client import chat_text
 from ...core.knowledge_graph import KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
+from ..llm_client import chat_text
 
 
 class DataEngineeringAgent(AgentBase):
@@ -63,11 +63,13 @@ class DataEngineeringAgent(AgentBase):
                 )
             except Exception:
                 section_md = self._build_data_section(
-                    components=components, repo_name=repo_profile.repo_name,
+                    components=components,
+                    repo_name=repo_profile.repo_name,
                 )
         else:
             section_md = self._build_data_section(
-                components=components, repo_name=repo_profile.repo_name,
+                components=components,
+                repo_name=repo_profile.repo_name,
             )
         artifacts["data_pipeline_md"] = section_md
         artifacts["data_components"] = components
@@ -82,9 +84,7 @@ class DataEngineeringAgent(AgentBase):
 
     # -- Internal -----------------------------------------------------------
 
-    def _detect_components(
-        self, profile: RepoProfile
-    ) -> list[dict[str, Any]]:
+    def _detect_components(self, profile: RepoProfile) -> list[dict[str, Any]]:
         """Detect data engineering components from signals and file tree.
 
         TODO: Parse actual DAG files, dbt_project.yml, Spark configs.
@@ -93,50 +93,58 @@ class DataEngineeringAgent(AgentBase):
         signal_types = {s.signal_type for s in profile.signals}
 
         if "airflow" in signal_types:
-            components.append({
-                "type": "orchestrator",
-                "tech": "airflow",
-                "name": "Apache Airflow",
-            })
+            components.append(
+                {
+                    "type": "orchestrator",
+                    "tech": "airflow",
+                    "name": "Apache Airflow",
+                }
+            )
         if "dbt" in signal_types:
-            components.append({
-                "type": "transform",
-                "tech": "dbt",
-                "name": "dbt Models",
-            })
+            components.append(
+                {
+                    "type": "transform",
+                    "tech": "dbt",
+                    "name": "dbt Models",
+                }
+            )
         if "spark" in signal_types:
-            components.append({
-                "type": "compute",
-                "tech": "spark",
-                "name": "Apache Spark",
-            })
+            components.append(
+                {
+                    "type": "compute",
+                    "tech": "spark",
+                    "name": "Apache Spark",
+                }
+            )
         if "warehouse" in signal_types:
-            components.append({
-                "type": "storage",
-                "tech": "warehouse",
-                "name": "Data Warehouse",
-            })
+            components.append(
+                {
+                    "type": "storage",
+                    "tech": "warehouse",
+                    "name": "Data Warehouse",
+                }
+            )
 
         # Detect from file tree
         for path in profile.file_tree:
             if "dags/" in path and path.endswith(".py"):
-                components.append({
-                    "type": "dag",
-                    "tech": "airflow",
-                    "name": f"DAG: {path.split('/')[-1]}",
-                    "source": path,
-                })
+                components.append(
+                    {
+                        "type": "dag",
+                        "tech": "airflow",
+                        "name": f"DAG: {path.split('/')[-1]}",
+                        "source": path,
+                    }
+                )
 
         return components
 
-    def _build_lineage_diagram(
-        self, components: list[dict[str, Any]]
-    ) -> str:
+    def _build_lineage_diagram(self, components: list[dict[str, Any]]) -> str:
         """Generate a Mermaid data lineage diagram."""
         lines = ["graph LR"]
         lines.append('    Sources["Data Sources"]')
         lines.append('    Landing["Landing Zone"]')
-        lines.append('    Sources --> Landing')
+        lines.append("    Sources --> Landing")
 
         has_transform = any(c["type"] == "transform" for c in components)
         has_compute = any(c["type"] == "compute" for c in components)
@@ -144,15 +152,15 @@ class DataEngineeringAgent(AgentBase):
 
         if has_transform:
             lines.append('    Transform["dbt Transform"]')
-            lines.append('    Landing --> Transform')
+            lines.append("    Landing --> Transform")
         if has_compute:
             lines.append('    Spark["Spark Processing"]')
             prev = "Transform" if has_transform else "Landing"
-            lines.append(f'    {prev} --> Spark')
+            lines.append(f"    {prev} --> Spark")
         if has_warehouse:
             prev = "Spark" if has_compute else ("Transform" if has_transform else "Landing")
             lines.append('    Warehouse["Data Warehouse"]')
-            lines.append(f'    {prev} --> Warehouse')
+            lines.append(f"    {prev} --> Warehouse")
             lines.append('    Warehouse --> Analytics["Analytics / BI"]')
 
         return "\n".join(lines)
@@ -205,8 +213,5 @@ class DataEngineeringAgent(AgentBase):
         lines.append("")
         lines.append("### Data Lineage")
         lines.append("")
-        lines.append(
-            "TODO: Document data sources, transformation logic, "
-            "partitioning strategy, and SLAs."
-        )
+        lines.append("TODO: Document data sources, transformation logic, partitioning strategy, and SLAs.")
         return "\n".join(lines)

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import json
 import logging
 import re
 import subprocess
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -80,7 +78,10 @@ class RepoTools:
             subprocess.run(
                 ["git", "fetch", "--unshallow"],
                 cwd=str(self.repo_dir),
-                check=True, capture_output=True, text=True, timeout=300,
+                check=True,
+                capture_output=True,
+                text=True,
+                timeout=300,
             )
         except subprocess.CalledProcessError as exc:
             logger.warning("Unshallow failed: %s", exc.stderr)
@@ -124,14 +125,16 @@ class RepoTools:
             lines = block.strip().splitlines()
             if len(lines) < 5:
                 continue
-            commits.append({
-                "hash": lines[0],
-                "short": lines[1],
-                "author": lines[2],
-                "date": lines[3],
-                "subject": lines[4],
-                "body": "\n".join(lines[5:]).strip(),
-            })
+            commits.append(
+                {
+                    "hash": lines[0],
+                    "short": lines[1],
+                    "author": lines[2],
+                    "date": lines[3],
+                    "subject": lines[4],
+                    "body": "\n".join(lines[5:]).strip(),
+                }
+            )
         logger.info("git_log: %d commits (since=%s, until=%s)", len(commits), since, until)
         return commits
 
@@ -151,7 +154,9 @@ class RepoTools:
         """
         fmt = "%H%n%h%n%an%n%aI%n%s%n%b%n==END=="
         cmd = [
-            "git", "log", "--merges",
+            "git",
+            "log",
+            "--merges",
             f"--pretty=format:{fmt}",
             f"--max-count={max_count}",
         ]
@@ -169,16 +174,17 @@ class RepoTools:
             lines = block.strip().splitlines()
             if len(lines) < 5:
                 continue
-            merges.append({
-                "hash": lines[0],
-                "short": lines[1],
-                "author": lines[2],
-                "date": lines[3],
-                "subject": lines[4],
-                "body": "\n".join(lines[5:]).strip(),
-            })
-        logger.info("git_merges: %d merge commits (since=%s, until=%s)",
-                     len(merges), since, until)
+            merges.append(
+                {
+                    "hash": lines[0],
+                    "short": lines[1],
+                    "author": lines[2],
+                    "date": lines[3],
+                    "subject": lines[4],
+                    "body": "\n".join(lines[5:]).strip(),
+                }
+            )
+        logger.info("git_merges: %d merge commits (since=%s, until=%s)", len(merges), since, until)
         return merges
 
     # ------------------------------------------------------------------
@@ -190,8 +196,11 @@ class RepoTools:
         Returns list of ``{"tag", "date", "subject"}``.
         """
         cmd = [
-            "git", "tag", "-l", "--sort=-creatordate",
-            f"--format=%(refname:short)%09%(creatordate:iso-strict)%09%(subject)",
+            "git",
+            "tag",
+            "-l",
+            "--sort=-creatordate",
+            "--format=%(refname:short)%09%(creatordate:iso-strict)%09%(subject)",
         ]
         raw = self._run_git(cmd)
         if not raw.strip():
@@ -200,11 +209,13 @@ class RepoTools:
         tags: list[dict[str, str]] = []
         for line in raw.strip().splitlines()[:max_count]:
             parts = line.split("\t", 2)
-            tags.append({
-                "tag": parts[0] if len(parts) > 0 else "",
-                "date": parts[1] if len(parts) > 1 else "",
-                "subject": parts[2] if len(parts) > 2 else "",
-            })
+            tags.append(
+                {
+                    "tag": parts[0] if len(parts) > 0 else "",
+                    "date": parts[1] if len(parts) > 1 else "",
+                    "subject": parts[2] if len(parts) > 2 else "",
+                }
+            )
         logger.info("git_tags: %d tags found", len(tags))
         return tags
 
@@ -286,8 +297,11 @@ class RepoTools:
             result = subprocess.run(
                 cmd,
                 cwd=str(self.repo_dir),
-                capture_output=True, text=True, timeout=60,
-                encoding="utf-8", errors="replace",
+                capture_output=True,
+                text=True,
+                timeout=60,
+                encoding="utf-8",
+                errors="replace",
             )
             return result.stdout
         except subprocess.CalledProcessError as exc:

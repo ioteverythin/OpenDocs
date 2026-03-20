@@ -10,9 +10,9 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
 from ...core.knowledge_graph import KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
 from .diff_agent import DiffSummary
 from .impact_agent import ImpactReport
 
@@ -20,6 +20,7 @@ from .impact_agent import ImpactReport
 @dataclass
 class ReleaseNote:
     """A single release note entry."""
+
     category: str  # added | changed | fixed | removed | security
     title: str
     description: str
@@ -30,6 +31,7 @@ class ReleaseNote:
 @dataclass
 class ReleaseNotes:
     """Structured release notes for a version bump."""
+
     version: str = ""
     date: str = ""
     summary: str = ""
@@ -138,26 +140,32 @@ class ReleaseNotesAgent(AgentBase):
 
         for fd in diff_summary.file_diffs:
             if fd.status == "added":
-                notes.append(ReleaseNote(
-                    category="added",
-                    title=f"New file: {fd.path}",
-                    description=f"Added {fd.additions} lines",
-                    files=[fd.path],
-                ))
+                notes.append(
+                    ReleaseNote(
+                        category="added",
+                        title=f"New file: {fd.path}",
+                        description=f"Added {fd.additions} lines",
+                        files=[fd.path],
+                    )
+                )
             elif fd.status == "deleted":
-                notes.append(ReleaseNote(
-                    category="removed",
-                    title=f"Removed: {fd.path}",
-                    description=f"Deleted {fd.deletions} lines",
-                    files=[fd.path],
-                ))
+                notes.append(
+                    ReleaseNote(
+                        category="removed",
+                        title=f"Removed: {fd.path}",
+                        description=f"Deleted {fd.deletions} lines",
+                        files=[fd.path],
+                    )
+                )
             elif fd.status == "modified":
-                notes.append(ReleaseNote(
-                    category="changed",
-                    title=f"Updated: {fd.path}",
-                    description=f"+{fd.additions}/-{fd.deletions} lines",
-                    files=[fd.path],
-                ))
+                notes.append(
+                    ReleaseNote(
+                        category="changed",
+                        title=f"Updated: {fd.path}",
+                        description=f"+{fd.additions}/-{fd.deletions} lines",
+                        files=[fd.path],
+                    )
+                )
 
         summary_parts = []
         if diff_summary.total_files:
@@ -172,9 +180,7 @@ class ReleaseNotesAgent(AgentBase):
             notes=notes,
         )
 
-    def _extract_diff(
-        self, prior_results: list[AgentResult] | None
-    ) -> DiffSummary | None:
+    def _extract_diff(self, prior_results: list[AgentResult] | None) -> DiffSummary | None:
         if not prior_results:
             return None
         for r in prior_results:
@@ -187,9 +193,7 @@ class ReleaseNotesAgent(AgentBase):
                 )
         return None
 
-    def _extract_impact(
-        self, prior_results: list[AgentResult] | None
-    ) -> ImpactReport | None:
+    def _extract_impact(self, prior_results: list[AgentResult] | None) -> ImpactReport | None:
         if not prior_results:
             return None
         for r in prior_results:

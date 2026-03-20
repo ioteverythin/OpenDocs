@@ -23,7 +23,6 @@ from opendocs.generators.architecture_generator import (
     _build_tech_stack,
 )
 
-
 # ── Fixtures ──────────────────────────────────────────────────────────────
 
 
@@ -42,146 +41,250 @@ def rich_kg():
     kg = KnowledgeGraph()
 
     # Project
-    kg.add_entity(Entity(
-        id="proj-smarttemp", name="SmartTemp",
-        entity_type=EntityType.PROJECT, confidence=1.0,
-    ))
+    kg.add_entity(
+        Entity(
+            id="proj-smarttemp",
+            name="SmartTemp",
+            entity_type=EntityType.PROJECT,
+            confidence=1.0,
+        )
+    )
 
     # Components
-    kg.add_entity(Entity(
-        id="comp-api", name="REST API",
-        entity_type=EntityType.COMPONENT, confidence=0.95,
-    ))
-    kg.add_entity(Entity(
-        id="comp-worker", name="Background Worker",
-        entity_type=EntityType.COMPONENT, confidence=0.9,
-    ))
+    kg.add_entity(
+        Entity(
+            id="comp-api",
+            name="REST API",
+            entity_type=EntityType.COMPONENT,
+            confidence=0.95,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="comp-worker",
+            name="Background Worker",
+            entity_type=EntityType.COMPONENT,
+            confidence=0.9,
+        )
+    )
 
     # Features
-    kg.add_entity(Entity(
-        id="feat-dashboard", name="Dashboard",
-        entity_type=EntityType.FEATURE, confidence=0.85,
-    ))
-    kg.add_entity(Entity(
-        id="feat-alerts", name="Real-time Alerts",
-        entity_type=EntityType.FEATURE, confidence=0.8,
-    ))
+    kg.add_entity(
+        Entity(
+            id="feat-dashboard",
+            name="Dashboard",
+            entity_type=EntityType.FEATURE,
+            confidence=0.85,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="feat-alerts",
+            name="Real-time Alerts",
+            entity_type=EntityType.FEATURE,
+            confidence=0.8,
+        )
+    )
 
     # Languages
-    kg.add_entity(Entity(
-        id="lang-python", name="Python",
-        entity_type=EntityType.LANGUAGE, confidence=0.95,
-    ))
-    kg.add_entity(Entity(
-        id="lang-typescript", name="TypeScript",
-        entity_type=EntityType.LANGUAGE, confidence=0.85,
-    ))
+    kg.add_entity(
+        Entity(
+            id="lang-python",
+            name="Python",
+            entity_type=EntityType.LANGUAGE,
+            confidence=0.95,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="lang-typescript",
+            name="TypeScript",
+            entity_type=EntityType.LANGUAGE,
+            confidence=0.85,
+        )
+    )
 
     # Frameworks
-    kg.add_entity(Entity(
-        id="fw-flask", name="Flask",
-        entity_type=EntityType.FRAMEWORK, confidence=0.9,
-        properties={"category": "backend"},
-    ))
-    kg.add_entity(Entity(
-        id="fw-react", name="React",
-        entity_type=EntityType.FRAMEWORK, confidence=0.85,
-        properties={"category": "frontend"},
-    ))
+    kg.add_entity(
+        Entity(
+            id="fw-flask",
+            name="Flask",
+            entity_type=EntityType.FRAMEWORK,
+            confidence=0.9,
+            properties={"category": "backend"},
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="fw-react",
+            name="React",
+            entity_type=EntityType.FRAMEWORK,
+            confidence=0.85,
+            properties={"category": "frontend"},
+        )
+    )
 
     # Databases
-    kg.add_entity(Entity(
-        id="db-postgres", name="PostgreSQL",
-        entity_type=EntityType.DATABASE, confidence=0.9,
-    ))
-    kg.add_entity(Entity(
-        id="db-redis", name="Redis",
-        entity_type=EntityType.DATABASE, confidence=0.8,
-    ))
+    kg.add_entity(
+        Entity(
+            id="db-postgres",
+            name="PostgreSQL",
+            entity_type=EntityType.DATABASE,
+            confidence=0.9,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="db-redis",
+            name="Redis",
+            entity_type=EntityType.DATABASE,
+            confidence=0.8,
+        )
+    )
 
     # Cloud / Platform
-    kg.add_entity(Entity(
-        id="cloud-aws", name="AWS",
-        entity_type=EntityType.CLOUD_SERVICE, confidence=0.85,
-    ))
-    kg.add_entity(Entity(
-        id="plat-docker", name="Docker",
-        entity_type=EntityType.PLATFORM, confidence=0.9,
-    ))
+    kg.add_entity(
+        Entity(
+            id="cloud-aws",
+            name="AWS",
+            entity_type=EntityType.CLOUD_SERVICE,
+            confidence=0.85,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="plat-docker",
+            name="Docker",
+            entity_type=EntityType.PLATFORM,
+            confidence=0.9,
+        )
+    )
 
     # API endpoint
-    kg.add_entity(Entity(
-        id="api-health", name="/api/health",
-        entity_type=EntityType.API_ENDPOINT, confidence=0.7,
-    ))
+    kg.add_entity(
+        Entity(
+            id="api-health",
+            name="/api/health",
+            entity_type=EntityType.API_ENDPOINT,
+            confidence=0.7,
+        )
+    )
 
     # Protocol
-    kg.add_entity(Entity(
-        id="proto-mqtt", name="MQTT",
-        entity_type=EntityType.PROTOCOL, confidence=0.8,
-    ))
+    kg.add_entity(
+        Entity(
+            id="proto-mqtt",
+            name="MQTT",
+            entity_type=EntityType.PROTOCOL,
+            confidence=0.8,
+        )
+    )
 
     # Hardware
-    kg.add_entity(Entity(
-        id="hw-rpi", name="Raspberry Pi",
-        entity_type=EntityType.HARDWARE, confidence=0.75,
-    ))
+    kg.add_entity(
+        Entity(
+            id="hw-rpi",
+            name="Raspberry Pi",
+            entity_type=EntityType.HARDWARE,
+            confidence=0.75,
+        )
+    )
 
     # Prerequisites
-    kg.add_entity(Entity(
-        id="prereq-node", name="Node.js 18+",
-        entity_type=EntityType.PREREQUISITE, confidence=0.8,
-    ))
+    kg.add_entity(
+        Entity(
+            id="prereq-node",
+            name="Node.js 18+",
+            entity_type=EntityType.PREREQUISITE,
+            confidence=0.8,
+        )
+    )
 
     # ── Relations ─────────────────────────────────────────────────────
-    kg.add_relation(Relation(
-        source_id="proj-smarttemp", target_id="lang-python",
-        relation_type=RelationType.USES,
-    ))
-    kg.add_relation(Relation(
-        source_id="proj-smarttemp", target_id="fw-flask",
-        relation_type=RelationType.USES,
-    ))
-    kg.add_relation(Relation(
-        source_id="proj-smarttemp", target_id="fw-react",
-        relation_type=RelationType.USES,
-    ))
-    kg.add_relation(Relation(
-        source_id="comp-api", target_id="db-postgres",
-        relation_type=RelationType.STORES_IN,
-    ))
-    kg.add_relation(Relation(
-        source_id="comp-api", target_id="db-redis",
-        relation_type=RelationType.CONNECTS_TO,
-    ))
-    kg.add_relation(Relation(
-        source_id="comp-worker", target_id="proto-mqtt",
-        relation_type=RelationType.COMMUNICATES_VIA,
-    ))
-    kg.add_relation(Relation(
-        source_id="proj-smarttemp", target_id="prereq-node",
-        relation_type=RelationType.REQUIRES,
-    ))
-    kg.add_relation(Relation(
-        source_id="proj-smarttemp", target_id="lang-python",
-        relation_type=RelationType.DEPENDS_ON,
-    ))
-    kg.add_relation(Relation(
-        source_id="comp-api", target_id="cloud-aws",
-        relation_type=RelationType.RUNS_ON,
-    ))
-    kg.add_relation(Relation(
-        source_id="comp-worker", target_id="plat-docker",
-        relation_type=RelationType.RUNS_ON,
-    ))
-    kg.add_relation(Relation(
-        source_id="comp-api", target_id="api-health",
-        relation_type=RelationType.EXPOSES,
-    ))
-    kg.add_relation(Relation(
-        source_id="proj-smarttemp", target_id="cloud-aws",
-        relation_type=RelationType.INTEGRATES_WITH,
-    ))
+    kg.add_relation(
+        Relation(
+            source_id="proj-smarttemp",
+            target_id="lang-python",
+            relation_type=RelationType.USES,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="proj-smarttemp",
+            target_id="fw-flask",
+            relation_type=RelationType.USES,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="proj-smarttemp",
+            target_id="fw-react",
+            relation_type=RelationType.USES,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="comp-api",
+            target_id="db-postgres",
+            relation_type=RelationType.STORES_IN,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="comp-api",
+            target_id="db-redis",
+            relation_type=RelationType.CONNECTS_TO,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="comp-worker",
+            target_id="proto-mqtt",
+            relation_type=RelationType.COMMUNICATES_VIA,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="proj-smarttemp",
+            target_id="prereq-node",
+            relation_type=RelationType.REQUIRES,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="proj-smarttemp",
+            target_id="lang-python",
+            relation_type=RelationType.DEPENDS_ON,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="comp-api",
+            target_id="cloud-aws",
+            relation_type=RelationType.RUNS_ON,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="comp-worker",
+            target_id="plat-docker",
+            relation_type=RelationType.RUNS_ON,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="comp-api",
+            target_id="api-health",
+            relation_type=RelationType.EXPOSES,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="proj-smarttemp",
+            target_id="cloud-aws",
+            relation_type=RelationType.INTEGRATES_WITH,
+        )
+    )
 
     return kg
 
@@ -196,10 +299,14 @@ def empty_kg():
 def minimal_kg():
     """KG with just a project — not enough for most diagrams."""
     kg = KnowledgeGraph()
-    kg.add_entity(Entity(
-        id="proj-x", name="ProjectX",
-        entity_type=EntityType.PROJECT, confidence=1.0,
-    ))
+    kg.add_entity(
+        Entity(
+            id="proj-x",
+            name="ProjectX",
+            entity_type=EntityType.PROJECT,
+            confidence=1.0,
+        )
+    )
     return kg
 
 

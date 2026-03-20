@@ -34,7 +34,6 @@ from __future__ import annotations
 import json
 import logging
 import os
-import re
 import time
 from abc import ABC, abstractmethod
 from typing import Any
@@ -107,15 +106,16 @@ class LLMProvider(ABC):
                 return self._call(system, user)
             except Exception as exc:
                 last_exc = exc
-                wait = 2 ** attempt
+                wait = 2**attempt
                 logger.warning(
                     "LLM request failed (attempt %d/%d): %s — retrying in %ds",
-                    attempt + 1, self.max_retries, exc, wait,
+                    attempt + 1,
+                    self.max_retries,
+                    exc,
+                    wait,
                 )
                 time.sleep(wait)
-        raise RuntimeError(
-            f"LLM request failed after {self.max_retries} attempts: {last_exc}"
-        )
+        raise RuntimeError(f"LLM request failed after {self.max_retries} attempts: {last_exc}")
 
     def chat_json(self, system: str, user: str) -> dict[str, Any]:
         """Send a chat completion expecting JSON output.
@@ -134,15 +134,15 @@ class LLMProvider(ABC):
                 time.sleep(1)
             except Exception as exc:
                 last_exc = exc
-                wait = 2 ** attempt
+                wait = 2**attempt
                 logger.warning(
                     "LLM JSON request failed (attempt %d/%d): %s",
-                    attempt + 1, self.max_retries, exc,
+                    attempt + 1,
+                    self.max_retries,
+                    exc,
                 )
                 time.sleep(wait)
-        raise RuntimeError(
-            f"LLM JSON request failed after {self.max_retries} attempts: {last_exc}"
-        )
+        raise RuntimeError(f"LLM JSON request failed after {self.max_retries} attempts: {last_exc}")
 
     # ── Subclass hooks ────────────────────────────────────────────────
 
@@ -201,15 +201,10 @@ class OpenAIProvider(LLMProvider):
         try:
             from openai import OpenAI
         except ImportError:
-            raise ImportError(
-                "OpenAI provider requires the 'openai' package. "
-                "Install with: pip install opendocs[llm]"
-            )
+            raise ImportError("OpenAI provider requires the 'openai' package. Install with: pip install opendocs[llm]")
         key = self.api_key or os.environ.get("OPENAI_API_KEY", "")
         if not key and not self.base_url:
-            raise RuntimeError(
-                "No OpenAI API key found. Pass --api-key or set OPENAI_API_KEY."
-            )
+            raise RuntimeError("No OpenAI API key found. Pass --api-key or set OPENAI_API_KEY.")
         ctor_kwargs: dict[str, Any] = {"api_key": key or "not-needed"}
         if self.base_url:
             ctor_kwargs["base_url"] = self.base_url
@@ -261,14 +256,11 @@ class AnthropicProvider(LLMProvider):
             from anthropic import Anthropic
         except ImportError:
             raise ImportError(
-                "Anthropic provider requires the 'anthropic' package. "
-                "Install with: pip install anthropic"
+                "Anthropic provider requires the 'anthropic' package. Install with: pip install anthropic"
             )
         key = self.api_key or os.environ.get("ANTHROPIC_API_KEY", "")
         if not key:
-            raise RuntimeError(
-                "No Anthropic API key found. Pass --api-key or set ANTHROPIC_API_KEY."
-            )
+            raise RuntimeError("No Anthropic API key found. Pass --api-key or set ANTHROPIC_API_KEY.")
         ctor_kwargs: dict[str, Any] = {"api_key": key}
         if self.base_url:
             ctor_kwargs["base_url"] = self.base_url
@@ -288,8 +280,7 @@ class AnthropicProvider(LLMProvider):
     def _call_json(self, system: str, user: str) -> str:
         """Claude doesn't have a native JSON mode; we guide via system prompt."""
         json_system = (
-            system
-            + "\n\nIMPORTANT: You MUST respond with valid JSON only. "
+            system + "\n\nIMPORTANT: You MUST respond with valid JSON only. "
             "No markdown fences, no commentary, no explanation — just the JSON object or array."
         )
         return self._call(json_system, user)
@@ -315,9 +306,7 @@ class GoogleProvider(LLMProvider):
             )
         key = self.api_key or os.environ.get("GOOGLE_API_KEY", "")
         if not key:
-            raise RuntimeError(
-                "No Google API key found. Pass --api-key or set GOOGLE_API_KEY."
-            )
+            raise RuntimeError("No Google API key found. Pass --api-key or set GOOGLE_API_KEY.")
         genai.configure(api_key=key)
         self._genai = genai
         self._gmodel = genai.GenerativeModel(
@@ -344,8 +333,7 @@ class GoogleProvider(LLMProvider):
     def _call_json(self, system: str, user: str) -> str:
         """Gemini supports response_mime_type for JSON."""
         json_system = (
-            system
-            + "\n\nIMPORTANT: You MUST respond with valid JSON only. "
+            system + "\n\nIMPORTANT: You MUST respond with valid JSON only. "
             "No markdown fences, no commentary — just the JSON object."
         )
         try:
@@ -409,8 +397,7 @@ class OllamaProvider(LLMProvider):
     def _call_json(self, system: str, user: str) -> str:
         """Ollama supports JSON mode via format param in some versions."""
         json_system = (
-            system
-            + "\n\nIMPORTANT: You MUST respond with valid JSON only. "
+            system + "\n\nIMPORTANT: You MUST respond with valid JSON only. "
             "No markdown fences, no commentary — just the JSON object."
         )
         try:
@@ -446,21 +433,14 @@ class AzureProvider(LLMProvider):
         try:
             from openai import AzureOpenAI
         except ImportError:
-            raise ImportError(
-                "Azure provider requires the 'openai' package. "
-                "Install with: pip install openai"
-            )
+            raise ImportError("Azure provider requires the 'openai' package. Install with: pip install openai")
         key = self.api_key or os.environ.get("AZURE_OPENAI_API_KEY", "")
         if not key:
-            raise RuntimeError(
-                "No Azure OpenAI API key found. Pass --api-key or set AZURE_OPENAI_API_KEY."
-            )
+            raise RuntimeError("No Azure OpenAI API key found. Pass --api-key or set AZURE_OPENAI_API_KEY.")
         if not self.base_url:
             self.base_url = os.environ.get("AZURE_OPENAI_ENDPOINT", "")
         if not self.base_url:
-            raise RuntimeError(
-                "Azure provider requires --base-url or AZURE_OPENAI_ENDPOINT."
-            )
+            raise RuntimeError("Azure provider requires --base-url or AZURE_OPENAI_ENDPOINT.")
         api_version = self.extra.get(
             "api_version",
             os.environ.get("AZURE_OPENAI_API_VERSION", "2024-02-15-preview"),
@@ -547,15 +527,10 @@ class AsyncOpenAIProvider(AsyncLLMProvider):
         try:
             from openai import AsyncOpenAI
         except ImportError:
-            raise ImportError(
-                "OpenAI provider requires the 'openai' package. "
-                "Install with: pip install opendocs[llm]"
-            )
+            raise ImportError("OpenAI provider requires the 'openai' package. Install with: pip install opendocs[llm]")
         key = self.api_key or os.environ.get("OPENAI_API_KEY", "")
         if not key and not self.base_url:
-            raise RuntimeError(
-                "No OpenAI API key found. Pass --api-key or set OPENAI_API_KEY."
-            )
+            raise RuntimeError("No OpenAI API key found. Pass --api-key or set OPENAI_API_KEY.")
         ctor_kwargs: dict[str, Any] = {"api_key": key or "not-needed"}
         if self.base_url:
             ctor_kwargs["base_url"] = self.base_url
@@ -604,8 +579,7 @@ class AsyncAnthropicProvider(AsyncLLMProvider):
             from anthropic import AsyncAnthropic
         except ImportError:
             raise ImportError(
-                "Anthropic provider requires the 'anthropic' package. "
-                "Install with: pip install anthropic"
+                "Anthropic provider requires the 'anthropic' package. Install with: pip install anthropic"
             )
         key = self.api_key or os.environ.get("ANTHROPIC_API_KEY", "")
         if not key:
@@ -626,10 +600,7 @@ class AsyncAnthropicProvider(AsyncLLMProvider):
         return resp.content[0].text if resp.content else ""
 
     async def chat_json(self, system: str, user: str) -> dict[str, Any]:
-        json_system = (
-            system
-            + "\n\nRespond with valid JSON only. No markdown, no commentary."
-        )
+        json_system = system + "\n\nRespond with valid JSON only. No markdown, no commentary."
         raw = await self.chat(json_system, user)
         return self._parse_json(raw)
 
@@ -656,14 +627,19 @@ class AsyncGoogleProvider(AsyncLLMProvider):
     async def chat(self, system: str, user: str) -> str:
         # google-generativeai is sync; we run it in the default executor
         import asyncio
+
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self._sync_call, system, user)
 
     async def chat_json(self, system: str, user: str) -> dict[str, Any]:
         import asyncio
+
         loop = asyncio.get_event_loop()
         raw = await loop.run_in_executor(
-            None, self._sync_call_json, system, user,
+            None,
+            self._sync_call_json,
+            system,
+            user,
         )
         return self._parse_json(raw)
 
@@ -680,9 +656,7 @@ class AsyncGoogleProvider(AsyncLLMProvider):
         return resp.text or ""
 
     def _sync_call_json(self, system: str, user: str) -> str:
-        json_system = (
-            system + "\n\nRespond with valid JSON only. No markdown, no commentary."
-        )
+        json_system = system + "\n\nRespond with valid JSON only. No markdown, no commentary."
         try:
             model = self._genai.GenerativeModel(
                 model_name=self.model,
@@ -729,9 +703,7 @@ class AsyncOllamaProvider(AsyncLLMProvider):
         return resp.choices[0].message.content or ""
 
     async def chat_json(self, system: str, user: str) -> dict[str, Any]:
-        json_system = (
-            system + "\n\nRespond with valid JSON only. No markdown, no commentary."
-        )
+        json_system = system + "\n\nRespond with valid JSON only. No markdown, no commentary."
         try:
             resp = await self._client.chat.completions.create(
                 model=self.model,
@@ -801,7 +773,8 @@ class AsyncAzureProvider(AsyncLLMProvider):
             raw = resp.choices[0].message.content or "{}"
         except Exception:
             raw = await self.chat(
-                system + "\n\nRespond with valid JSON only.", user,
+                system + "\n\nRespond with valid JSON only.",
+                user,
             )
         return self._parse_json(raw)
 
@@ -860,10 +833,7 @@ def get_provider(
     name = provider.lower().strip()
     cls = _SYNC_PROVIDERS.get(name)
     if cls is None:
-        raise ValueError(
-            f"Unknown provider '{provider}'. "
-            f"Supported: {', '.join(SUPPORTED_PROVIDERS)}"
-        )
+        raise ValueError(f"Unknown provider '{provider}'. Supported: {', '.join(SUPPORTED_PROVIDERS)}")
     return cls(
         api_key=api_key,
         model=model,
@@ -889,10 +859,7 @@ def get_async_provider(
     name = provider.lower().strip()
     cls = _ASYNC_PROVIDERS.get(name)
     if cls is None:
-        raise ValueError(
-            f"Unknown async provider '{provider}'. "
-            f"Supported: {', '.join(SUPPORTED_PROVIDERS)}"
-        )
+        raise ValueError(f"Unknown async provider '{provider}'. Supported: {', '.join(SUPPORTED_PROVIDERS)}")
     return cls(
         api_key=api_key,
         model=model,

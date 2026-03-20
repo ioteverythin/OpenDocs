@@ -91,10 +91,22 @@ class AnalysisTools:
         stack.update(self._detect_node_deps(file_set))
 
         # 3. Detect by file extensions
-        ext_map = {".py": "Python", ".ts": "TypeScript", ".js": "JavaScript",
-                   ".go": "Go", ".rs": "Rust", ".java": "Java", ".rb": "Ruby",
-                   ".cs": "C#", ".cpp": "C++", ".c": "C", ".swift": "Swift",
-                   ".kt": "Kotlin", ".scala": "Scala", ".r": "R"}
+        ext_map = {
+            ".py": "Python",
+            ".ts": "TypeScript",
+            ".js": "JavaScript",
+            ".go": "Go",
+            ".rs": "Rust",
+            ".java": "Java",
+            ".rb": "Ruby",
+            ".cs": "C#",
+            ".cpp": "C++",
+            ".c": "C",
+            ".swift": "Swift",
+            ".kt": "Kotlin",
+            ".scala": "Scala",
+            ".r": "R",
+        }
         for f in files:
             ext = Path(f).suffix.lower()
             if ext in ext_map:
@@ -106,9 +118,11 @@ class AnalysisTools:
     def _detect_python_deps(self, file_set: set[str]) -> set[str]:
         """Scan Python dependency files for frameworks."""
         found: set[str] = set()
-        dep_files = [f for f in file_set
-                     if f.endswith("requirements.txt") or f == "pyproject.toml"
-                     or f == "setup.py" or f == "Pipfile"]
+        dep_files = [
+            f
+            for f in file_set
+            if f.endswith("requirements.txt") or f == "pyproject.toml" or f == "setup.py" or f == "Pipfile"
+        ]
         for df in dep_files:
             try:
                 content = self._repo.read_file(df).lower()
@@ -147,7 +161,10 @@ class AnalysisTools:
         Returns ``{"install": [...], "run": [...], "test": [...], "build": [...]}``.
         """
         commands: dict[str, list[str]] = {
-            "install": [], "run": [], "test": [], "build": [],
+            "install": [],
+            "run": [],
+            "test": [],
+            "build": [],
         }
 
         # --- README ---
@@ -227,18 +244,36 @@ class AnalysisTools:
     def _classify_command(cmd: str, commands: dict) -> None:
         """Classify a command string into install/run/test/build."""
         lower = cmd.lower()
-        if any(kw in lower for kw in ("pip install", "npm install", "yarn add",
-                                       "cargo install", "go install", "apt-get")):
+        if any(
+            kw in lower
+            for kw in (
+                "pip install",
+                "npm install",
+                "yarn add",
+                "cargo install",
+                "go install",
+                "apt-get",
+            )
+        ):
             commands["install"].append(cmd)
-        elif any(kw in lower for kw in ("pytest", "npm test", "cargo test",
-                                         "go test", "unittest")):
+        elif any(kw in lower for kw in ("pytest", "npm test", "cargo test", "go test", "unittest")):
             commands["test"].append(cmd)
-        elif any(kw in lower for kw in ("npm run build", "cargo build",
-                                         "go build", "make build", "docker build")):
+        elif any(kw in lower for kw in ("npm run build", "cargo build", "go build", "make build", "docker build")):
             commands["build"].append(cmd)
-        elif any(kw in lower for kw in ("python", "npm start", "npm run",
-                                         "node", "cargo run", "go run",
-                                         "uvicorn", "gunicorn", "flask run")):
+        elif any(
+            kw in lower
+            for kw in (
+                "python",
+                "npm start",
+                "npm run",
+                "node",
+                "cargo run",
+                "go run",
+                "uvicorn",
+                "gunicorn",
+                "flask run",
+            )
+        ):
             commands["run"].append(cmd)
 
     # ------------------------------------------------------------------

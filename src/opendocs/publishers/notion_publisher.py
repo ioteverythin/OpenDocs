@@ -29,10 +29,10 @@ import re
 from pathlib import Path
 from typing import Any
 
-
 # ---------------------------------------------------------------------------
 # Markdown → Notion blocks conversion
 # ---------------------------------------------------------------------------
+
 
 def _rich_text(text: str) -> list[dict[str, Any]]:
     """Build a Notion ``rich_text`` array for plain text (≤ 2 000 chars)."""
@@ -58,16 +58,77 @@ def _divider_block() -> dict[str, Any]:
 
 def _code_block(code: str, language: str = "plain text") -> dict[str, Any]:
     _SUPPORTED_LANGS = {
-        "abap", "arduino", "bash", "basic", "c", "clojure", "coffeescript",
-        "c++", "c#", "css", "dart", "diff", "docker", "elixir", "elm",
-        "erlang", "flow", "fortran", "f#", "gherkin", "glsl", "go", "graphql",
-        "groovy", "haskell", "html", "java", "javascript", "json", "julia",
-        "kotlin", "latex", "less", "lisp", "livescript", "lua", "makefile",
-        "markdown", "markup", "matlab", "mermaid", "nix", "objective-c",
-        "ocaml", "pascal", "perl", "php", "plain text", "powershell", "prolog",
-        "protobuf", "python", "r", "reason", "ruby", "rust", "sass", "scala",
-        "scheme", "scss", "shell", "sql", "swift", "typescript", "vb.net",
-        "verilog", "vhdl", "visual basic", "webassembly", "xml", "yaml",
+        "abap",
+        "arduino",
+        "bash",
+        "basic",
+        "c",
+        "clojure",
+        "coffeescript",
+        "c++",
+        "c#",
+        "css",
+        "dart",
+        "diff",
+        "docker",
+        "elixir",
+        "elm",
+        "erlang",
+        "flow",
+        "fortran",
+        "f#",
+        "gherkin",
+        "glsl",
+        "go",
+        "graphql",
+        "groovy",
+        "haskell",
+        "html",
+        "java",
+        "javascript",
+        "json",
+        "julia",
+        "kotlin",
+        "latex",
+        "less",
+        "lisp",
+        "livescript",
+        "lua",
+        "makefile",
+        "markdown",
+        "markup",
+        "matlab",
+        "mermaid",
+        "nix",
+        "objective-c",
+        "ocaml",
+        "pascal",
+        "perl",
+        "php",
+        "plain text",
+        "powershell",
+        "prolog",
+        "protobuf",
+        "python",
+        "r",
+        "reason",
+        "ruby",
+        "rust",
+        "sass",
+        "scala",
+        "scheme",
+        "scss",
+        "shell",
+        "sql",
+        "swift",
+        "typescript",
+        "vb.net",
+        "verilog",
+        "vhdl",
+        "visual basic",
+        "webassembly",
+        "xml",
+        "yaml",
     }
     lang = language.lower()
     if lang not in _SUPPORTED_LANGS:
@@ -182,18 +243,18 @@ def markdown_to_notion_blocks(markdown: str) -> list[dict[str, Any]]:
         # Collect consecutive non-blank, non-special lines as one paragraph
         para_lines: list[str] = []
         while i < len(lines):
-            l = lines[i]
+            line = lines[i]
             if (
-                not l.strip()
-                or l.startswith("#")
-                or l.startswith("```")
-                or re.match(r"^[-*_]{3,}\s*$", l.strip())
-                or re.match(r"^[\*\-\+]\s+", l)
-                or re.match(r"^\d+\.\s+", l)
+                not line.strip()
+                or line.startswith("#")
+                or line.startswith("```")
+                or re.match(r"^[-*_]{3,}\s*$", line.strip())
+                or re.match(r"^[\*\-\+]\s+", line)
+                or re.match(r"^\d+\.\s+", line)
             ):
                 break
             # Strip inline markdown (bold / italic) for plain text
-            clean = re.sub(r"\*{1,2}([^*]+)\*{1,2}", r"\1", l)
+            clean = re.sub(r"\*{1,2}([^*]+)\*{1,2}", r"\1", line)
             clean = re.sub(r"`([^`]+)`", r"\1", clean)
             para_lines.append(clean.strip())
             i += 1
@@ -206,6 +267,7 @@ def markdown_to_notion_blocks(markdown: str) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 # NotionPublisher
 # ---------------------------------------------------------------------------
+
 
 class NotionPublisher:
     """Publish a Markdown file as a new child page in Notion.
@@ -225,8 +287,7 @@ class NotionPublisher:
             from notion_client import Client  # type: ignore[import]
         except ImportError:
             raise ImportError(
-                "notion-client is required for Notion publishing.\n"
-                "Install it with:  pip install opendocs[publish]"
+                "notion-client is required for Notion publishing.\nInstall it with:  pip install opendocs[publish]"
             ) from None
 
         self._client = Client(auth=token)
@@ -273,9 +334,7 @@ class NotionPublisher:
         # Create the page (initially empty)
         response = self._client.pages.create(
             parent={"type": "page_id", "page_id": self._page_id},
-            properties={
-                "title": [{"type": "text", "text": {"content": page_title}}]
-            },
+            properties={"title": [{"type": "text", "text": {"content": page_title}}]},
         )
         new_page_id: str = response["id"]
 

@@ -13,13 +13,14 @@ from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Evidence pointer
 # ---------------------------------------------------------------------------
 
+
 class EvidenceType(str, Enum):
     """The kind of source material backing a claim."""
+
     README_SECTION = "readme_section"
     CODE_FILE = "code_file"
     CODE_SNIPPET = "code_snippet"
@@ -53,13 +54,13 @@ class EvidencePointer(BaseModel):
 
     id: str = Field(default_factory=lambda: f"ev-{uuid.uuid4().hex[:10]}")
     evidence_type: EvidenceType
-    source_path: str = ""                  # relative file path in repo
-    section: str = ""                      # README section title
-    snippet: str = ""                      # short excerpt (≤200 chars)
+    source_path: str = ""  # relative file path in repo
+    section: str = ""  # README section title
+    snippet: str = ""  # short excerpt (≤200 chars)
     line_start: Optional[int] = None
     line_end: Optional[int] = None
-    commit_sha: str = ""                   # git commit for traceability
-    url: str = ""                          # link to source (GH permalink)
+    commit_sha: str = ""  # git commit for traceability
+    url: str = ""  # link to source (GH permalink)
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -67,6 +68,7 @@ class EvidencePointer(BaseModel):
 # ---------------------------------------------------------------------------
 # Claim model (generated assertion + evidence links)
 # ---------------------------------------------------------------------------
+
 
 class Claim(BaseModel):
     """A single generated assertion tied to evidence.
@@ -76,16 +78,17 @@ class Claim(BaseModel):
     """
 
     id: str = Field(default_factory=lambda: f"cl-{uuid.uuid4().hex[:8]}")
-    text: str                              # the generated assertion
-    artifact_id: str = ""                  # which artifact contains this
+    text: str  # the generated assertion
+    artifact_id: str = ""  # which artifact contains this
     evidence_ids: list[str] = Field(default_factory=list)
-    is_assumption: bool = False            # True if no evidence found
+    is_assumption: bool = False  # True if no evidence found
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
 
 
 # ---------------------------------------------------------------------------
 # Evidence coverage score
 # ---------------------------------------------------------------------------
+
 
 class EvidenceCoverage(BaseModel):
     """Aggregate evidence coverage score for an artifact.
@@ -94,7 +97,7 @@ class EvidenceCoverage(BaseModel):
     """
 
     artifact_id: str
-    artifact_type: str = ""                # e.g. "word", "pptx", "diagram"
+    artifact_type: str = ""  # e.g. "word", "pptx", "diagram"
     total_claims: int = 0
     backed_claims: int = 0
     assumption_count: int = 0
@@ -133,6 +136,7 @@ class EvidenceCoverage(BaseModel):
 # ---------------------------------------------------------------------------
 # Evidence registry (in-memory store for a pipeline run)
 # ---------------------------------------------------------------------------
+
 
 class EvidenceRegistry:
     """Collects all evidence pointers and claims during a pipeline run.

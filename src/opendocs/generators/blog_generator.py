@@ -11,9 +11,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..core.knowledge_graph import EntityType, KnowledgeGraph
+from ..core.knowledge_graph import EntityType
 from ..core.models import (
-    BlockType,
     CodeBlock,
     ContentBlock,
     DocumentModel,
@@ -28,7 +27,7 @@ from ..core.models import (
 from .base import BaseGenerator
 
 if TYPE_CHECKING:
-    from .diagram_extractor import ImageCache
+    pass
 
 
 class BlogGenerator(BaseGenerator):
@@ -78,18 +77,22 @@ class BlogGenerator(BaseGenerator):
         return self._build_template_blog(doc, name, now, url)
 
     def _wrap_llm_blog(
-        self, blog_body: str, doc: DocumentModel,
-        name: str, now: str, url: str,
+        self,
+        blog_body: str,
+        doc: DocumentModel,
+        name: str,
+        now: str,
+        url: str,
     ) -> str:
         """Wrap LLM-generated blog prose with front-matter and footer."""
         lines: list[str] = []
 
         # Front-matter
         lines.append("---")
-        lines.append(f"title: \"{name}: A Deep Dive\"")
+        lines.append(f'title: "{name}: A Deep Dive"')
         lines.append(f"date: {now}")
-        lines.append(f"author: opendocs")
-        lines.append(f"description: \"{self._strip_html(self._build_meta_description(doc))}\"")
+        lines.append("author: opendocs")
+        lines.append(f'description: "{self._strip_html(self._build_meta_description(doc))}"')
         if url:
             lines.append(f"canonical_url: {url}")
         lines.append(f"tags: [{self._build_tags(doc)}]")
@@ -115,17 +118,21 @@ class BlogGenerator(BaseGenerator):
         return "\n".join(lines)
 
     def _build_template_blog(
-        self, doc: DocumentModel, name: str, now: str, url: str,
+        self,
+        doc: DocumentModel,
+        name: str,
+        now: str,
+        url: str,
     ) -> str:
         """Build the blog using deterministic templates (basic mode)."""
         lines: list[str] = []
 
         # -- Front-matter / meta -----------------------------------------
         lines.append("---")
-        lines.append(f"title: \"{name}: A Deep Dive\"")
+        lines.append(f'title: "{name}: A Deep Dive"')
         lines.append(f"date: {now}")
-        lines.append(f"author: opendocs")
-        lines.append(f"description: \"{self._strip_html(self._build_meta_description(doc))}\"")
+        lines.append("author: opendocs")
+        lines.append(f'description: "{self._strip_html(self._build_meta_description(doc))}"')
         if url:
             lines.append(f"canonical_url: {url}")
         lines.append(f"tags: [{self._build_tags(doc)}]")
@@ -175,10 +182,7 @@ class BlogGenerator(BaseGenerator):
             self._render_section(lines, section, depth=2)
 
         # -- Code Examples (pull most interesting code blocks) -----------
-        code_blocks = [
-            b for b in doc.all_blocks
-            if isinstance(b, CodeBlock) and len(b.code.strip()) > 20
-        ]
+        code_blocks = [b for b in doc.all_blocks if isinstance(b, CodeBlock) and len(b.code.strip()) > 20]
         if code_blocks:
             lines.append("## Code Examples")
             lines.append("")
@@ -257,8 +261,10 @@ class BlogGenerator(BaseGenerator):
         if self.kg:
             for e in self.kg.entities:
                 if e.entity_type in (
-                    EntityType.TECHNOLOGY, EntityType.FRAMEWORK,
-                    EntityType.LANGUAGE, EntityType.PLATFORM,
+                    EntityType.TECHNOLOGY,
+                    EntityType.FRAMEWORK,
+                    EntityType.LANGUAGE,
+                    EntityType.PLATFORM,
                 ):
                     tags.append(e.name.lower())
         if doc.metadata.repo_name:
@@ -272,10 +278,7 @@ class BlogGenerator(BaseGenerator):
             return self._strip_html(self.kg.executive_summary)
 
         # Fallback: synthesize from first paragraphs
-        paras = [
-            self._strip_html(b.text) for b in doc.all_blocks
-            if isinstance(b, ParagraphBlock) and len(b.text) > 40
-        ]
+        paras = [self._strip_html(b.text) for b in doc.all_blocks if isinstance(b, ParagraphBlock) and len(b.text) > 40]
         if paras:
             intro = paras[0]
             if len(paras) > 1:
@@ -321,16 +324,22 @@ class BlogGenerator(BaseGenerator):
         techs: list[tuple[str, str]] = []
         for e in self.kg.entities:
             if e.entity_type in (
-                EntityType.TECHNOLOGY, EntityType.FRAMEWORK,
-                EntityType.LANGUAGE, EntityType.DATABASE,
-                EntityType.CLOUD_SERVICE, EntityType.PLATFORM,
+                EntityType.TECHNOLOGY,
+                EntityType.FRAMEWORK,
+                EntityType.LANGUAGE,
+                EntityType.DATABASE,
+                EntityType.CLOUD_SERVICE,
+                EntityType.PLATFORM,
             ):
                 category = e.entity_type.value.replace("_", " ").title()
                 techs.append((e.name, category))
         return techs[:15]
 
     def _render_section(
-        self, lines: list[str], section: Section, depth: int,
+        self,
+        lines: list[str],
+        section: Section,
+        depth: int,
     ) -> None:
         """Recursively render a section as blog-style Markdown.
 
@@ -339,9 +348,13 @@ class BlogGenerator(BaseGenerator):
         """
         if section.title:
             _skip = {
-                "sponsor", "sponsors", "keystone sponsor",
-                "gold and silver sponsors", "bronze sponsors",
-                "opinions", "testimonials",
+                "sponsor",
+                "sponsors",
+                "keystone sponsor",
+                "gold and silver sponsors",
+                "bronze sponsors",
+                "opinions",
+                "testimonials",
             }
             if section.title.lower().strip() in _skip:
                 return
@@ -403,9 +416,16 @@ class BlogGenerator(BaseGenerator):
 
     def _find_install_block(self, doc: DocumentModel) -> CodeBlock | None:
         """Find the first code block that looks like an install command."""
-        install_keywords = ("pip install", "npm install", "cargo install",
-                            "brew install", "apt install", "go install",
-                            "git clone", "docker pull")
+        install_keywords = (
+            "pip install",
+            "npm install",
+            "cargo install",
+            "brew install",
+            "apt install",
+            "go install",
+            "git clone",
+            "docker pull",
+        )
         for b in doc.all_blocks:
             if isinstance(b, CodeBlock):
                 lower = b.code.lower()

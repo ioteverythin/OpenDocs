@@ -9,7 +9,7 @@ from rich.console import Console
 
 from .core.models import OutputFormat
 from .core.template_vars import load_template_vars
-from .generators.themes import list_themes, get_theme
+from .generators.themes import list_themes
 from .pipeline import Pipeline
 
 console = Console()
@@ -51,18 +51,32 @@ def main():
 @main.command()
 @click.argument("source", metavar="SOURCE")
 @click.option(
-    "-f", "--format",
+    "-f",
+    "--format",
     "fmt",
     type=click.Choice(
-        ["word", "pdf", "pptx", "blog", "jira", "changelog",
-         "latex", "onepager", "social", "faq", "architecture", "all"],
+        [
+            "word",
+            "pdf",
+            "pptx",
+            "blog",
+            "jira",
+            "changelog",
+            "latex",
+            "onepager",
+            "social",
+            "faq",
+            "architecture",
+            "all",
+        ],
         case_sensitive=False,
     ),
     default="all",
     help="Output format (default: all).",
 )
 @click.option(
-    "-o", "--output",
+    "-o",
+    "--output",
     "output_dir",
     type=click.Path(),
     default="./output",
@@ -120,7 +134,7 @@ def main():
     "--sort-tables",
     "sort_tables",
     default="smart",
-    help='Table sort strategy: smart (auto), alpha, numeric, column:N, column:N:desc, or none.',
+    help="Table sort strategy: smart (auto), alpha, numeric, column:N, column:N:desc, or none.",
 )
 @click.option(
     "--config",
@@ -134,7 +148,11 @@ def main():
 @click.option("--doc-version", "doc_version", default=None, help="Document / project version string.")
 @click.option("--org", "organisation", default=None, help="Organisation name for headers and footers.")
 @click.option("--department", default=None, help="Department / team name.")
-@click.option("--confidentiality", default=None, help="Classification label (e.g. Internal, Confidential, Public).")
+@click.option(
+    "--confidentiality",
+    default=None,
+    help="Classification label (e.g. Internal, Confidential, Public).",
+)
 @click.option(
     "--include-outputs/--no-outputs",
     "include_outputs",
@@ -252,6 +270,7 @@ def generate(
 
     # Auto-detect notebooks
     from .core.notebook_parser import is_notebook
+
     if is_notebook(source) and not local:
         local = True  # Notebooks are always local files
 
@@ -259,10 +278,18 @@ def generate(
     chosen = FORMAT_MAP[fmt.lower()]
     if chosen == OutputFormat.ALL:
         formats = [
-            OutputFormat.WORD, OutputFormat.PDF, OutputFormat.PPTX,
-            OutputFormat.BLOG, OutputFormat.JIRA, OutputFormat.CHANGELOG,
-            OutputFormat.LATEX, OutputFormat.ONEPAGER, OutputFormat.SOCIAL,
-            OutputFormat.FAQ, OutputFormat.ARCHITECTURE, OutputFormat.MINDMAP,
+            OutputFormat.WORD,
+            OutputFormat.PDF,
+            OutputFormat.PPTX,
+            OutputFormat.BLOG,
+            OutputFormat.JIRA,
+            OutputFormat.CHANGELOG,
+            OutputFormat.LATEX,
+            OutputFormat.ONEPAGER,
+            OutputFormat.SOCIAL,
+            OutputFormat.FAQ,
+            OutputFormat.ARCHITECTURE,
+            OutputFormat.MINDMAP,
         ]
     else:
         formats = [chosen]
@@ -307,10 +334,7 @@ def generate(
     # ---- Post-generation publishing ------------------------------------
     # Find the best Markdown file to publish (blog_post.md preferred)
     def _find_markdown_output() -> Path | None:
-        md_candidates = [
-            r.output_path for r in result.results
-            if r.success and r.output_path.suffix == ".md"
-        ]
+        md_candidates = [r.output_path for r in result.results if r.success and r.output_path.suffix == ".md"]
         # Prefer blog_post over analysis_report over any other .md
         for candidate in md_candidates:
             if "blog" in candidate.stem.lower():
@@ -319,7 +343,9 @@ def generate(
 
     if notion_page_id:
         if not notion_token:
-            console.print("[yellow]WARNING: --publish-notion requires --notion-token (or NOTION_TOKEN env var). Skipping.[/]")
+            console.print(
+                "[yellow]WARNING: --publish-notion requires --notion-token (or NOTION_TOKEN env var). Skipping.[/]"
+            )
         else:
             md_file = _find_markdown_output()
             if not md_file:
@@ -327,6 +353,7 @@ def generate(
             else:
                 try:
                     from .publishers import NotionPublisher
+
                     console.print("[bold blue]Publishing to Notion...[/]")
                     pub = NotionPublisher(token=notion_token, page_id=notion_page_id)
                     url = pub.publish(md_file)
@@ -337,11 +364,15 @@ def generate(
                     console.print(f"[red]Notion publish failed: {exc}[/]")
 
     if confluence_space:
-        missing = [n for n, v in [
-            ("--confluence-url", confluence_url),
-            ("--confluence-user", confluence_user),
-            ("--confluence-token", confluence_token),
-        ] if not v]
+        missing = [
+            n
+            for n, v in [
+                ("--confluence-url", confluence_url),
+                ("--confluence-user", confluence_user),
+                ("--confluence-token", confluence_token),
+            ]
+            if not v
+        ]
         if missing:
             console.print(f"[yellow]WARNING: Confluence publish requires {', '.join(missing)}. Skipping.[/]")
         else:
@@ -351,6 +382,7 @@ def generate(
             else:
                 try:
                     from .publishers import ConfluencePublisher
+
                     console.print("[bold blue]Publishing to Confluence...[/]")
                     pub = ConfluencePublisher(
                         url=confluence_url,
@@ -406,9 +438,10 @@ def themes():
 def inspect(source: str, local: bool, token: str | None):
     """Fetch and parse a README or Jupyter Notebook, then display the structured representation."""
     from rich.tree import Tree
+
     from .core.fetcher import ReadmeFetcher
-    from .core.parser import ReadmeParser
     from .core.notebook_parser import NotebookParser, is_notebook
+    from .core.parser import ReadmeParser
 
     if is_notebook(source):
         parser = NotebookParser()
@@ -437,7 +470,8 @@ def inspect(source: str, local: bool, token: str | None):
 @main.command()
 @click.argument("repo_dir", type=click.Path(exists=True))
 @click.option(
-    "-o", "--output",
+    "-o",
+    "--output",
     "output_dir",
     default="./output",
     help="Output directory for generated docs (default: ./output).",
@@ -472,11 +506,24 @@ def inspect(source: str, local: bool, token: str | None):
     help="Comma-separated file patterns to watch (e.g. 'README.md,docs/*.md,*.ipynb').",
 )
 @click.option(
-    "-f", "--format",
+    "-f",
+    "--format",
     "fmt",
     type=click.Choice(
-        ["word", "pdf", "pptx", "blog", "jira", "changelog",
-         "latex", "onepager", "social", "faq", "architecture", "all"],
+        [
+            "word",
+            "pdf",
+            "pptx",
+            "blog",
+            "jira",
+            "changelog",
+            "latex",
+            "onepager",
+            "social",
+            "faq",
+            "architecture",
+            "all",
+        ],
         case_sensitive=False,
     ),
     default="all",
@@ -503,8 +550,13 @@ def inspect(source: str, local: bool, token: str | None):
     type=click.Choice(["openai", "anthropic", "google", "ollama", "azure"], case_sensitive=False),
     default="openai",
 )
-@click.option("--config", "config_path", type=click.Path(exists=True), default=None,
-              help="Template variables config file.")
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True),
+    default=None,
+    help="Template variables config file.",
+)
 def watch(
     repo_dir: str,
     output_dir: str,
@@ -574,10 +626,7 @@ def watch(
 
 def _add_section_tree(parent, section):
     """Recursively add sections to a Rich tree."""
-    node = parent.add(
-        f"[blue]H{section.level}:[/blue] {section.title} "
-        f"[dim]({len(section.blocks)} blocks)[/dim]"
-    )
+    node = parent.add(f"[blue]H{section.level}:[/blue] {section.title} [dim]({len(section.blocks)} blocks)[/dim]")
     for sub in section.subsections:
         _add_section_tree(node, sub)
 

@@ -14,20 +14,9 @@ These tests validate:
 
 from __future__ import annotations
 
-import asyncio
 import pytest
 
-from opendocs.core.knowledge_graph import (
-    Entity,
-    EntityType,
-    KnowledgeGraph,
-    Relation,
-    RelationType,
-)
-from opendocs.core.models import DocumentModel
-
 # -- Base models --
-
 from opendocs.agents.base import (
     AgentPlan,
     AgentResult,
@@ -38,9 +27,14 @@ from opendocs.agents.base import (
     ToolCall,
     ToolCallStatus,
 )
+from opendocs.agents.critic import CriticAgent, CriticVerdict
+
+# -- Diff pipeline --
+from opendocs.agents.diff import DiffAgent, ImpactAgent, RegenerationAgent, ReleaseNotesAgent
+from opendocs.agents.diff.diff_agent import DiffSummary, FileDiff
+from opendocs.agents.diff.impact_agent import DeltaKind, EntityDelta, ImpactReport
 
 # -- Evidence --
-
 from opendocs.agents.evidence import (
     Claim,
     EvidenceCoverage,
@@ -48,52 +42,56 @@ from opendocs.agents.evidence import (
     EvidenceRegistry,
     EvidenceType,
 )
-
-# -- Privacy --
-
-from opendocs.agents.privacy import PrivacyGuard, PrivacyMode
-
-# -- Core agents --
-
-from opendocs.agents.planner import PlannerAgent
 from opendocs.agents.executor import ExecutorAgent
-from opendocs.agents.critic import CriticAgent, CriticVerdict
 from opendocs.agents.orchestrator import AgentOrchestrator, OrchestrationResult
 
-# -- Diff pipeline --
+# -- Core agents --
+from opendocs.agents.planner import PlannerAgent
 
-from opendocs.agents.diff import DiffAgent, ImpactAgent, RegenerationAgent, ReleaseNotesAgent
-from opendocs.agents.diff.diff_agent import DiffSummary, FileDiff
-from opendocs.agents.diff.impact_agent import DeltaKind, EntityDelta, ImpactReport
+# -- Privacy --
+from opendocs.agents.privacy import PrivacyGuard, PrivacyMode
 
 # -- Specialized --
-
 from opendocs.agents.specialized import (
-    MicroservicesAgent,
-    EventDrivenAgent,
-    MLAgent,
     DataEngineeringAgent,
+    EventDrivenAgent,
     InfraAgent,
+    MicroservicesAgent,
+    MLAgent,
 )
 
 # -- Tool contracts --
-
-from opendocs.agents.tools.contracts import TOOL_REGISTRY, ToolContract
-
+from opendocs.agents.tools.contracts import TOOL_REGISTRY
+from opendocs.core.knowledge_graph import (
+    Entity,
+    EntityType,
+    KnowledgeGraph,
+    Relation,
+    RelationType,
+)
 
 # ===================================================================
 # Fixtures
 # ===================================================================
+
 
 @pytest.fixture
 def sample_kg() -> KnowledgeGraph:
     """A small knowledge graph for testing."""
     return KnowledgeGraph(
         entities=[
-            Entity(id="proj-1", name="MyApp", entity_type=EntityType.PROJECT,
-                   properties={"source_file": "README.md"}),
-            Entity(id="comp-1", name="API Server", entity_type=EntityType.COMPONENT,
-                   properties={"source_file": "src/api/main.py"}),
+            Entity(
+                id="proj-1",
+                name="MyApp",
+                entity_type=EntityType.PROJECT,
+                properties={"source_file": "README.md"},
+            ),
+            Entity(
+                id="comp-1",
+                name="API Server",
+                entity_type=EntityType.COMPONENT,
+                properties={"source_file": "src/api/main.py"},
+            ),
             Entity(id="tech-1", name="FastAPI", entity_type=EntityType.TECHNOLOGY),
             Entity(id="tech-2", name="PostgreSQL", entity_type=EntityType.TECHNOLOGY),
         ],
@@ -193,6 +191,7 @@ def infra_profile() -> RepoProfile:
 # 1. Base models
 # ===================================================================
 
+
 class TestBaseModels:
     """Test Pydantic data models instantiate and serialize correctly."""
 
@@ -208,9 +207,7 @@ class TestBaseModels:
             step_number=1,
             description="Search repo",
             agent_role=AgentRole.EXECUTOR,
-            tool_calls=[
-                ToolCall(tool_name="repo.search", parameters={"query": "x"})
-            ],
+            tool_calls=[ToolCall(tool_name="repo.search", parameters={"query": "x"})],
         )
         d = step.model_dump()
         assert d["step_number"] == 1
@@ -255,6 +252,7 @@ class TestBaseModels:
 # ===================================================================
 # 2. Evidence registry
 # ===================================================================
+
 
 class TestEvidenceRegistry:
     """Test evidence pointer registration and coverage scoring."""
@@ -341,6 +339,7 @@ class TestEvidenceRegistry:
 # 3. Privacy guard
 # ===================================================================
 
+
 class TestPrivacyGuard:
     """Test privacy filtering in all three modes."""
 
@@ -408,6 +407,7 @@ class TestPrivacyGuard:
 # 4. Tool contracts
 # ===================================================================
 
+
 class TestToolContracts:
     """Test MCP tool contract registry and parameter validation."""
 
@@ -416,10 +416,17 @@ class TestToolContracts:
 
     def test_expected_tools_registered(self):
         expected = {
-            "repo.search", "repo.read", "repo.diff", "repo.summarize",
-            "diagram.render", "chart.generate",
-            "figma.create_frame", "figma.add_nodes",
-            "image.generate", "docx.refine", "pptx.refine",
+            "repo.search",
+            "repo.read",
+            "repo.diff",
+            "repo.summarize",
+            "diagram.render",
+            "chart.generate",
+            "figma.create_frame",
+            "figma.add_nodes",
+            "image.generate",
+            "docx.refine",
+            "pptx.refine",
             "confluence.publish",
         }
         assert set(TOOL_REGISTRY.keys()) == expected
@@ -447,6 +454,7 @@ class TestToolContracts:
 # 5. Planner agent
 # ===================================================================
 
+
 class TestPlannerAgent:
     """Test planner signal detection and plan construction."""
 
@@ -454,8 +462,8 @@ class TestPlannerAgent:
         planner = PlannerAgent()
         agents = planner._detect_sub_agents(sample_profile)
         roles = {a.value for a in agents}
-        assert "microservices" in roles   # docker-compose + kubernetes
-        assert "infra" in roles           # terraform
+        assert "microservices" in roles  # docker-compose + kubernetes
+        assert "infra" in roles  # terraform
 
     def test_detect_no_agents_for_plain_repo(self):
         planner = PlannerAgent()
@@ -492,6 +500,7 @@ class TestPlannerAgent:
 # 6. Executor agent
 # ===================================================================
 
+
 class TestExecutorAgent:
     """Test executor tool dispatch and error handling."""
 
@@ -525,6 +534,7 @@ class TestExecutorAgent:
     @pytest.mark.asyncio
     async def test_executor_with_mock_adapter(self, sample_profile, sample_kg):
         """Test that a registered adapter gets called."""
+
         class MockAdapter:
             async def execute(self, params):
                 return {"results": ["file1.py", "file2.py"]}
@@ -550,6 +560,7 @@ class TestExecutorAgent:
     @pytest.mark.asyncio
     async def test_executor_handles_adapter_exception(self, sample_profile, sample_kg):
         """Adapter that raises an exception should be caught."""
+
         class FailingAdapter:
             async def execute(self, params):
                 raise RuntimeError("Connection failed")
@@ -576,6 +587,7 @@ class TestExecutorAgent:
 # 7. Critic agent
 # ===================================================================
 
+
 class TestCriticAgent:
     """Test critic evidence validation and approval logic."""
 
@@ -587,9 +599,7 @@ class TestCriticAgent:
 
         # All claims backed
         for i in range(5):
-            registry.register_claim(
-                Claim(text=f"Claim {i}", artifact_id="doc", evidence_ids=[pid])
-            )
+            registry.register_claim(Claim(text=f"Claim {i}", artifact_id="doc", evidence_ids=[pid]))
 
         critic = CriticAgent(evidence_registry=registry, min_coverage_pct=80.0)
         result = await critic.run(
@@ -641,6 +651,7 @@ class TestCriticAgent:
 # ===================================================================
 # 8. Diff pipeline
 # ===================================================================
+
 
 class TestDiffPipeline:
     """Test DiffAgent, ImpactAgent, RegenerationAgent, ReleaseNotesAgent."""
@@ -749,7 +760,8 @@ class TestDiffPipeline:
 
     def test_diff_summary_changed_paths(self):
         ds = DiffSummary(
-            base_ref="a", head_ref="b",
+            base_ref="a",
+            head_ref="b",
             file_diffs=[
                 FileDiff(path="x.py", status="modified"),
                 FileDiff(path="y.py", status="added"),
@@ -768,6 +780,7 @@ class TestDiffPipeline:
 # ===================================================================
 # 9. Specialized agents
 # ===================================================================
+
 
 class TestMicroservicesAgent:
     @pytest.mark.asyncio
@@ -863,6 +876,7 @@ class TestInfraAgent:
 # ===================================================================
 # 10. Orchestrator (integration-level)
 # ===================================================================
+
 
 class TestOrchestrator:
     """Integration tests for the full Planner → Executor → Critic loop."""

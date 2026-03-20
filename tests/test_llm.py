@@ -4,21 +4,20 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 from opendocs.core.knowledge_graph import (
     EntityType,
     KnowledgeGraph,
-    RelationType,
 )
 from opendocs.core.parser import ReadmeParser
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_doc():
@@ -35,42 +34,44 @@ def sample_doc():
 @pytest.fixture
 def mock_extraction_response():
     """A realistic JSON response from an LLM extraction call."""
-    return json.dumps({
-        "entities": [
-            {
-                "name": "SmartTemp",
-                "entity_type": "project",
-                "properties": {"version": "1.0"},
-                "confidence": 0.95,
-            },
-            {
-                "name": "MQTT",
-                "entity_type": "protocol",
-                "properties": {},
-                "confidence": 0.9,
-            },
-            {
-                "name": "React",
-                "entity_type": "framework",
-                "properties": {},
-                "confidence": 0.85,
-            },
-        ],
-        "relations": [
-            {
-                "source": "SmartTemp",
-                "target": "MQTT",
-                "relation_type": "communicates_via",
-                "confidence": 0.88,
-            },
-            {
-                "source": "SmartTemp",
-                "target": "React",
-                "relation_type": "uses",
-                "confidence": 0.82,
-            },
-        ],
-    })
+    return json.dumps(
+        {
+            "entities": [
+                {
+                    "name": "SmartTemp",
+                    "entity_type": "project",
+                    "properties": {"version": "1.0"},
+                    "confidence": 0.95,
+                },
+                {
+                    "name": "MQTT",
+                    "entity_type": "protocol",
+                    "properties": {},
+                    "confidence": 0.9,
+                },
+                {
+                    "name": "React",
+                    "entity_type": "framework",
+                    "properties": {},
+                    "confidence": 0.85,
+                },
+            ],
+            "relations": [
+                {
+                    "source": "SmartTemp",
+                    "target": "MQTT",
+                    "relation_type": "communicates_via",
+                    "confidence": 0.88,
+                },
+                {
+                    "source": "SmartTemp",
+                    "target": "React",
+                    "relation_type": "uses",
+                    "confidence": 0.82,
+                },
+            ],
+        }
+    )
 
 
 @pytest.fixture
@@ -99,13 +100,12 @@ def mock_stakeholder_response():
 # LLMClient tests
 # ---------------------------------------------------------------------------
 
+
 class TestLLMClient:
     def test_import_error_without_openai(self):
         """LLMClient should raise ImportError if openai isn't installed."""
         with patch.dict("sys.modules", {"openai": None}):
             # Reimport to trigger the check
-            from importlib import reload
-            from opendocs.llm import llm_extractor
 
             # Can't easily force ImportError with a mock like this
             # but we verify the error message is set correctly
@@ -125,11 +125,10 @@ class TestLLMClient:
 # LLMExtractor tests
 # ---------------------------------------------------------------------------
 
+
 class TestLLMExtractor:
     @patch("opendocs.llm.llm_extractor.LLMClient")
-    def test_extract_entities_from_doc(
-        self, MockClient, sample_doc, mock_extraction_response
-    ):
+    def test_extract_entities_from_doc(self, MockClient, sample_doc, mock_extraction_response):
         """LLMExtractor should parse LLM JSON and build a KG."""
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = mock_extraction_response
@@ -218,11 +217,10 @@ class TestLLMExtractor:
 # LLMSummarizer tests
 # ---------------------------------------------------------------------------
 
+
 class TestLLMSummarizer:
     @patch("opendocs.llm.llm_extractor.LLMClient")
-    def test_executive_summary(
-        self, MockClient, sample_doc, mock_summary_response
-    ):
+    def test_executive_summary(self, MockClient, sample_doc, mock_summary_response):
         """LLMSummarizer should generate an executive summary."""
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = mock_summary_response
@@ -238,9 +236,7 @@ class TestLLMSummarizer:
         assert len(result) > 50
 
     @patch("opendocs.llm.llm_extractor.LLMClient")
-    def test_stakeholder_summary(
-        self, MockClient, sample_doc, mock_stakeholder_response
-    ):
+    def test_stakeholder_summary(self, MockClient, sample_doc, mock_stakeholder_response):
         """LLMSummarizer should generate stakeholder-specific summaries."""
         mock_instance = MockClient.return_value
         mock_instance.chat.return_value = mock_stakeholder_response
@@ -269,9 +265,7 @@ class TestLLMSummarizer:
         assert "Unknown persona" in result
 
     @patch("opendocs.llm.llm_extractor.LLMClient")
-    def test_enrich_populates_kg(
-        self, MockClient, sample_doc, mock_summary_response, mock_stakeholder_response
-    ):
+    def test_enrich_populates_kg(self, MockClient, sample_doc, mock_summary_response, mock_stakeholder_response):
         """enrich() should populate KG with executive and stakeholder summaries."""
         mock_instance = MockClient.return_value
         # First call = executive summary, next 3 = stakeholder personas
@@ -317,6 +311,7 @@ class TestLLMSummarizer:
 # ---------------------------------------------------------------------------
 # Smart Report tests
 # ---------------------------------------------------------------------------
+
 
 class TestSmartReport:
     def test_generate_basic_report(self, sample_doc, tmp_path):

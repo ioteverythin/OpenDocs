@@ -8,13 +8,11 @@ from __future__ import annotations
 
 import json
 import logging
-import os
-from typing import Any
 
 from ..llm.providers import (
+    DEFAULT_PROVIDER,
     LLMProvider,
     get_provider,
-    DEFAULT_PROVIDER,
 )
 
 logger = logging.getLogger("docagent.llm")
@@ -62,8 +60,13 @@ def chat_text(
 ) -> str:
     """Send a chat completion and return the assistant's text reply."""
     client = get_client(api_key=api_key, base_url=base_url, provider=provider, model=model)
-    logger.debug("LLM call: provider=%s, model=%s, system=%d chars, user=%d chars",
-                 provider, model, len(system), len(user))
+    logger.debug(
+        "LLM call: provider=%s, model=%s, system=%d chars, user=%d chars",
+        provider,
+        model,
+        len(system),
+        len(user),
+    )
 
     text = client.chat(system, user)
     logger.debug("LLM response: %d chars", len(text))

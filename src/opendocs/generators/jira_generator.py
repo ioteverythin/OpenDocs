@@ -10,24 +10,22 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from ..core.knowledge_graph import EntityType, KnowledgeGraph
+from ..core.knowledge_graph import EntityType
 from ..core.models import (
     CodeBlock,
-    ContentBlock,
     DocumentModel,
     GenerationResult,
     ListBlock,
     OutputFormat,
     ParagraphBlock,
     Section,
-    TableBlock,
 )
 from .base import BaseGenerator
 
 if TYPE_CHECKING:
-    from .diagram_extractor import ImageCache
+    pass
 
 
 class JiraGenerator(BaseGenerator):
@@ -88,7 +86,9 @@ class JiraGenerator(BaseGenerator):
 
         for section in doc.sections:
             section_stories = self._section_to_stories(
-                section, name, story_idx,
+                section,
+                name,
+                story_idx,
             )
             stories.extend(section_stories)
             story_idx += len(section_stories)
@@ -125,10 +125,7 @@ class JiraGenerator(BaseGenerator):
             parts.append(self._strip_html(self.kg.executive_summary))
             parts.append("")
 
-        paras = [
-            self._strip_html(b.text) for b in doc.all_blocks
-            if isinstance(b, ParagraphBlock) and len(b.text) > 30
-        ]
+        paras = [self._strip_html(b.text) for b in doc.all_blocks if isinstance(b, ParagraphBlock) and len(b.text) > 30]
         if paras:
             parts.append(paras[0])
 
@@ -183,7 +180,9 @@ class JiraGenerator(BaseGenerator):
         # Recurse into subsections
         for sub in section.subsections:
             sub_stories = self._section_to_stories(
-                sub, project_name, start_idx + len(stories),
+                sub,
+                project_name,
+                start_idx + len(stories),
             )
             stories.extend(sub_stories)
 
@@ -194,7 +193,9 @@ class JiraGenerator(BaseGenerator):
     # ------------------------------------------------------------------
 
     def _features_to_stories(
-        self, project_name: str, start_idx: int,
+        self,
+        project_name: str,
+        start_idx: int,
     ) -> list[dict[str, Any]]:
         """Create stories from KG feature entities."""
         if not self.kg:
@@ -205,30 +206,34 @@ class JiraGenerator(BaseGenerator):
         features = self.kg.entities_of_type(EntityType.FEATURE)
 
         for i, feat in enumerate(features[:20]):  # cap at 20
-            stories.append({
-                "type": "Story",
-                "key": f"{key_prefix}-{start_idx + i}",
-                "summary": f"Implement feature: {feat.name}",
-                "description": (
-                    f"Implement the '{feat.name}' feature as described in the "
-                    f"project documentation.\n\n"
-                    f"Source section: {feat.source_section or 'N/A'}\n"
-                    f"Confidence: {feat.confidence:.0%}"
-                ),
-                "acceptance_criteria": [
-                    f"'{feat.name}' feature is fully implemented",
-                    "Feature is covered by unit tests",
-                    "Documentation is updated",
-                ],
-                "labels": ["opendocs-generated", "feature"],
-                "priority": "Medium",
-                "story_points": 3,
-            })
+            stories.append(
+                {
+                    "type": "Story",
+                    "key": f"{key_prefix}-{start_idx + i}",
+                    "summary": f"Implement feature: {feat.name}",
+                    "description": (
+                        f"Implement the '{feat.name}' feature as described in the "
+                        f"project documentation.\n\n"
+                        f"Source section: {feat.source_section or 'N/A'}\n"
+                        f"Confidence: {feat.confidence:.0%}"
+                    ),
+                    "acceptance_criteria": [
+                        f"'{feat.name}' feature is fully implemented",
+                        "Feature is covered by unit tests",
+                        "Documentation is updated",
+                    ],
+                    "labels": ["opendocs-generated", "feature"],
+                    "priority": "Medium",
+                    "story_points": 3,
+                }
+            )
 
         return stories
 
     def _prerequisites_to_stories(
-        self, project_name: str, start_idx: int,
+        self,
+        project_name: str,
+        start_idx: int,
     ) -> list[dict[str, Any]]:
         """Create setup stories from KG prerequisite entities."""
         if not self.kg:
@@ -239,24 +244,26 @@ class JiraGenerator(BaseGenerator):
         prereqs = self.kg.entities_of_type(EntityType.PREREQUISITE)
 
         for i, prereq in enumerate(prereqs[:10]):
-            stories.append({
-                "type": "Story",
-                "key": f"{key_prefix}-{start_idx + i}",
-                "summary": f"Setup prerequisite: {prereq.name}",
-                "description": (
-                    f"Ensure the prerequisite '{prereq.name}' is properly "
-                    f"set up in the development environment.\n\n"
-                    f"Source: {prereq.source_section or 'N/A'}"
-                ),
-                "acceptance_criteria": [
-                    f"'{prereq.name}' is installed / configured",
-                    "Version requirements are met",
-                    "Setup steps documented in wiki/runbook",
-                ],
-                "labels": ["opendocs-generated", "setup", "prerequisite"],
-                "priority": "High",
-                "story_points": 2,
-            })
+            stories.append(
+                {
+                    "type": "Story",
+                    "key": f"{key_prefix}-{start_idx + i}",
+                    "summary": f"Setup prerequisite: {prereq.name}",
+                    "description": (
+                        f"Ensure the prerequisite '{prereq.name}' is properly "
+                        f"set up in the development environment.\n\n"
+                        f"Source: {prereq.source_section or 'N/A'}"
+                    ),
+                    "acceptance_criteria": [
+                        f"'{prereq.name}' is installed / configured",
+                        "Version requirements are met",
+                        "Setup steps documented in wiki/runbook",
+                    ],
+                    "labels": ["opendocs-generated", "setup", "prerequisite"],
+                    "priority": "High",
+                    "story_points": 2,
+                }
+            )
 
         return stories
 
@@ -331,6 +338,7 @@ class JiraGenerator(BaseGenerator):
     def _section_to_description(section: Section) -> str:
         """Build a story description from section blocks."""
         import re
+
         _html_re = re.compile(r"<[^>]+>")
         _multi_sp = re.compile(r"\s{2,}")
         parts: list[str] = []
@@ -378,9 +386,7 @@ class JiraGenerator(BaseGenerator):
         """Rough story point estimate based on content complexity."""
         n_blocks = len(section.blocks)
         n_subs = len(section.subsections)
-        code_blocks = sum(
-            1 for b in section.blocks if isinstance(b, CodeBlock)
-        )
+        code_blocks = sum(1 for b in section.blocks if isinstance(b, CodeBlock))
         # Simple heuristic
         if n_blocks + n_subs > 10 or code_blocks > 3:
             return 8

@@ -18,13 +18,12 @@ Strategies
 
 from __future__ import annotations
 
+import functools
 import logging
 import re
-from copy import deepcopy
 from enum import Enum
 
 from ..core.models import (
-    ContentBlock,
     DocumentModel,
     Section,
     TableBlock,
@@ -36,8 +35,10 @@ logger = logging.getLogger(__name__)
 # Strategy enum
 # ---------------------------------------------------------------------------
 
+
 class SortStrategy(str, Enum):
     """Built-in table-sorting strategies."""
+
     NONE = "none"
     ALPHA = "alpha"
     NUMERIC = "numeric"
@@ -110,12 +111,29 @@ def _sort_key_numeric(row: list[str], col: int | None = None) -> float:
 
 _API_HEADERS = {"endpoint", "method", "route", "url", "path", "api", "verb"}
 _METRIC_HEADERS = {
-    "metric", "value", "performance", "benchmark", "result",
-    "measure", "score", "time", "latency", "rate", "uptime",
+    "metric",
+    "value",
+    "performance",
+    "benchmark",
+    "result",
+    "measure",
+    "score",
+    "time",
+    "latency",
+    "rate",
+    "uptime",
 }
 _FEATURE_HEADERS = {
-    "feature", "description", "module", "component", "capability",
-    "option", "parameter", "setting", "config", "flag",
+    "feature",
+    "description",
+    "module",
+    "component",
+    "capability",
+    "option",
+    "parameter",
+    "setting",
+    "config",
+    "flag",
 }
 _STATUS_HEADERS = {"status", "state", "phase", "stage", "version"}
 
@@ -144,6 +162,7 @@ def _classify_table(block: TableBlock) -> str:
 # ---------------------------------------------------------------------------
 # Core sorter
 # ---------------------------------------------------------------------------
+
 
 class TableSorter:
     """Sort rows within ``TableBlock`` objects in a document model.
@@ -240,9 +259,7 @@ class TableSorter:
             rich_rows=sorted_rich_rows,
         )
 
-    def _pick_smart_strategy(
-        self, block: TableBlock
-    ) -> tuple[str, int | None, bool]:
+    def _pick_smart_strategy(self, block: TableBlock) -> tuple[str, int | None, bool]:
         """Heuristically choose the best sort for this table."""
         kind = _classify_table(block)
 
@@ -286,10 +303,7 @@ class TableSorter:
         best_ratio = 0.0
 
         for c in range(n_cols):
-            count = sum(
-                1 for row in block.rows
-                if c < len(row) and _extract_number(row[c]) != float("inf")
-            )
+            count = sum(1 for row in block.rows if c < len(row) and _extract_number(row[c]) != float("inf"))
             ratio = count / n_rows if n_rows else 0
             if ratio > best_ratio:
                 best_ratio = ratio
@@ -306,22 +320,19 @@ class TableSorter:
     ) -> list[list[str]]:
         """Sort a list of rows using the resolved strategy."""
         if strategy == "alpha":
-            key_fn = lambda r: _sort_key_alpha(r, col or 0)
+            key_fn = functools.partial(_sort_key_alpha, col=col or 0)
         elif strategy == "numeric":
-            key_fn = lambda r: _sort_key_numeric(r, col)
+            key_fn = functools.partial(_sort_key_numeric, col=col)
         elif strategy == "column":
             # Check if most values in this column are numeric
             if col is not None and rows:
-                nums = sum(
-                    1 for r in rows
-                    if col < len(r) and _extract_number(r[col]) != float("inf")
-                )
+                nums = sum(1 for r in rows if col < len(r) and _extract_number(r[col]) != float("inf"))
                 if nums / len(rows) > 0.5:
-                    key_fn = lambda r: _sort_key_numeric(r, col)
+                    key_fn = functools.partial(_sort_key_numeric, col=col)
                 else:
-                    key_fn = lambda r: _sort_key_alpha(r, col or 0)
+                    key_fn = functools.partial(_sort_key_alpha, col=col or 0)
             else:
-                key_fn = lambda r: _sort_key_alpha(r, col or 0)
+                key_fn = functools.partial(_sort_key_alpha, col=col or 0)
         else:
             return rows
 

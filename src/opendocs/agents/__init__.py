@@ -25,9 +25,9 @@ tools/      — MCP tool contracts and adapters
 """
 
 from .base import AgentBase, AgentPlan, AgentResult, PlanStep, ToolCall
-from .evidence import EvidencePointer, EvidenceCoverage
+from .evidence import EvidenceCoverage, EvidencePointer
 from .orchestrator import AgentOrchestrator
-from .privacy import PrivacyMode, PrivacyGuard
+from .privacy import PrivacyGuard, PrivacyMode
 
 __all__ = [
     "AgentBase",

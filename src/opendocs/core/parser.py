@@ -28,10 +28,10 @@ from .models import (
     ThematicBreakBlock,
 )
 
-
 # ---------------------------------------------------------------------------
 # AST helpers
 # ---------------------------------------------------------------------------
+
 
 def _extract_text(node: dict[str, Any]) -> str:
     """Recursively extract plain text from an AST node."""
@@ -114,6 +114,7 @@ def _extract_table_cell_spans(row_children: list[dict]) -> list[list[InlineSpan]
 # Parser
 # ---------------------------------------------------------------------------
 
+
 class ReadmeParser:
     """Parse raw Markdown into a ``DocumentModel``."""
 
@@ -133,9 +134,7 @@ class ReadmeParser:
 
         all_blocks = self._walk_ast(ast_nodes)
         sections = self._build_sections(all_blocks)
-        mermaid_diagrams = [
-            b.code for b in all_blocks if isinstance(b, MermaidBlock)
-        ]
+        mermaid_diagrams = [b.code for b in all_blocks if isinstance(b, MermaidBlock)]
 
         # Derive description from first paragraph
         description = ""
@@ -302,15 +301,15 @@ class ReadmeParser:
                     rich_rows.append(_extract_table_cell_spans(row_children))
 
         return TableBlock(
-            headers=headers, rows=rows,
-            rich_headers=rich_headers, rich_rows=rich_rows,
+            headers=headers,
+            rows=rows,
+            rich_headers=rich_headers,
+            rich_rows=rich_rows,
         )
 
     @staticmethod
     def _parse_list(node: dict[str, Any]) -> ListBlock:
-        ordered = node.get("type") == "ordered_list" or node.get("attrs", {}).get(
-            "ordered", False
-        )
+        ordered = node.get("type") == "ordered_list" or node.get("attrs", {}).get("ordered", False)
         items: list[str] = []
         rich_items: list[list[InlineSpan]] = []
         for child in node.get("children", []):

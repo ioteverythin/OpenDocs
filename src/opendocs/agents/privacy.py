@@ -25,18 +25,17 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field
-
-from .base import RepoProfile, RepoSignal
+from .base import RepoProfile
 from .evidence import EvidencePointer
-
 
 # ---------------------------------------------------------------------------
 # Privacy modes
 # ---------------------------------------------------------------------------
 
+
 class PrivacyMode(str, Enum):
     """Controls how much repo data agents can access."""
+
     STRICT = "strict"
     STANDARD = "standard"
     PERMISSIVE = "permissive"
@@ -45,6 +44,7 @@ class PrivacyMode(str, Enum):
 # ---------------------------------------------------------------------------
 # Privacy guard
 # ---------------------------------------------------------------------------
+
 
 class PrivacyGuard:
     """Filters data flowing to agents according to the active privacy mode.
@@ -85,7 +85,7 @@ class PrivacyGuard:
             primary_language=profile.primary_language,
             languages=profile.languages,
             file_tree=file_tree,
-            signals=profile.signals,          # signals are metadata, always safe
+            signals=profile.signals,  # signals are metadata, always safe
             readme_summary=profile.readme_summary,
             license=profile.license,
             topics=profile.topics,
@@ -135,10 +135,7 @@ class PrivacyGuard:
 
         def _strip(obj: Any) -> Any:
             if isinstance(obj, dict):
-                return {
-                    k: "[redacted]" if k in banned_keys else _strip(v)
-                    for k, v in obj.items()
-                }
+                return {k: "[redacted]" if k in banned_keys else _strip(v) for k, v in obj.items()}
             if isinstance(obj, list):
                 return [_strip(item) for item in obj]
             return obj

@@ -39,19 +39,14 @@ import json
 import re
 from pathlib import Path
 
-
 # ---------------------------------------------------------------------------
 # Markdown → Confluence storage format (XHTML-based) conversion
 # ---------------------------------------------------------------------------
 
+
 def _escape(text: str) -> str:
     """Escape HTML-special characters for Confluence storage format."""
-    return (
-        text
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
-    )
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
 
 def _inline(text: str) -> str:
@@ -112,14 +107,10 @@ def markdown_to_confluence(markdown: str) -> str:
             else:
                 in_code = False
                 code_str = _escape("\n".join(code_lines))
-                lang_param = (
-                    f'<ac:parameter ac:name="language">{code_lang}</ac:parameter>'
-                    if code_lang
-                    else ""
-                )
+                lang_param = f'<ac:parameter ac:name="language">{code_lang}</ac:parameter>' if code_lang else ""
                 output.append(
                     f'<ac:structured-macro ac:name="code">'
-                    f'{lang_param}'
+                    f"{lang_param}"
                     f"<ac:plain-text-body><![CDATA[{code_str}]]></ac:plain-text-body>"
                     f"</ac:structured-macro>"
                 )
@@ -197,18 +188,18 @@ def markdown_to_confluence(markdown: str) -> str:
         close_lists()
         para_parts: list[str] = []
         while i < len(lines):
-            l = lines[i]
+            line = lines[i]
             if (
-                not l.strip()
-                or l.startswith("#")
-                or l.startswith("```")
-                or re.match(r"^[-*_]{3,}\s*$", l.strip())
-                or re.match(r"^[\*\-\+]\s+", l)
-                or re.match(r"^\d+\.\s+", l)
-                or re.match(r"^>\s+", l)
+                not line.strip()
+                or line.startswith("#")
+                or line.startswith("```")
+                or re.match(r"^[-*_]{3,}\s*$", line.strip())
+                or re.match(r"^[\*\-\+]\s+", line)
+                or re.match(r"^\d+\.\s+", line)
+                or re.match(r"^>\s+", line)
             ):
                 break
-            para_parts.append(_inline(l.strip()))
+            para_parts.append(_inline(line.strip()))
             i += 1
         if para_parts:
             output.append(f"<p>{' '.join(para_parts)}</p>")
@@ -225,6 +216,7 @@ def markdown_to_confluence(markdown: str) -> str:
 # ---------------------------------------------------------------------------
 # ConfluencePublisher
 # ---------------------------------------------------------------------------
+
 
 class ConfluencePublisher:
     """Create or update a Confluence page with generated Markdown content.
@@ -255,8 +247,7 @@ class ConfluencePublisher:
             import requests  # noqa: F401 (just verify it's available)
         except ImportError:
             raise ImportError(
-                "requests is required for Confluence publishing.\n"
-                "Install it with:  pip install opendocs[publish]"
+                "requests is required for Confluence publishing.\nInstall it with:  pip install opendocs[publish]"
             ) from None
 
         import requests as _requests
@@ -267,9 +258,7 @@ class ConfluencePublisher:
 
         self._session = _requests.Session()
         self._session.auth = (username, token)
-        self._session.headers.update(
-            {"Content-Type": "application/json", "Accept": "application/json"}
-        )
+        self._session.headers.update({"Content-Type": "application/json", "Accept": "application/json"})
 
     # ------------------------------------------------------------------
     def _api(self, path: str) -> str:

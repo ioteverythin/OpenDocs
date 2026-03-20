@@ -26,6 +26,7 @@ def sample_doc():
 # Word
 # ---------------------------------------------------------------------------
 
+
 class TestWordGenerator:
     def test_generates_docx(self, sample_doc, tmp_path):
         gen = WordGenerator()
@@ -38,6 +39,7 @@ class TestWordGenerator:
 # ---------------------------------------------------------------------------
 # PDF
 # ---------------------------------------------------------------------------
+
 
 class TestPdfGenerator:
     def test_generates_pdf(self, sample_doc, tmp_path):
@@ -52,6 +54,7 @@ class TestPdfGenerator:
 # PPTX
 # ---------------------------------------------------------------------------
 
+
 class TestPptxGenerator:
     def test_generates_pptx(self, sample_doc, tmp_path):
         gen = PptxGenerator()
@@ -64,6 +67,7 @@ class TestPptxGenerator:
 # ---------------------------------------------------------------------------
 # Diagram Extractor
 # ---------------------------------------------------------------------------
+
 
 class TestDiagramExtractor:
     def test_extracts_mermaid(self, sample_doc, tmp_path):

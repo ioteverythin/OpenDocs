@@ -20,16 +20,16 @@ class FigmaCreateFrameTool:
         self._base_url = "https://api.figma.com/v1"
 
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
-        layout: dict[str, Any] = params["layout"]
+        _layout: dict[str, Any] = params["layout"]
         name: str = params["name"]
-        file_key: str = params.get("file_key", "")
+        _file_key: str = params.get("file_key", "")
 
         # TODO: POST to Figma API to create frame
         # TODO: headers = {"X-Figma-Token": self.api_token}
         # TODO: parse response for frame_id and figma_url
         return {
-            "frame_id": "",             # TODO: from API response
-            "figma_url": "",            # TODO: constructed URL
+            "frame_id": "",  # TODO: from API response
+            "figma_url": "",  # TODO: constructed URL
             "name": name,
         }
 
@@ -46,7 +46,7 @@ class FigmaAddNodesTool:
 
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
         frame_id: str = params["frame_id"]
-        nodes: list[dict[str, Any]] = params["nodes"]
+        _nodes: list[dict[str, Any]] = params["nodes"]
 
         # TODO: batch-create nodes via Figma plugin API or REST
         # TODO: each node spec: {type, position, content, style}
@@ -54,6 +54,6 @@ class FigmaAddNodesTool:
         # TODO: return node_ids for later reference
         return {
             "frame_id": frame_id,
-            "node_ids": [],             # TODO: list of created node IDs
+            "node_ids": [],  # TODO: list of created node IDs
             "figma_url": "",
         }

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseSkill
+from ..models.document_model import DocumentType, DraftDocument
 from ..models.repo_model import RepoKnowledgeModel
-from ..models.document_model import DraftDocument, DocumentType
+from .base import BaseSkill
 
 
 class SlidesSkill(BaseSkill):

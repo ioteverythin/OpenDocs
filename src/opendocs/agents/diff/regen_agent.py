@@ -9,9 +9,9 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
 from ...core.knowledge_graph import KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
 from .impact_agent import ImpactReport
 
 
@@ -68,9 +68,7 @@ class RegenerationAgent(AgentBase):
             success=True,
             artifacts={
                 "regenerated": regenerated_formats,
-                "impacted_entities": [
-                    d.entity_id for d in impact_report.entity_deltas
-                ],
+                "impacted_entities": [d.entity_id for d in impact_report.entity_deltas],
             },
             duration_ms=duration,
         )
@@ -92,9 +90,7 @@ class RegenerationAgent(AgentBase):
         """
         return impact_report.impacted_output_formats
 
-    def _extract_impact(
-        self, prior_results: list[AgentResult] | None
-    ) -> ImpactReport | None:
+    def _extract_impact(self, prior_results: list[AgentResult] | None) -> ImpactReport | None:
         """Try to find an ImpactReport in prior results."""
         if not prior_results:
             return None

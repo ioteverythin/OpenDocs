@@ -10,14 +10,12 @@ Provides a thin wrapper around the multi-provider LLM system with:
 
 from __future__ import annotations
 
-import json
-import os
 from typing import Any
 
 from ..llm.providers import (
+    DEFAULT_PROVIDER,
     AsyncLLMProvider,
     get_async_provider,
-    DEFAULT_PROVIDER,
 )
 
 # ---------------------------------------------------------------------------
@@ -55,6 +53,7 @@ def reset_client() -> None:
 # ---------------------------------------------------------------------------
 # High-level helpers
 # ---------------------------------------------------------------------------
+
 
 async def chat_text(
     *,

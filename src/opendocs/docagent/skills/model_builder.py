@@ -7,8 +7,8 @@ import re
 from pathlib import Path
 from typing import Any
 
+from ..models.repo_model import APIEndpoint, RepoKnowledgeModel
 from .base import BaseSkill
-from ..models.repo_model import RepoKnowledgeModel, APIEndpoint
 
 
 class ModelBuilderSkill(BaseSkill):
@@ -37,9 +37,13 @@ class ModelBuilderSkill(BaseSkill):
         if use_llm:
             try:
                 model = self._build_model_llm(
-                    url=url, files=files, readme=readme,
-                    key_files=key_files, tech_stack=tech_stack,
-                    commands=commands, llm_config=llm_config or {},
+                    url=url,
+                    files=files,
+                    readme=readme,
+                    key_files=key_files,
+                    tech_stack=tech_stack,
+                    commands=commands,
+                    llm_config=llm_config or {},
                 )
                 out_path = index_dir / "repo_model.json"
                 out_path.write_text(model.model_dump_json(indent=2), encoding="utf-8")
@@ -171,8 +175,7 @@ class ModelBuilderSkill(BaseSkill):
             features=data.get("features", self._extract_features(readme)),
             target_users=data.get("target_users", self._infer_users(readme, tech_stack)),
             tech_stack=tech_stack,
-            architecture_components=data.get("architecture_components",
-                                             self._extract_architecture(files, key_files)),
+            architecture_components=data.get("architecture_components", self._extract_architecture(files, key_files)),
             data_flow=data.get("data_flow", []),
             setup_instructions=commands.get("install", []) or self._extract_setup_from_readme(readme),
             api_endpoints=self._detect_api_endpoints(key_files),
@@ -188,8 +191,7 @@ class ModelBuilderSkill(BaseSkill):
             key_files={k: v[:500] for k, v in list(key_files.items())[:30]},
         )
 
-        self.logger.info("LLM-enhanced model: %d features, %d risks",
-                         len(model.features), len(model.risks))
+        self.logger.info("LLM-enhanced model: %d features, %d risks", len(model.features), len(model.risks))
         return model
 
     # ------------------------------------------------------------------
@@ -203,9 +205,13 @@ class ModelBuilderSkill(BaseSkill):
         for i, line in enumerate(lines):
             stripped = line.strip()
             # Skip headings, badges, blank lines
-            if (not stripped or stripped.startswith("#")
-                    or stripped.startswith("[!") or stripped.startswith("![")
-                    or stripped.startswith("<")):
+            if (
+                not stripped
+                or stripped.startswith("#")
+                or stripped.startswith("[!")
+                or stripped.startswith("![")
+                or stripped.startswith("<")
+            ):
                 continue
             # Found a text paragraph
             desc_lines = [stripped]
@@ -269,9 +275,26 @@ class ModelBuilderSkill(BaseSkill):
         """Identify architectural components from file structure."""
         components: list[str] = []
         dirs = {f.split("/")[0] for f in files if "/" in f}
-        arch_dirs = {"src", "lib", "app", "api", "core", "services", "models",
-                     "controllers", "routes", "middleware", "utils", "config",
-                     "db", "database", "tests", "docs", "scripts", "deploy"}
+        arch_dirs = {
+            "src",
+            "lib",
+            "app",
+            "api",
+            "core",
+            "services",
+            "models",
+            "controllers",
+            "routes",
+            "middleware",
+            "utils",
+            "config",
+            "db",
+            "database",
+            "tests",
+            "docs",
+            "scripts",
+            "deploy",
+        }
         for d in sorted(dirs):
             if d.lower() in arch_dirs or d.lower() in ("frontend", "backend", "server", "client"):
                 components.append(f"{d}/ — {d.capitalize()} layer")
@@ -284,7 +307,8 @@ class ModelBuilderSkill(BaseSkill):
         # Look for architecture/flow sections
         m = re.search(
             r"(?:##?\s*(?:Architecture|Data Flow|How it works|System Design))\s*\n([\s\S]*?)(?=\n##|\Z)",
-            readme, re.IGNORECASE,
+            readme,
+            re.IGNORECASE,
         )
         if m:
             for line in m.group(1).splitlines():
@@ -329,10 +353,13 @@ class ModelBuilderSkill(BaseSkill):
                 for m in re.finditer(pat, content, re.IGNORECASE):
                     method = m.group(1).upper()
                     route = m.group(2)
-                    endpoints.append(APIEndpoint(
-                        method=method, path=route,
-                        description=f"Found in {path}",
-                    ))
+                    endpoints.append(
+                        APIEndpoint(
+                            method=method,
+                            path=route,
+                            description=f"Found in {path}",
+                        )
+                    )
         return endpoints[:50]
 
     @staticmethod

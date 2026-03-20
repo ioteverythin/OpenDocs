@@ -30,46 +30,68 @@ def sample_doc():
 def sample_kg():
     """Build a small knowledge graph for testing."""
     kg = KnowledgeGraph()
-    kg.add_entity(Entity(
-        id="proj-smarttemp", name="SmartTemp",
-        entity_type=EntityType.PROJECT,
-        confidence=1.0,
-    ))
-    kg.add_entity(Entity(
-        id="tech-python", name="Python",
-        entity_type=EntityType.LANGUAGE,
-        confidence=0.95,
-    ))
-    kg.add_entity(Entity(
-        id="fw-flask", name="Flask",
-        entity_type=EntityType.FRAMEWORK,
-        confidence=0.9,
-    ))
-    kg.add_entity(Entity(
-        id="feat-dashboard", name="Dashboard",
-        entity_type=EntityType.FEATURE,
-        confidence=0.85,
-    ))
-    kg.add_entity(Entity(
-        id="feat-alerts", name="Real-time Alerts",
-        entity_type=EntityType.FEATURE,
-        confidence=0.8,
-    ))
-    kg.add_entity(Entity(
-        id="prereq-docker", name="Docker",
-        entity_type=EntityType.PREREQUISITE,
-        confidence=0.9,
-    ))
-    kg.add_relation(Relation(
-        source_id="proj-smarttemp",
-        target_id="tech-python",
-        relation_type=RelationType.USES,
-    ))
-    kg.add_relation(Relation(
-        source_id="proj-smarttemp",
-        target_id="fw-flask",
-        relation_type=RelationType.USES,
-    ))
+    kg.add_entity(
+        Entity(
+            id="proj-smarttemp",
+            name="SmartTemp",
+            entity_type=EntityType.PROJECT,
+            confidence=1.0,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="tech-python",
+            name="Python",
+            entity_type=EntityType.LANGUAGE,
+            confidence=0.95,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="fw-flask",
+            name="Flask",
+            entity_type=EntityType.FRAMEWORK,
+            confidence=0.9,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="feat-dashboard",
+            name="Dashboard",
+            entity_type=EntityType.FEATURE,
+            confidence=0.85,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="feat-alerts",
+            name="Real-time Alerts",
+            entity_type=EntityType.FEATURE,
+            confidence=0.8,
+        )
+    )
+    kg.add_entity(
+        Entity(
+            id="prereq-docker",
+            name="Docker",
+            entity_type=EntityType.PREREQUISITE,
+            confidence=0.9,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="proj-smarttemp",
+            target_id="tech-python",
+            relation_type=RelationType.USES,
+        )
+    )
+    kg.add_relation(
+        Relation(
+            source_id="proj-smarttemp",
+            target_id="fw-flask",
+            relation_type=RelationType.USES,
+        )
+    )
     kg.executive_summary = (
         "SmartTemp is an IoT temperature monitoring platform built with "
         "Python and Flask, featuring real-time dashboards and alerts."
@@ -80,6 +102,7 @@ def sample_kg():
 # ---------------------------------------------------------------------------
 # Blog Generator
 # ---------------------------------------------------------------------------
+
 
 class TestBlogGenerator:
     def test_generates_blog_md(self, sample_doc, tmp_path):
@@ -122,6 +145,7 @@ class TestBlogGenerator:
 # Jira Generator
 # ---------------------------------------------------------------------------
 
+
 class TestJiraGenerator:
     def test_generates_jira_json(self, sample_doc, tmp_path):
         gen = JiraGenerator()
@@ -162,6 +186,7 @@ class TestJiraGenerator:
 # Changelog Generator
 # ---------------------------------------------------------------------------
 
+
 class TestChangelogGenerator:
     def test_generates_changelog_md(self, sample_doc, tmp_path):
         gen = ChangelogGenerator()
@@ -190,6 +215,7 @@ class TestChangelogGenerator:
 # ---------------------------------------------------------------------------
 # LaTeX Generator
 # ---------------------------------------------------------------------------
+
 
 class TestLatexGenerator:
     def test_generates_latex_tex(self, sample_doc, tmp_path):
@@ -229,6 +255,7 @@ class TestLatexGenerator:
 # One-Pager Generator
 # ---------------------------------------------------------------------------
 
+
 class TestOnePagerGenerator:
     def test_generates_onepager_pdf(self, sample_doc, tmp_path):
         gen = OnePagerGenerator()
@@ -248,6 +275,7 @@ class TestOnePagerGenerator:
 # ---------------------------------------------------------------------------
 # Social Generator
 # ---------------------------------------------------------------------------
+
 
 class TestSocialGenerator:
     def test_generates_social_json(self, sample_doc, tmp_path):

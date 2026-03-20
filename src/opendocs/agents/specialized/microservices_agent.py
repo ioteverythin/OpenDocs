@@ -9,10 +9,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
-from ..llm_client import chat_text
 from ...core.knowledge_graph import KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
+from ..llm_client import chat_text
 
 
 class MicroservicesAgent(AgentBase):
@@ -64,11 +64,13 @@ class MicroservicesAgent(AgentBase):
                 )
             except Exception:
                 section_md = self._build_architecture_section(
-                    services=services, repo_name=repo_profile.repo_name,
+                    services=services,
+                    repo_name=repo_profile.repo_name,
                 )
         else:
             section_md = self._build_architecture_section(
-                services=services, repo_name=repo_profile.repo_name,
+                services=services,
+                repo_name=repo_profile.repo_name,
             )
         artifacts["architecture_section_md"] = section_md
 
@@ -96,30 +98,34 @@ class MicroservicesAgent(AgentBase):
         services: list[dict[str, Any]] = []
         for path in profile.file_tree:
             if "docker-compose" in path:
-                services.append({
-                    "name": "docker-compose",
-                    "source": path,
-                    "type": "compose",
-                })
+                services.append(
+                    {
+                        "name": "docker-compose",
+                        "source": path,
+                        "type": "compose",
+                    }
+                )
             elif path.endswith(("deployment.yaml", "deployment.yml")):
                 name = path.split("/")[-2] if "/" in path else "unknown"
-                services.append({
-                    "name": name,
-                    "source": path,
-                    "type": "k8s-deployment",
-                })
+                services.append(
+                    {
+                        "name": name,
+                        "source": path,
+                        "type": "k8s-deployment",
+                    }
+                )
             elif path.endswith("Dockerfile"):
                 name = path.split("/")[-2] if "/" in path else "app"
-                services.append({
-                    "name": name,
-                    "source": path,
-                    "type": "docker",
-                })
+                services.append(
+                    {
+                        "name": name,
+                        "source": path,
+                        "type": "docker",
+                    }
+                )
         return services
 
-    def _build_service_diagram(
-        self, services: list[dict[str, Any]]
-    ) -> str:
+    def _build_service_diagram(self, services: list[dict[str, Any]]) -> str:
         """Generate a Mermaid service dependency diagram."""
         lines = ["graph LR"]
         for svc in services:
@@ -141,10 +147,10 @@ class MicroservicesAgent(AgentBase):
         knowledge_graph: KnowledgeGraph,
     ) -> str:
         """Use LLM to generate a rich architecture overview."""
-        svc_desc = "\n".join(
-            f"- {s['name']} ({s['type']}) from {s.get('source', 'N/A')}"
-            for s in services
-        ) or "No services discovered"
+        svc_desc = (
+            "\n".join(f"- {s['name']} ({s['type']}) from {s.get('source', 'N/A')}" for s in services)
+            or "No services discovered"
+        )
         entities = ", ".join(e.name for e in knowledge_graph.entities[:15])
 
         return await chat_text(
@@ -185,8 +191,5 @@ class MicroservicesAgent(AgentBase):
         lines.append("")
         lines.append("### Service Communication")
         lines.append("")
-        lines.append(
-            "TODO: Document inter-service communication patterns "
-            "(REST, gRPC, message queues)."
-        )
+        lines.append("TODO: Document inter-service communication patterns (REST, gRPC, message queues).")
         return "\n".join(lines)

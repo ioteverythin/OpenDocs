@@ -9,10 +9,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
-from ..llm_client import chat_text
 from ...core.knowledge_graph import KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
+from ..llm_client import chat_text
 
 
 class EventDrivenAgent(AgentBase):
@@ -64,11 +64,13 @@ class EventDrivenAgent(AgentBase):
                 )
             except Exception:
                 section_md = self._build_event_section(
-                    components=components, repo_name=repo_profile.repo_name,
+                    components=components,
+                    repo_name=repo_profile.repo_name,
                 )
         else:
             section_md = self._build_event_section(
-                components=components, repo_name=repo_profile.repo_name,
+                components=components,
+                repo_name=repo_profile.repo_name,
             )
         artifacts["event_architecture_md"] = section_md
         artifacts["event_components"] = components
@@ -83,9 +85,7 @@ class EventDrivenAgent(AgentBase):
 
     # -- Internal -----------------------------------------------------------
 
-    def _discover_event_components(
-        self, profile: RepoProfile
-    ) -> list[dict[str, Any]]:
+    def _discover_event_components(self, profile: RepoProfile) -> list[dict[str, Any]]:
         """Extract event-driven components from signals and file tree.
 
         TODO: Parse actual config files for topic/queue definitions.
@@ -106,9 +106,7 @@ class EventDrivenAgent(AgentBase):
 
         return components
 
-    def _build_event_flow_diagram(
-        self, components: list[dict[str, Any]]
-    ) -> str:
+    def _build_event_flow_diagram(self, components: list[dict[str, Any]]) -> str:
         """Generate a Mermaid event flow diagram."""
         lines = ["graph LR"]
         lines.append('    Producer["Producer Service"]')
@@ -116,7 +114,7 @@ class EventDrivenAgent(AgentBase):
         for comp in components:
             safe_name = comp["name"].replace(" ", "_").replace("-", "_")
             lines.append(f'    {safe_name}["{comp["name"]}"]')
-            lines.append(f'    Producer --> {safe_name}')
+            lines.append(f"    Producer --> {safe_name}")
             lines.append(f'    {safe_name} --> Consumer["Consumer Service"]')
 
         return "\n".join(lines)
@@ -167,8 +165,5 @@ class EventDrivenAgent(AgentBase):
         lines.append("")
         lines.append("### Event Flow")
         lines.append("")
-        lines.append(
-            "TODO: Document event schemas, retry policies, "
-            "and dead-letter queue configurations."
-        )
+        lines.append("TODO: Document event schemas, retry policies, and dead-letter queue configurations.")
         return "\n".join(lines)

@@ -9,10 +9,10 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
-from ..llm_client import chat_text
 from ...core.knowledge_graph import KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
+from ..llm_client import chat_text
 
 
 class InfraAgent(AgentBase):
@@ -66,11 +66,13 @@ class InfraAgent(AgentBase):
                 )
             except Exception:
                 section_md = self._build_infra_section(
-                    resources=resources, repo_name=repo_profile.repo_name,
+                    resources=resources,
+                    repo_name=repo_profile.repo_name,
                 )
         else:
             section_md = self._build_infra_section(
-                resources=resources, repo_name=repo_profile.repo_name,
+                resources=resources,
+                repo_name=repo_profile.repo_name,
             )
         artifacts["infrastructure_md"] = section_md
         artifacts["infra_resources"] = resources
@@ -85,9 +87,7 @@ class InfraAgent(AgentBase):
 
     # -- Internal -----------------------------------------------------------
 
-    def _discover_resources(
-        self, profile: RepoProfile
-    ) -> list[dict[str, Any]]:
+    def _discover_resources(self, profile: RepoProfile) -> list[dict[str, Any]]:
         """Discover IaC resources from file tree and signals.
 
         TODO: Parse actual .tf files for resource blocks,
@@ -98,53 +98,63 @@ class InfraAgent(AgentBase):
         signal_types = {s.signal_type for s in profile.signals}
 
         if "terraform" in signal_types:
-            resources.append({
-                "type": "iac",
-                "tech": "terraform",
-                "name": "Terraform Configuration",
-            })
+            resources.append(
+                {
+                    "type": "iac",
+                    "tech": "terraform",
+                    "name": "Terraform Configuration",
+                }
+            )
         if "helm" in signal_types:
-            resources.append({
-                "type": "chart",
-                "tech": "helm",
-                "name": "Helm Chart",
-            })
+            resources.append(
+                {
+                    "type": "chart",
+                    "tech": "helm",
+                    "name": "Helm Chart",
+                }
+            )
         if "pulumi" in signal_types:
-            resources.append({
-                "type": "iac",
-                "tech": "pulumi",
-                "name": "Pulumi Program",
-            })
+            resources.append(
+                {
+                    "type": "iac",
+                    "tech": "pulumi",
+                    "name": "Pulumi Program",
+                }
+            )
         if "cloudformation" in signal_types:
-            resources.append({
-                "type": "iac",
-                "tech": "cloudformation",
-                "name": "CloudFormation Stack",
-            })
+            resources.append(
+                {
+                    "type": "iac",
+                    "tech": "cloudformation",
+                    "name": "CloudFormation Stack",
+                }
+            )
 
         # Discover from file tree
         for path in profile.file_tree:
             if path.endswith(".tf"):
-                resources.append({
-                    "type": "terraform-file",
-                    "tech": "terraform",
-                    "name": path.split("/")[-1],
-                    "source": path,
-                })
+                resources.append(
+                    {
+                        "type": "terraform-file",
+                        "tech": "terraform",
+                        "name": path.split("/")[-1],
+                        "source": path,
+                    }
+                )
             elif path == "Chart.yaml" or path.endswith("/Chart.yaml"):
                 chart_name = path.split("/")[-2] if "/" in path else "chart"
-                resources.append({
-                    "type": "helm-chart",
-                    "tech": "helm",
-                    "name": chart_name,
-                    "source": path,
-                })
+                resources.append(
+                    {
+                        "type": "helm-chart",
+                        "tech": "helm",
+                        "name": chart_name,
+                        "source": path,
+                    }
+                )
 
         return resources
 
-    def _build_infra_diagram(
-        self, resources: list[dict[str, Any]]
-    ) -> str:
+    def _build_infra_diagram(self, resources: list[dict[str, Any]]) -> str:
         """Generate a Mermaid infrastructure topology diagram."""
         lines = ["graph TB"]
         lines.append('    Cloud["Cloud Provider"]')
@@ -156,19 +166,19 @@ class InfraAgent(AgentBase):
             lines.append('    TF --> Compute["Compute"]')
             lines.append('    TF --> Storage["Storage"]')
             lines.append('    TF --> DB["Database"]')
-            lines.append('    Cloud --> TF')
+            lines.append("    Cloud --> TF")
         if "helm" in techs:
             lines.append('    Helm["Helm Charts"]')
             lines.append('    Helm --> K8s["Kubernetes Cluster"]')
             lines.append('    K8s --> Pods["Pods"]')
             lines.append('    K8s --> Services["Services"]')
-            lines.append('    Cloud --> Helm')
+            lines.append("    Cloud --> Helm")
         if "pulumi" in techs:
             lines.append('    Pulumi["Pulumi"]')
-            lines.append('    Cloud --> Pulumi')
+            lines.append("    Cloud --> Pulumi")
         if "cloudformation" in techs:
             lines.append('    CFN["CloudFormation"]')
-            lines.append('    Cloud --> CFN')
+            lines.append("    Cloud --> CFN")
 
         return "\n".join(lines)
 
@@ -179,9 +189,9 @@ class InfraAgent(AgentBase):
         knowledge_graph: KnowledgeGraph,
     ) -> str:
         """Use LLM to generate rich infrastructure documentation."""
-        res_desc = "\n".join(
-            f"- {r['name']} ({r['tech']}, {r['type']})" for r in resources
-        ) or "No resources discovered"
+        res_desc = (
+            "\n".join(f"- {r['name']} ({r['tech']}, {r['type']})" for r in resources) or "No resources discovered"
+        )
         entities = ", ".join(e.name for e in knowledge_graph.entities[:15])
 
         return await chat_text(
@@ -222,8 +232,5 @@ class InfraAgent(AgentBase):
         lines.append("")
         lines.append("### Deployment")
         lines.append("")
-        lines.append(
-            "TODO: Document deployment prerequisites, environment variables, "
-            "and rollback procedures."
-        )
+        lines.append("TODO: Document deployment prerequisites, environment variables, and rollback procedures.")
         return "\n".join(lines)

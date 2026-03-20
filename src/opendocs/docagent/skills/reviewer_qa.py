@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseSkill
 from ..models.document_model import DraftDocument, ReviewFeedback
 from ..tools.document_tools import DocumentTools
+from .base import BaseSkill
 
 
 class ReviewerQASkill(BaseSkill):
@@ -36,8 +36,10 @@ class ReviewerQASkill(BaseSkill):
 
         self.logger.info(
             "Review result: passed=%s, clarity=%.2f, issues=%d, missing=%d",
-            feedback.passed, feedback.clarity_score,
-            len(feedback.issues), len(feedback.missing_sections),
+            feedback.passed,
+            feedback.clarity_score,
+            len(feedback.issues),
+            len(feedback.missing_sections),
         )
         return feedback
 
@@ -79,12 +81,8 @@ class ReviewerQASkill(BaseSkill):
         data = chat_json(system, user, **llm_config)
 
         # Merge LLM feedback with deterministic
-        all_issues = list(set(
-            base_feedback.issues + data.get("issues", [])
-        ))
-        all_missing = list(set(
-            base_feedback.missing_sections + data.get("missing_sections", [])
-        ))
+        all_issues = list(set(base_feedback.issues + data.get("issues", [])))
+        all_missing = list(set(base_feedback.missing_sections + data.get("missing_sections", [])))
         clarity = data.get("clarity_score", base_feedback.clarity_score)
         suggestions = data.get("suggestions", base_feedback.suggestions)
         passed = data.get("passed", False) and base_feedback.passed
@@ -99,6 +97,8 @@ class ReviewerQASkill(BaseSkill):
 
         self.logger.info(
             "LLM review: passed=%s, clarity=%.2f, issues=%d",
-            feedback.passed, feedback.clarity_score, len(feedback.issues),
+            feedback.passed,
+            feedback.clarity_score,
+            len(feedback.issues),
         )
         return feedback

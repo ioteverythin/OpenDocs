@@ -20,13 +20,11 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 from ..core.knowledge_graph import (
     Entity,
     EntityType,
     KnowledgeGraph,
-    Relation,
     RelationType,
 )
 from ..core.models import DocumentModel, GenerationResult, OutputFormat
@@ -36,6 +34,7 @@ from .mermaid_renderer import MermaidRenderer
 logger = logging.getLogger(__name__)
 
 # ── Helpers ────────────────────────────────────────────────────────────────
+
 
 def _safe_id(raw: str) -> str:
     """Make a string safe for use as a Mermaid node ID."""
@@ -67,6 +66,7 @@ def _entity_icon(etype: EntityType) -> str:
 
 
 # ── Shape helpers for different entity types ──────────────────────────────
+
 
 def _node(entity: Entity, *, shape: str = "default") -> str:
     """Return a Mermaid node declaration with an appropriate shape."""
@@ -122,6 +122,7 @@ _EDGE_STYLE: dict[RelationType, str] = {
 # Diagram builders
 # ═══════════════════════════════════════════════════════════════════════════
 
+
 def _build_system_architecture(kg: KnowledgeGraph, project_name: str) -> str | None:
     """C4-style system context / component diagram.
 
@@ -142,13 +143,13 @@ def _build_system_architecture(kg: KnowledgeGraph, project_name: str) -> str | N
 
     lines = [
         "graph TB",
-        f'    classDef project fill:#4A90D9,stroke:#2C5F8A,color:#fff,stroke-width:3px',
-        f'    classDef component fill:#67B7DC,stroke:#4A90D9,color:#fff,stroke-width:2px',
-        f'    classDef feature fill:#7EC8E3,stroke:#67B7DC,color:#333',
-        f'    classDef framework fill:#F5A623,stroke:#D4891C,color:#fff',
-        f'    classDef database fill:#50C878,stroke:#3BA35C,color:#fff',
-        f'    classDef cloud fill:#9B59B6,stroke:#7D3C98,color:#fff',
-        f'    classDef api fill:#E74C3C,stroke:#C0392B,color:#fff',
+        "    classDef project fill:#4A90D9,stroke:#2C5F8A,color:#fff,stroke-width:3px",
+        "    classDef component fill:#67B7DC,stroke:#4A90D9,color:#fff,stroke-width:2px",
+        "    classDef feature fill:#7EC8E3,stroke:#67B7DC,color:#333",
+        "    classDef framework fill:#F5A623,stroke:#D4891C,color:#fff",
+        "    classDef database fill:#50C878,stroke:#3BA35C,color:#fff",
+        "    classDef cloud fill:#9B59B6,stroke:#7D3C98,color:#fff",
+        "    classDef api fill:#E74C3C,stroke:#C0392B,color:#fff",
     ]
 
     # Project node
@@ -161,7 +162,7 @@ def _build_system_architecture(kg: KnowledgeGraph, project_name: str) -> str | N
     if components:
         lines.append('    subgraph Components["Core Components"]')
         for e in components[:10]:
-            lines.append(f'        {_node(e, shape="default")}:::component')
+            lines.append(f"        {_node(e, shape='default')}:::component")
         lines.append("    end")
         lines.append(f"    {proj_id} --> Components")
 
@@ -169,7 +170,7 @@ def _build_system_architecture(kg: KnowledgeGraph, project_name: str) -> str | N
     if features:
         lines.append('    subgraph Features["Key Features"]')
         for e in features[:10]:
-            lines.append(f'        {_node(e)}:::feature')
+            lines.append(f"        {_node(e)}:::feature")
         lines.append("    end")
         if not components:
             lines.append(f"    {proj_id} --> Features")
@@ -181,36 +182,33 @@ def _build_system_architecture(kg: KnowledgeGraph, project_name: str) -> str | N
     if frameworks:
         lines.append('    subgraph Frameworks["Frameworks & Libraries"]')
         for e in frameworks[:8]:
-            lines.append(f'        {_node(e)}:::framework')
+            lines.append(f"        {_node(e)}:::framework")
             external_nodes.append(e)
         lines.append("    end")
 
     if databases:
         lines.append('    subgraph DataStores["Data Stores"]')
         for e in databases[:6]:
-            lines.append(f'        {_node(e, shape="cylinder")}:::database')
+            lines.append(f"        {_node(e, shape='cylinder')}:::database")
             external_nodes.append(e)
         lines.append("    end")
 
     if cloud:
         lines.append('    subgraph Cloud["Cloud & Infrastructure"]')
         for e in cloud[:6]:
-            lines.append(f'        {_node(e, shape="parallelogram")}:::cloud')
+            lines.append(f"        {_node(e, shape='parallelogram')}:::cloud")
             external_nodes.append(e)
         lines.append("    end")
 
     if apis:
         lines.append('    subgraph APIs["API Endpoints"]')
         for e in apis[:6]:
-            lines.append(f'        {_node(e, shape="subroutine")}:::api')
+            lines.append(f"        {_node(e, shape='subroutine')}:::api")
             external_nodes.append(e)
         lines.append("    end")
 
     # Draw relations between included nodes
-    included_ids = {e.id for e in (
-        projects + components + features + frameworks
-        + databases + cloud + apis
-    )}
+    included_ids = {e.id for e in (projects + components + features + frameworks + databases + cloud + apis)}
     seen_edges: set[str] = set()
     for r in kg.relations:
         if r.source_id in included_ids and r.target_id in included_ids:
@@ -239,8 +237,7 @@ def _build_tech_stack(kg: KnowledgeGraph) -> str | None:
     technologies = kg.entities_of_type(EntityType.TECHNOLOGY)
     protocols = kg.entities_of_type(EntityType.PROTOCOL)
 
-    total = (len(languages) + len(frameworks) + len(databases)
-             + len(cloud) + len(platforms) + len(technologies))
+    total = len(languages) + len(frameworks) + len(databases) + len(cloud) + len(platforms) + len(technologies)
     if total < 2:
         return None
 
@@ -259,12 +256,12 @@ def _build_tech_stack(kg: KnowledgeGraph) -> str | None:
 
     lines = [
         "graph TB",
-        '    classDef frontend fill:#61DAFB,stroke:#21A1C4,color:#333',
-        '    classDef backend fill:#68A063,stroke:#4A7A45,color:#fff',
-        '    classDef data fill:#336791,stroke:#1E3F5A,color:#fff',
-        '    classDef infra fill:#FF9900,stroke:#CC7A00,color:#fff',
-        '    classDef lang fill:#F7DF1E,stroke:#C4B118,color:#333',
-        '    classDef tool fill:#8E8E93,stroke:#636366,color:#fff',
+        "    classDef frontend fill:#61DAFB,stroke:#21A1C4,color:#333",
+        "    classDef backend fill:#68A063,stroke:#4A7A45,color:#fff",
+        "    classDef data fill:#336791,stroke:#1E3F5A,color:#fff",
+        "    classDef infra fill:#FF9900,stroke:#CC7A00,color:#fff",
+        "    classDef lang fill:#F7DF1E,stroke:#C4B118,color:#333",
+        "    classDef tool fill:#8E8E93,stroke:#636366,color:#fff",
     ]
 
     subgraph_ids = []
@@ -274,7 +271,7 @@ def _build_tech_stack(kg: KnowledgeGraph) -> str | None:
     if fe_items:
         lines.append('    subgraph Frontend["Frontend"]')
         for e in fe_items[:6]:
-            lines.append(f'        {_node(e)}:::frontend')
+            lines.append(f"        {_node(e)}:::frontend")
         lines.append("    end")
         subgraph_ids.append("Frontend")
 
@@ -283,7 +280,7 @@ def _build_tech_stack(kg: KnowledgeGraph) -> str | None:
     if be_items:
         lines.append('    subgraph Backend["Backend & Frameworks"]')
         for e in be_items[:8]:
-            lines.append(f'        {_node(e)}:::backend')
+            lines.append(f"        {_node(e)}:::backend")
         lines.append("    end")
         subgraph_ids.append("Backend")
 
@@ -291,7 +288,7 @@ def _build_tech_stack(kg: KnowledgeGraph) -> str | None:
     if languages:
         lines.append('    subgraph Languages["Languages"]')
         for e in languages[:8]:
-            lines.append(f'        {_node(e)}:::lang')
+            lines.append(f"        {_node(e)}:::lang")
         lines.append("    end")
         subgraph_ids.append("Languages")
 
@@ -300,7 +297,7 @@ def _build_tech_stack(kg: KnowledgeGraph) -> str | None:
     if data_items:
         lines.append('    subgraph Data["Data Layer"]')
         for e in data_items[:6]:
-            lines.append(f'        {_node(e, shape="cylinder")}:::data')
+            lines.append(f"        {_node(e, shape='cylinder')}:::data")
         lines.append("    end")
         subgraph_ids.append("Data")
 
@@ -309,7 +306,7 @@ def _build_tech_stack(kg: KnowledgeGraph) -> str | None:
     if infra_items:
         lines.append('    subgraph Infrastructure["Infrastructure"]')
         for e in infra_items[:6]:
-            lines.append(f'        {_node(e, shape="parallelogram")}:::infra')
+            lines.append(f"        {_node(e, shape='parallelogram')}:::infra")
         lines.append("    end")
         subgraph_ids.append("Infrastructure")
 
@@ -318,7 +315,7 @@ def _build_tech_stack(kg: KnowledgeGraph) -> str | None:
     if tool_items:
         lines.append('    subgraph Tooling["Protocols & Tools"]')
         for e in tool_items[:6]:
-            lines.append(f'        {_node(e)}:::tool')
+            lines.append(f"        {_node(e)}:::tool")
         lines.append("    end")
         subgraph_ids.append("Tooling")
 
@@ -353,17 +350,18 @@ def _build_data_flow(kg: KnowledgeGraph) -> str | None:
 
     lines = [
         "graph LR",
-        '    classDef source fill:#4A90D9,stroke:#2C5F8A,color:#fff',
-        '    classDef store fill:#50C878,stroke:#3BA35C,color:#fff',
-        '    classDef service fill:#9B59B6,stroke:#7D3C98,color:#fff',
+        "    classDef source fill:#4A90D9,stroke:#2C5F8A,color:#fff",
+        "    classDef store fill:#50C878,stroke:#3BA35C,color:#fff",
+        "    classDef service fill:#9B59B6,stroke:#7D3C98,color:#fff",
     ]
 
     # Declare nodes
     for eid, e in entities_map.items():
         shape = _shape_for(e.entity_type)
-        cls = "store" if e.entity_type == EntityType.DATABASE else (
-            "service" if e.entity_type in (EntityType.CLOUD_SERVICE, EntityType.API_ENDPOINT)
-            else "source"
+        cls = (
+            "store"
+            if e.entity_type == EntityType.DATABASE
+            else ("service" if e.entity_type in (EntityType.CLOUD_SERVICE, EntityType.API_ENDPOINT) else "source")
         )
         lines.append(f"    {_node(e, shape=shape)}:::{cls}")
 
@@ -403,16 +401,17 @@ def _build_dependency_tree(kg: KnowledgeGraph) -> str | None:
 
     lines = [
         "graph TD",
-        '    classDef core fill:#4A90D9,stroke:#2C5F8A,color:#fff,stroke-width:2px',
-        '    classDef dep fill:#F5A623,stroke:#D4891C,color:#fff',
-        '    classDef prereq fill:#E74C3C,stroke:#C0392B,color:#fff',
+        "    classDef core fill:#4A90D9,stroke:#2C5F8A,color:#fff,stroke-width:2px",
+        "    classDef dep fill:#F5A623,stroke:#D4891C,color:#fff",
+        "    classDef prereq fill:#E74C3C,stroke:#C0392B,color:#fff",
     ]
 
     for eid, e in entities_map.items():
         shape = _shape_for(e.entity_type)
-        cls = "prereq" if e.entity_type == EntityType.PREREQUISITE else (
-            "core" if e.entity_type in (EntityType.PROJECT, EntityType.COMPONENT)
-            else "dep"
+        cls = (
+            "prereq"
+            if e.entity_type == EntityType.PREREQUISITE
+            else ("core" if e.entity_type in (EntityType.PROJECT, EntityType.COMPONENT) else "dep")
         )
         lines.append(f"    {_node(e, shape=shape)}:::{cls}")
 
@@ -439,15 +438,9 @@ def _build_deployment_view(kg: KnowledgeGraph) -> str | None:
     if not hosts:
         return None
 
-    # Find RUNS_ON relations
-    runs_on = [r for r in kg.relations if r.relation_type == RelationType.RUNS_ON]
-
     # Also gather anything that connects to these hosts
     host_ids = {e.id for e in hosts}
-    host_relations = [
-        r for r in kg.relations
-        if r.target_id in host_ids or r.source_id in host_ids
-    ]
+    host_relations = [r for r in kg.relations if r.target_id in host_ids or r.source_id in host_ids]
     if not host_relations and len(hosts) < 2:
         return None
 
@@ -462,9 +455,9 @@ def _build_deployment_view(kg: KnowledgeGraph) -> str | None:
 
     lines = [
         "graph TB",
-        '    classDef host fill:#FF9900,stroke:#CC7A00,color:#fff,stroke-width:2px',
-        '    classDef app fill:#4A90D9,stroke:#2C5F8A,color:#fff',
-        '    classDef hw fill:#8E8E93,stroke:#636366,color:#fff',
+        "    classDef host fill:#FF9900,stroke:#CC7A00,color:#fff,stroke-width:2px",
+        "    classDef app fill:#4A90D9,stroke:#2C5F8A,color:#fff",
+        "    classDef hw fill:#8E8E93,stroke:#636366,color:#fff",
     ]
 
     # Host subgraph
@@ -472,18 +465,15 @@ def _build_deployment_view(kg: KnowledgeGraph) -> str | None:
     for e in hosts[:8]:
         shape = "hexagon" if e.entity_type == EntityType.HARDWARE else "parallelogram"
         cls = "hw" if e.entity_type == EntityType.HARDWARE else "host"
-        lines.append(f'        {_node(e, shape=shape)}:::{cls}')
+        lines.append(f"        {_node(e, shape=shape)}:::{cls}")
     lines.append("    end")
 
     # App nodes
-    app_entities = [
-        entities_map[eid] for eid in involved_ids
-        if eid not in host_ids and eid in entities_map
-    ]
+    app_entities = [entities_map[eid] for eid in involved_ids if eid not in host_ids and eid in entities_map]
     if app_entities:
         lines.append('    subgraph Applications["Applications & Services"]')
         for e in app_entities[:10]:
-            lines.append(f'        {_node(e)}:::app')
+            lines.append(f"        {_node(e)}:::app")
         lines.append("    end")
 
     # Edges
@@ -570,13 +560,15 @@ class ArchitectureGenerator(BaseGenerator):
             # Render to PNG
             png_path = renderer.render(mermaid_src, label=stem)
 
-            diagrams_built.append({
-                "title": title,
-                "stem": stem,
-                "mmd_path": mmd_path,
-                "png_path": png_path,
-                "mermaid_src": mermaid_src,
-            })
+            diagrams_built.append(
+                {
+                    "title": title,
+                    "stem": stem,
+                    "mmd_path": mmd_path,
+                    "png_path": png_path,
+                    "mermaid_src": mermaid_src,
+                }
+            )
 
         if not diagrams_built:
             return GenerationResult(
@@ -590,7 +582,7 @@ class ArchitectureGenerator(BaseGenerator):
         md_lines = [
             f"# Architecture Diagrams — {project_name}",
             "",
-            f"> Auto-generated by OpenDocs from the project's README.",
+            "> Auto-generated by OpenDocs from the project's README.",
             f"> {len(diagrams_built)} architecture view(s) produced.",
             "",
             "---",
@@ -608,7 +600,7 @@ class ArchitectureGenerator(BaseGenerator):
                 md_lines.append("*(PNG rendering unavailable — raw Mermaid below)*")
 
             md_lines.append("")
-            md_lines.append(f'<details><summary>Mermaid source</summary>')
+            md_lines.append("<details><summary>Mermaid source</summary>")
             md_lines.append("")
             md_lines.append("```mermaid")
             md_lines.append(d["mermaid_src"])
@@ -624,15 +616,12 @@ class ArchitectureGenerator(BaseGenerator):
             stats = self.kg.compute_stats()
             md_lines.append("## Generation Stats")
             md_lines.append("")
-            md_lines.append(f"| Metric | Value |")
-            md_lines.append(f"|--------|-------|")
+            md_lines.append("| Metric | Value |")
+            md_lines.append("|--------|-------|")
             md_lines.append(f"| Entities | {stats.get('total_entities', 0)} |")
             md_lines.append(f"| Relations | {stats.get('total_relations', 0)} |")
             md_lines.append(f"| Diagrams generated | {len(diagrams_built)} |")
-            md_lines.append(
-                f"| Diagrams rendered (PNG) | "
-                f"{sum(1 for d in diagrams_built if d['png_path'])} |"
-            )
+            md_lines.append(f"| Diagrams rendered (PNG) | {sum(1 for d in diagrams_built if d['png_path'])} |")
             md_lines.append("")
 
         report_path = output_dir / self._safe_filename(project_name, "architecture.md")
@@ -641,7 +630,8 @@ class ArchitectureGenerator(BaseGenerator):
         n_rendered = sum(1 for d in diagrams_built if d["png_path"])
         logger.info(
             "Architecture diagrams: %d built, %d rendered to PNG",
-            len(diagrams_built), n_rendered,
+            len(diagrams_built),
+            n_rendered,
         )
 
         return GenerationResult(

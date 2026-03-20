@@ -7,11 +7,9 @@ import pytest
 from opendocs.core.models import (
     BlockquoteBlock,
     CodeBlock,
-    HeadingBlock,
     ListBlock,
     MermaidBlock,
     ParagraphBlock,
-    TableBlock,
 )
 from opendocs.core.parser import ReadmeParser
 
@@ -24,6 +22,7 @@ def parser():
 # ---------------------------------------------------------------------------
 # Basic parsing
 # ---------------------------------------------------------------------------
+
 
 class TestBasicParsing:
     def test_parse_heading(self, parser):
@@ -62,6 +61,7 @@ class TestBasicParsing:
 # Mermaid detection
 # ---------------------------------------------------------------------------
 
+
 class TestMermaidDetection:
     def test_mermaid_block_extracted(self, parser):
         md = "# Arch\n\n```mermaid\ngraph TD\n  A-->B\n```"
@@ -79,6 +79,7 @@ class TestMermaidDetection:
 # ---------------------------------------------------------------------------
 # Tables & Lists
 # ---------------------------------------------------------------------------
+
 
 class TestComplex:
     def test_list_block(self, parser):
@@ -98,6 +99,7 @@ class TestComplex:
 # ---------------------------------------------------------------------------
 # Metadata
 # ---------------------------------------------------------------------------
+
 
 class TestMetadata:
     def test_repo_name_set(self, parser):

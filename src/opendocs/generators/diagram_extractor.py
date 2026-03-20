@@ -24,6 +24,7 @@ logger = logging.getLogger(__name__)
 # Image cache — shared across generators
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class ImageCache:
     """Holds paths to rendered diagram images and downloaded external images.

@@ -58,6 +58,7 @@ _SUB_AGENT_CLASSES: dict[AgentRole, type] = {
 # Orchestrator result
 # ---------------------------------------------------------------------------
 
+
 class OrchestrationResult:
     """The final output of the agentic pipeline.
 
@@ -96,16 +97,14 @@ class OrchestrationResult:
             "completed_steps": self.plan.completed_steps if self.plan else 0,
             "duration_ms": round(self.total_duration_ms, 1),
             "artifacts": list(self.enhanced_artifacts.keys()),
-            "verdict": (
-                self.critic_result.artifacts.get("verdict")
-                if self.critic_result else None
-            ),
+            "verdict": (self.critic_result.artifacts.get("verdict") if self.critic_result else None),
         }
 
 
 # ---------------------------------------------------------------------------
 # Main orchestrator
 # ---------------------------------------------------------------------------
+
 
 class AgentOrchestrator:
     """Top-level coordinator for the Planner → Executor → Critic loop.
@@ -172,9 +171,7 @@ class AgentOrchestrator:
 
         for attempt in range(1, self.max_retries + 2):  # +1 for initial + retries
             iterations = attempt
-            console.print(
-                f"[bold cyan]Agent loop iteration {attempt}[/bold cyan]"
-            )
+            console.print(f"[bold cyan]Agent loop iteration {attempt}[/bold cyan]")
 
             # ── 1. PLAN ──────────────────────────────────────────────
             console.print("  [dim]Planning...[/dim]")
@@ -190,10 +187,7 @@ class AgentOrchestrator:
                 break
 
             current_plan = AgentPlan(**planner_result.artifacts["plan"])
-            console.print(
-                f"  Plan: {current_plan.total_steps} steps, "
-                f"goal: {current_plan.goal}"
-            )
+            console.print(f"  Plan: {current_plan.total_steps} steps, goal: {current_plan.goal}")
 
             # ── 2. EXECUTE ───────────────────────────────────────────
             step_results: list[AgentResult] = []
@@ -201,9 +195,7 @@ class AgentOrchestrator:
                 if step.agent_role == AgentRole.CRITIC:
                     continue  # Critic runs after all execution steps
 
-                console.print(
-                    f"  [dim]Step {step.step_number}: {step.description}[/dim]"
-                )
+                console.print(f"  [dim]Step {step.step_number}: {step.description}[/dim]")
 
                 result = await self._execute_step(
                     step=step,
@@ -232,14 +224,10 @@ class AgentOrchestrator:
 
             verdict = critic_result.artifacts.get("verdict", {})
             if critic_result.success:
-                console.print(
-                    "[green]  ✓ Critic approved — evidence coverage OK[/green]"
-                )
+                console.print("[green]  ✓ Critic approved — evidence coverage OK[/green]")
                 break
             else:
-                console.print(
-                    f"[yellow]  ✗ Critic rejected: {verdict.get('replan_reason', '?')}[/yellow]"
-                )
+                console.print(f"[yellow]  ✗ Critic rejected: {verdict.get('replan_reason', '?')}[/yellow]")
                 if attempt > self.max_retries:
                     console.print("[red]  Max retries reached[/red]")
                     break

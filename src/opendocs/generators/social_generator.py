@@ -13,11 +13,10 @@ from __future__ import annotations
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
-from ..core.knowledge_graph import EntityType, KnowledgeGraph
+from ..core.knowledge_graph import EntityType
 from ..core.models import (
-    CodeBlock,
     DocumentModel,
     GenerationResult,
     ListBlock,
@@ -27,7 +26,7 @@ from ..core.models import (
 from .base import BaseGenerator
 
 if TYPE_CHECKING:
-    from .diagram_extractor import ImageCache
+    pass
 
 
 class SocialGenerator(BaseGenerator):
@@ -80,7 +79,6 @@ class SocialGenerator(BaseGenerator):
             "generated_at": now,
             "project": name,
             "url": url,
-
             # -- Open Graph metadata ---
             "open_graph": {
                 "og:title": f"{name} — {self._tagline(doc)}",
@@ -90,7 +88,6 @@ class SocialGenerator(BaseGenerator):
                 "og:site_name": name,
                 "og:locale": "en_US",
             },
-
             # -- Twitter Card ---
             "twitter_card": {
                 "twitter:card": "summary_large_image",
@@ -98,7 +95,6 @@ class SocialGenerator(BaseGenerator):
                 "twitter:description": description,
                 "twitter:url": url,
             },
-
             # -- Post templates ---
             "posts": {
                 "twitter": self._twitter_post(name, url, description, tags),
@@ -107,7 +103,6 @@ class SocialGenerator(BaseGenerator):
                 "reddit": self._reddit_post(name, url, long_description, tags),
                 "producthunt": self._ph_post(name, url, description, tags),
             },
-
             # -- Raw data ---
             "hashtags": tags,
             "short_description": description,
@@ -121,7 +116,11 @@ class SocialGenerator(BaseGenerator):
     # ------------------------------------------------------------------
 
     def _twitter_post(
-        self, name: str, url: str, desc: str, tags: list[str],
+        self,
+        name: str,
+        url: str,
+        desc: str,
+        tags: list[str],
     ) -> str:
         """Build a Twitter/X post (≤280 chars)."""
         tag_str = " ".join(f"#{t}" for t in tags[:3])
@@ -134,7 +133,11 @@ class SocialGenerator(BaseGenerator):
         return post[:280]
 
     def _linkedin_post(
-        self, name: str, url: str, desc: str, tags: list[str],
+        self,
+        name: str,
+        url: str,
+        desc: str,
+        tags: list[str],
     ) -> str:
         """Build a LinkedIn post."""
         tag_str = " ".join(f"#{t}" for t in tags[:5])
@@ -161,7 +164,11 @@ Check it out here: {url}
         }
 
     def _reddit_post(
-        self, name: str, url: str, desc: str, tags: list[str],
+        self,
+        name: str,
+        url: str,
+        desc: str,
+        tags: list[str],
     ) -> dict[str, str]:
         """Build a Reddit post."""
         features = self._extract_features_text()
@@ -171,7 +178,7 @@ Check it out here: {url}
 
 **Links:**
 - GitHub: {url}
-- Install: `pip install {name.lower().replace(' ', '-')}`
+- Install: `pip install {name.lower().replace(" ", "-")}`
 
 Would love to hear your feedback!"""
 
@@ -182,7 +189,11 @@ Would love to hear your feedback!"""
         }
 
     def _ph_post(
-        self, name: str, url: str, desc: str, tags: list[str],
+        self,
+        name: str,
+        url: str,
+        desc: str,
+        tags: list[str],
     ) -> dict[str, str]:
         """Build a Product Hunt launch post."""
         return {
@@ -204,10 +215,7 @@ Would love to hear your feedback!"""
             return self._strip_html(first[:160])
         if doc.metadata.description:
             return self._strip_html(doc.metadata.description[:160])
-        paras = [
-            b.text for b in doc.all_blocks
-            if isinstance(b, ParagraphBlock) and len(b.text) > 20
-        ]
+        paras = [b.text for b in doc.all_blocks if isinstance(b, ParagraphBlock) and len(b.text) > 20]
         if paras:
             return self._strip_html(paras[0][:160])
         return f"{doc.metadata.repo_name or 'Project'} -- an open-source tool"
@@ -216,10 +224,7 @@ Would love to hear your feedback!"""
         """Build a longer description (<=500 chars)."""
         if self.kg and self.kg.executive_summary:
             return self._strip_html(self.kg.executive_summary[:500])
-        paras = [
-            b.text for b in doc.all_blocks
-            if isinstance(b, ParagraphBlock) and len(b.text) > 30
-        ]
+        paras = [b.text for b in doc.all_blocks if isinstance(b, ParagraphBlock) and len(b.text) > 30]
         if paras:
             text = " ".join(paras[:3])
             return self._strip_html(text[:500])
@@ -243,8 +248,10 @@ Would love to hear your feedback!"""
         if self.kg:
             for e in self.kg.entities:
                 if e.entity_type in (
-                    EntityType.TECHNOLOGY, EntityType.FRAMEWORK,
-                    EntityType.LANGUAGE, EntityType.PLATFORM,
+                    EntityType.TECHNOLOGY,
+                    EntityType.FRAMEWORK,
+                    EntityType.LANGUAGE,
+                    EntityType.PLATFORM,
                 ):
                     # Clean tag: no spaces, lowercase
                     tag = e.name.lower().replace(" ", "").replace("-", "").replace(".", "")
@@ -291,9 +298,12 @@ Would love to hear your feedback!"""
         techs: list[str] = []
         for e in self.kg.entities:
             if e.entity_type in (
-                EntityType.TECHNOLOGY, EntityType.FRAMEWORK,
-                EntityType.LANGUAGE, EntityType.DATABASE,
-                EntityType.CLOUD_SERVICE, EntityType.PLATFORM,
+                EntityType.TECHNOLOGY,
+                EntityType.FRAMEWORK,
+                EntityType.LANGUAGE,
+                EntityType.DATABASE,
+                EntityType.CLOUD_SERVICE,
+                EntityType.PLATFORM,
             ):
                 techs.append(e.name)
         return list(dict.fromkeys(techs))[:10]
@@ -302,10 +312,7 @@ Would love to hear your feedback!"""
         """Suggest relevant subreddits based on tech stack."""
         subs = ["r/programming", "r/opensource"]
         if self.kg:
-            langs = {
-                e.name.lower()
-                for e in self.kg.entities_of_type(EntityType.LANGUAGE)
-            }
+            langs = {e.name.lower() for e in self.kg.entities_of_type(EntityType.LANGUAGE)}
             if "python" in langs:
                 subs.append("r/Python")
             if "javascript" in langs or "typescript" in langs:
@@ -315,10 +322,7 @@ Would love to hear your feedback!"""
             if "go" in langs:
                 subs.append("r/golang")
 
-            frameworks = {
-                e.name.lower()
-                for e in self.kg.entities_of_type(EntityType.FRAMEWORK)
-            }
+            frameworks = {e.name.lower() for e in self.kg.entities_of_type(EntityType.FRAMEWORK)}
             if any("react" in f for f in frameworks):
                 subs.append("r/reactjs")
             if any("django" in f for f in frameworks):

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from .base import BaseSkill
+from ..models.document_model import DocumentType, DraftDocument
 from ..models.repo_model import RepoKnowledgeModel
-from ..models.document_model import DraftDocument, DocumentType
+from .base import BaseSkill
 
 
 class PRDSkill(BaseSkill):
@@ -68,8 +68,7 @@ class PRDSkill(BaseSkill):
         content = chat_text(system, context, **llm_config)
         self.logger.info("LLM-generated PRD: %d chars", len(content))
 
-        sections = [line.lstrip("# ").strip() for line in content.splitlines()
-                     if line.startswith("## ")]
+        sections = [line.lstrip("# ").strip() for line in content.splitlines() if line.startswith("## ")]
 
         return DraftDocument(
             doc_type=DocumentType.PRD,
@@ -145,8 +144,10 @@ class PRDSkill(BaseSkill):
         parts.append("## User Stories\n")
         if m.features:
             for i, f in enumerate(m.features[:8], 1):
-                parts.append(f"**US-{i:03d}:** As a user, I want to {f.lower().rstrip('.')}"
-                             f" so that I can benefit from this capability.\n")
+                parts.append(
+                    f"**US-{i:03d}:** As a user, I want to {f.lower().rstrip('.')}"
+                    f" so that I can benefit from this capability.\n"
+                )
         else:
             parts.append("- As a user, I want to use this project to solve my problem.\n")
 

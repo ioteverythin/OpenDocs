@@ -25,26 +25,37 @@ from pathlib import Path
 from typing import Iterator
 
 from .models import (
+    BlockType,
     ContentBlock,
     DocumentMetadata,
     DocumentModel,
     HeadingBlock,
-    BlockType,
     Section,
     ThematicBreakBlock,
 )
-from .parser import ReadmeParser
 from .notebook_parser import NotebookParser, is_notebook
+from .parser import ReadmeParser
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
 _IGNORE_DIRS = {
-    ".git", ".hg", ".svn",
-    "__pycache__", ".tox", ".venv", "venv", "env",
-    "node_modules", "dist", "build", "site-packages",
-    ".mypy_cache", ".ruff_cache", ".pytest_cache",
+    ".git",
+    ".hg",
+    ".svn",
+    "__pycache__",
+    ".tox",
+    ".venv",
+    "venv",
+    "env",
+    "node_modules",
+    "dist",
+    "build",
+    "site-packages",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".pytest_cache",
 }
 
 _DOC_EXTENSIONS = {".md", ".markdown", ".ipynb"}
@@ -53,6 +64,7 @@ _DOC_EXTENSIONS = {".md", ".markdown", ".ipynb"}
 # ---------------------------------------------------------------------------
 # File discovery
 # ---------------------------------------------------------------------------
+
 
 def _iter_doc_files(folder: Path, recursive: bool = True) -> Iterator[Path]:
     """Yield .md/.ipynb files from *folder* in stable sorted order.
@@ -105,12 +117,13 @@ def _read_order_file(folder: Path) -> list[Path] | None:
 # Title helpers
 # ---------------------------------------------------------------------------
 
+
 def _file_title(path: Path, folder: Path) -> str:
     """Turn a file path into a human-readable section title."""
     # Use the relative stem, convert separators to spaces, title-case it
     rel = path.relative_to(folder)
-    stem = rel.with_suffix("").as_posix()          # e.g.  "docs/getting-started"
-    stem = re.sub(r"[\-_/]", " ", stem)             # "docs getting started"
+    stem = rel.with_suffix("").as_posix()  # e.g.  "docs/getting-started"
+    stem = re.sub(r"[\-_/]", " ", stem)  # "docs getting started"
     # Drop leading digits that look like ordering prefixes (e.g. "01 intro")
     stem = re.sub(r"^\d+\s+", "", stem)
     return stem.strip().title()
@@ -119,6 +132,7 @@ def _file_title(path: Path, folder: Path) -> str:
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def merge_folder(
     folder: str | Path,
@@ -158,9 +172,7 @@ def merge_folder(
     files: list[Path] = ordered if ordered else list(_iter_doc_files(folder, recursive=recursive))
 
     if not files:
-        raise ValueError(
-            f"No Markdown (.md) or Notebook (.ipynb) files found in {folder}"
-        )
+        raise ValueError(f"No Markdown (.md) or Notebook (.ipynb) files found in {folder}")
 
     md_parser = ReadmeParser()
     nb_parser = NotebookParser()
@@ -206,10 +218,7 @@ def merge_folder(
     metadata = DocumentMetadata(
         repo_name=repo_name,
         repo_url="",
-        description=(
-            f"Unified documentation merged from {len(files)} source "
-            f"file(s) in {folder.name}/"
-        ),
+        description=(f"Unified documentation merged from {len(files)} source file(s) in {folder.name}/"),
         source_path=str(folder),
     )
 

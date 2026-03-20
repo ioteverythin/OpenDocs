@@ -9,10 +9,9 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
-from ..llm_client import chat_text
 from ...core.knowledge_graph import KnowledgeGraph
 from ...core.models import DocumentModel
+from ..base import AgentBase, AgentPlan, AgentResult, AgentRole, RepoProfile
 
 
 class MLAgent(AgentBase):
@@ -64,11 +63,13 @@ class MLAgent(AgentBase):
                 )
             except Exception:
                 model_card = self._build_model_card(
-                    components=components, repo_name=repo_profile.repo_name,
+                    components=components,
+                    repo_name=repo_profile.repo_name,
                 )
         else:
             model_card = self._build_model_card(
-                components=components, repo_name=repo_profile.repo_name,
+                components=components,
+                repo_name=repo_profile.repo_name,
             )
         artifacts["model_card_md"] = model_card
 
@@ -82,11 +83,13 @@ class MLAgent(AgentBase):
                 )
             except Exception:
                 section_md = self._build_ml_section(
-                    components=components, repo_name=repo_profile.repo_name,
+                    components=components,
+                    repo_name=repo_profile.repo_name,
                 )
         else:
             section_md = self._build_ml_section(
-                components=components, repo_name=repo_profile.repo_name,
+                components=components,
+                repo_name=repo_profile.repo_name,
             )
         artifacts["ml_architecture_md"] = section_md
         artifacts["ml_components"] = components
@@ -101,9 +104,7 @@ class MLAgent(AgentBase):
 
     # -- Internal -----------------------------------------------------------
 
-    def _detect_ml_components(
-        self, profile: RepoProfile
-    ) -> list[dict[str, Any]]:
+    def _detect_ml_components(self, profile: RepoProfile) -> list[dict[str, Any]]:
         """Detect ML components from signals and file tree.
 
         TODO: Parse requirements.txt / pyproject.toml for ML libraries.
@@ -127,29 +128,27 @@ class MLAgent(AgentBase):
 
         return components
 
-    def _build_pipeline_diagram(
-        self, components: list[dict[str, Any]]
-    ) -> str:
+    def _build_pipeline_diagram(self, components: list[dict[str, Any]]) -> str:
         """Generate a Mermaid ML pipeline diagram."""
         lines = ["graph LR"]
         lines.append('    Data["Data Sources"]')
         lines.append('    Preprocessing["Preprocessing"]')
-        lines.append('    Data --> Preprocessing')
+        lines.append("    Data --> Preprocessing")
 
         for comp in components:
             safe = comp["name"].replace(" ", "_").replace("-", "_")
             if comp["type"] == "framework":
                 lines.append(f'    {safe}["{comp["name"]}"]')
-                lines.append(f'    Preprocessing --> {safe}')
+                lines.append(f"    Preprocessing --> {safe}")
                 lines.append(f'    {safe} --> Model["Trained Model"]')
             elif comp["type"] == "pipeline" and comp["tech"] == "rag":
                 lines.append('    Embeddings["Embeddings"]')
                 lines.append('    VectorDB["Vector Store"]')
                 lines.append('    Retrieval["Retrieval"]')
                 lines.append('    LLM["LLM"]')
-                lines.append('    Embeddings --> VectorDB')
-                lines.append('    VectorDB --> Retrieval')
-                lines.append('    Retrieval --> LLM')
+                lines.append("    Embeddings --> VectorDB")
+                lines.append("    VectorDB --> Retrieval")
+                lines.append("    Retrieval --> LLM")
 
         lines.append('    Model --> Inference["Inference API"]')
         return "\n".join(lines)

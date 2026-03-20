@@ -11,10 +11,15 @@ import logging
 from pathlib import Path
 from typing import Any
 
-from .base import BaseSkill
 from ..models.repo_model import RepoKnowledgeModel
+from .base import BaseSkill
 
 logger = logging.getLogger("docagent.skill.diagram.gen")
+
+
+def _safe_label(s: str) -> str:
+    """Sanitise a string for use as a Mermaid node label."""
+    return s.replace('"', "'").replace("(", "").replace(")", "")
 
 
 class DiagramGenSkill(BaseSkill):
@@ -48,6 +53,7 @@ class DiagramGenSkill(BaseSkill):
 
         # Get a renderer
         from opendocs.generators.mermaid_renderer import MermaidRenderer
+
         renderer = MermaidRenderer(cache_dir=diagrams_dir, backend="ink")
 
         results: dict[str, Path | None] = {}
@@ -167,12 +173,11 @@ class DiagramGenSkill(BaseSkill):
             return ""
 
         lines = ["graph TB"]
-        safe = lambda s: s.replace('"', "'").replace("(", "").replace(")", "")
 
         # Create node for each component
         for i, comp in enumerate(m.architecture_components[:12]):
             node_id = f"C{i}"
-            lines.append(f'    {node_id}["{safe(comp)}"]')
+            lines.append(f'    {node_id}["{_safe_label(comp)}"]')
 
         # Connect sequentially as a simple flow
         for i in range(len(m.architecture_components[:12]) - 1):
@@ -186,11 +191,10 @@ class DiagramGenSkill(BaseSkill):
             return ""
 
         lines = ["flowchart LR"]
-        safe = lambda s: s.replace('"', "'").replace("(", "").replace(")", "")
 
         for i, step in enumerate(m.data_flow[:10]):
             node_id = f"S{i}"
-            lines.append(f'    {node_id}["{safe(step)}"]')
+            lines.append(f'    {node_id}["{_safe_label(step)}"]')
 
         for i in range(len(m.data_flow[:10]) - 1):
             lines.append(f"    S{i} --> S{i + 1}")
@@ -203,13 +207,12 @@ class DiagramGenSkill(BaseSkill):
             return ""
 
         lines = ["graph TB"]
-        safe = lambda s: s.replace('"', "'").replace("(", "").replace(")", "")
 
         # Tech stack as a subgraph
         if m.tech_stack:
             lines.append('    subgraph Stack["Tech Stack"]')
             for i, tech in enumerate(m.tech_stack[:8]):
-                lines.append(f'        T{i}["{safe(tech)}"]')
+                lines.append(f'        T{i}["{_safe_label(tech)}"]')
             lines.append("    end")
 
         # Key files as another subgraph
@@ -218,7 +221,7 @@ class DiagramGenSkill(BaseSkill):
             lines.append('    subgraph Modules["Key Modules"]')
             for i, fname in enumerate(key_file_names):
                 short = fname.split("/")[-1]
-                lines.append(f'        M{i}["{safe(short)}"]')
+                lines.append(f'        M{i}["{_safe_label(short)}"]')
             lines.append("    end")
 
         # Connect stacks to modules

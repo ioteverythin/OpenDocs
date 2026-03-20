@@ -22,7 +22,7 @@ class ChartGenerateTool:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     async def execute(self, params: dict[str, Any]) -> dict[str, Any]:
-        data: dict[str, Any] = params["data"]
+        _data: dict[str, Any] = params["data"]
         chart_type: str = params["chart_type"]
         title: str = params.get("title", "")
         output_format: str = params.get("output_format", "png")
@@ -40,6 +40,6 @@ class ChartGenerateTool:
         return {
             "chart_type": chart_type,
             "output_format": output_format,
-            "output_path": "",          # TODO: path to rendered chart
+            "output_path": "",  # TODO: path to rendered chart
             "title": title,
         }

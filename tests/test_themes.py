@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from opendocs.generators.styles import Colors, apply_theme, reset_theme
 from opendocs.generators.themes import (
     CORPORATE_THEME,
     DEFAULT_THEME,
@@ -13,7 +14,6 @@ from opendocs.generators.themes import (
     list_themes,
     register_theme,
 )
-from opendocs.generators.styles import Colors, apply_theme, reset_theme
 
 
 class TestThemeRegistry:

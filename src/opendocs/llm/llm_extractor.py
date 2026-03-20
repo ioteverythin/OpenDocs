@@ -11,12 +11,8 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
-import time
 from typing import Any
-
-from .providers import LLMProvider, get_provider, DEFAULT_PROVIDER
 
 from ..core.knowledge_graph import (
     Entity,
@@ -26,6 +22,7 @@ from ..core.knowledge_graph import (
     RelationType,
 )
 from ..core.models import DocumentModel, Section
+from .providers import DEFAULT_PROVIDER, get_provider
 
 logger = logging.getLogger(__name__)
 
@@ -150,7 +147,6 @@ IMPORTANT: Return ONLY plain-text bullet points starting with "- ".
 Reference SPECIFIC technologies, components, and patterns from the README.
 Do NOT write generic bullets that could apply to any project.
 No introduction line — jump straight into the bullets.""",
-
     "investor": """\
 Write an investor-grade assessment of this SPECIFIC project.
 Your bullets MUST reference actual details from the README.
@@ -177,7 +173,6 @@ Write 5-8 bullet points covering:
 IMPORTANT: Return ONLY plain-text bullet points starting with "- ".
 Reference SPECIFIC features, numbers, and technical details from the README.
 No introduction line — jump straight into the bullets.""",
-
     "developer": """\
 Write a developer onboarding guide for this SPECIFIC project.
 Your bullets MUST reference actual details from the README.
@@ -214,6 +209,7 @@ No introduction line — jump straight into the bullets.""",
 # LLM Client wrapper (delegates to unified provider)
 # ---------------------------------------------------------------------------
 
+
 class LLMClient:
     """Thin wrapper that delegates to the unified multi-provider system.
 
@@ -248,6 +244,7 @@ class LLMClient:
 # LLM Entity Extractor
 # ---------------------------------------------------------------------------
 
+
 class LLMExtractor:
     """Uses an LLM to extract entities and relations from README content.
 
@@ -272,14 +269,16 @@ class LLMExtractor:
         kg = KnowledgeGraph()
 
         # Project root entity
-        kg.add_entity(Entity(
-            id="project_root",
-            name=doc.metadata.repo_name or "Unknown Project",
-            entity_type=EntityType.PROJECT,
-            properties={"url": doc.metadata.repo_url, "description": doc.metadata.description},
-            confidence=1.0,
-            extraction_method="llm",
-        ))
+        kg.add_entity(
+            Entity(
+                id="project_root",
+                name=doc.metadata.repo_name or "Unknown Project",
+                entity_type=EntityType.PROJECT,
+                properties={"url": doc.metadata.repo_url, "description": doc.metadata.description},
+                confidence=1.0,
+                extraction_method="llm",
+            )
+        )
 
         # Process each section
         for section in doc.sections:
@@ -358,15 +357,17 @@ class LLMExtractor:
             eid = self._make_id(etype.value, name)
             entity_name_to_id[name.lower()] = eid
 
-            kg.add_entity(Entity(
-                id=eid,
-                name=name,
-                entity_type=etype,
-                properties=e_data.get("properties", {}),
-                source_section=section_title,
-                confidence=min(float(e_data.get("confidence", 0.8)), 1.0),
-                extraction_method="llm",
-            ))
+            kg.add_entity(
+                Entity(
+                    id=eid,
+                    name=name,
+                    entity_type=etype,
+                    properties=e_data.get("properties", {}),
+                    source_section=section_title,
+                    confidence=min(float(e_data.get("confidence", 0.8)), 1.0),
+                    extraction_method="llm",
+                )
+            )
 
         for r_data in parsed.get("relations", []):
             src_name = r_data.get("source", "").strip().lower()
@@ -383,13 +384,15 @@ class LLMExtractor:
             except ValueError:
                 rtype = RelationType.USES
 
-            kg.add_relation(Relation(
-                source_id=src_id,
-                target_id=tgt_id,
-                relation_type=rtype,
-                confidence=min(float(r_data.get("confidence", 0.7)), 1.0),
-                extraction_method="llm",
-            ))
+            kg.add_relation(
+                Relation(
+                    source_id=src_id,
+                    target_id=tgt_id,
+                    relation_type=rtype,
+                    confidence=min(float(r_data.get("confidence", 0.7)), 1.0),
+                    extraction_method="llm",
+                )
+            )
 
     def _make_id(self, prefix: str, name: str) -> str:
         safe = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")[:50]
@@ -399,6 +402,7 @@ class LLMExtractor:
 # ---------------------------------------------------------------------------
 # LLM Summarizer
 # ---------------------------------------------------------------------------
+
 
 class LLMSummarizer:
     """Generates executive summaries and stakeholder-specific content
@@ -440,7 +444,7 @@ class LLMSummarizer:
 
         kg.executive_summary = self._executive_summary(ctx)
 
-        for persona in (personas or list(self.PERSONAS)):
+        for persona in personas or list(self.PERSONAS):
             summary = self._stakeholder_summary(ctx, persona)
             kg.stakeholder_summaries[persona] = summary
 
@@ -451,7 +455,10 @@ class LLMSummarizer:
         return self._executive_summary(ctx)
 
     def stakeholder_summary(
-        self, doc: DocumentModel, kg: KnowledgeGraph, persona: str = "cto",
+        self,
+        doc: DocumentModel,
+        kg: KnowledgeGraph,
+        persona: str = "cto",
     ) -> str:
         ctx = self._build_context(doc, kg)
         return self._stakeholder_summary(ctx, persona)
@@ -489,7 +496,9 @@ class LLMSummarizer:
         tech names, and prerequisite names.
         """
         from ..core.models import (
-            CodeBlock, ListBlock, ParagraphBlock, TableBlock,
+            CodeBlock,
+            ParagraphBlock,
+            TableBlock,
         )
 
         project_name = doc.metadata.repo_name or "Unknown"
@@ -525,9 +534,7 @@ class LLMSummarizer:
         # Tables (headers + first rows)
         for b in doc.all_blocks:
             if isinstance(b, TableBlock) and b.headers:
-                digest_parts.append(
-                    f"\n## Table: {' | '.join(b.headers)}"
-                )
+                digest_parts.append(f"\n## Table: {' | '.join(b.headers)}")
                 for row in b.rows[:5]:
                     digest_parts.append("  " + " | ".join(row))
 
@@ -535,10 +542,17 @@ class LLMSummarizer:
         install_cmds: list[str] = []
         code_examples: list[str] = []
         install_keywords = (
-            "pip install", "npm install", "cargo install",
-            "brew install", "apt install", "go install",
-            "git clone", "docker pull", "docker run",
-            "yarn add", "gem install",
+            "pip install",
+            "npm install",
+            "cargo install",
+            "brew install",
+            "apt install",
+            "go install",
+            "git clone",
+            "docker pull",
+            "docker run",
+            "yarn add",
+            "gem install",
         )
         for b in doc.all_blocks:
             if isinstance(b, CodeBlock) and b.code.strip():
@@ -546,9 +560,7 @@ class LLMSummarizer:
                 if any(kw in lower for kw in install_keywords):
                     install_cmds.append(b.code.strip()[:200])
                 elif len(b.code.strip()) > 20:
-                    code_examples.append(
-                        f"```{b.language}\n{b.code.strip()[:300]}\n```"
-                    )
+                    code_examples.append(f"```{b.language}\n{b.code.strip()[:300]}\n```")
 
         if install_cmds:
             digest_parts.append("\n## Install Commands:")
@@ -570,13 +582,8 @@ class LLMSummarizer:
         for e in kg.entities[:50]:
             props = ""
             if e.properties:
-                props = " (" + ", ".join(
-                    f"{k}={v}" for k, v in e.properties.items()
-                    if v and str(v) != ""
-                ) + ")"
-            entity_lines.append(
-                f"- {e.name} [{e.entity_type.value}]{props}"
-            )
+                props = " (" + ", ".join(f"{k}={v}" for k, v in e.properties.items() if v and str(v) != "") + ")"
+            entity_lines.append(f"- {e.name} [{e.entity_type.value}]{props}")
         entity_list = "\n".join(entity_lines) or "(no entities extracted)"
 
         # -- Relation list --
@@ -585,25 +592,30 @@ class LLMSummarizer:
             src = kg.get_entity(r.source_id)
             tgt = kg.get_entity(r.target_id)
             if src and tgt:
-                relation_lines.append(
-                    f"- {src.name} --{r.relation_type.value}--> {tgt.name}"
-                )
+                relation_lines.append(f"- {src.name} --{r.relation_type.value}--> {tgt.name}")
         relation_list = "\n".join(relation_lines) or "(no relations)"
 
         # -- Named tech and prereqs --
-        tech_names = ", ".join(
-            e.name for e in kg.entities
-            if e.entity_type in (
-                EntityType.TECHNOLOGY, EntityType.FRAMEWORK,
-                EntityType.LANGUAGE, EntityType.DATABASE,
-                EntityType.CLOUD_SERVICE, EntityType.PLATFORM,
-            )
-        )[:300] or "not specified"
+        tech_names = (
+            ", ".join(
+                e.name
+                for e in kg.entities
+                if e.entity_type
+                in (
+                    EntityType.TECHNOLOGY,
+                    EntityType.FRAMEWORK,
+                    EntityType.LANGUAGE,
+                    EntityType.DATABASE,
+                    EntityType.CLOUD_SERVICE,
+                    EntityType.PLATFORM,
+                )
+            )[:300]
+            or "not specified"
+        )
 
-        prereq_names = ", ".join(
-            e.name for e in kg.entities
-            if e.entity_type == EntityType.PREREQUISITE
-        )[:200] or "not specified"
+        prereq_names = (
+            ", ".join(e.name for e in kg.entities if e.entity_type == EntityType.PREREQUISITE)[:200] or "not specified"
+        )
 
         return {
             "project_name": project_name,
@@ -618,7 +630,9 @@ class LLMSummarizer:
 
     @staticmethod
     def _outline_section(
-        parts: list[str], section: Section, indent: int,
+        parts: list[str],
+        section: Section,
+        indent: int,
     ) -> None:
         """Recursively build section outline."""
         if section.title:
@@ -635,9 +649,7 @@ class LLMSummarizer:
 
         lower = section.title.lower()
         is_feature_section = any(
-            w in lower
-            for w in ("feature", "highlight", "capability", "what",
-                       "overview", "key", "benefit")
+            w in lower for w in ("feature", "highlight", "capability", "what", "overview", "key", "benefit")
         )
         if is_feature_section:
             for b in section.blocks:
@@ -863,13 +875,14 @@ class LLMContentEnhancer:
     # -- Section rewrites ------------------------------------------------
 
     def _rewrite_sections(
-        self, doc: DocumentModel, ctx: dict[str, str],
+        self,
+        doc: DocumentModel,
+        ctx: dict[str, str],
     ) -> dict[str, str]:
         """Rewrite top-level README sections into polished prose.
 
         Batches sections into groups to minimize API calls.
         """
-        from ..core.models import CodeBlock, ListBlock, ParagraphBlock
 
         # Collect section summaries
         section_texts: list[tuple[str, str]] = []
@@ -905,9 +918,7 @@ class LLMContentEnhancer:
         batch_size = 5
         for i in range(0, len(section_texts), batch_size):
             batch = section_texts[i : i + batch_size]
-            sections_formatted = "\n\n".join(
-                f"--- {title} ---\n{text}" for title, text in batch
-            )
+            sections_formatted = "\n\n".join(f"--- {title} ---\n{text}" for title, text in batch)
             prompt = _SECTION_REWRITE_PROMPT.format(
                 project_name=ctx["project_name"],
                 sections_text=sections_formatted,
@@ -924,4 +935,3 @@ class LLMContentEnhancer:
                 continue
 
         return result
-

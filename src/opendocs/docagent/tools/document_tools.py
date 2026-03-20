@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from ..models.document_model import DraftDocument, DocumentType, ReviewFeedback
+from ..models.document_model import DocumentType, DraftDocument, ReviewFeedback
 
 logger = logging.getLogger("docagent.tools.document")
 
@@ -50,7 +50,7 @@ class DocumentTools:
         missing: list[str] = []
 
         lines = draft.content.splitlines()
-        headings = [l.strip() for l in lines if l.strip().startswith("#")]
+        headings = [ln.strip() for ln in lines if ln.strip().startswith("#")]
 
         # Check minimum length
         word_count = len(draft.content.split())
@@ -121,8 +121,10 @@ class DocumentTools:
 
         if feedback.missing_sections:
             generated = self._generate_missing_sections(
-                draft, feedback.missing_sections,
-                use_llm=use_llm, llm_config=llm_config or {},
+                draft,
+                feedback.missing_sections,
+                use_llm=use_llm,
+                llm_config=llm_config or {},
             )
             if generated:
                 content += "\n\n---\n\n"
@@ -175,8 +177,7 @@ class DocumentTools:
                 )
                 result = chat(system, user, **(llm_config or {}))
                 if result and len(result.strip()) > 20:
-                    logger.info("LLM generated %d chars for %d missing sections",
-                                len(result), len(missing))
+                    logger.info("LLM generated %d chars for %d missing sections", len(result), len(missing))
                     return result.strip()
             except Exception as exc:
                 logger.warning("LLM refinement failed (%s), using short notes", exc)
@@ -186,9 +187,9 @@ class DocumentTools:
         for section in missing:
             parts.append(f"## {section}\n")
             parts.append(
-                f"*This section was identified as a potential addition by the "
-                f"automated review process. Run with `--mode llm` to have it "
-                f"generated automatically.*\n"
+                "*This section was identified as a potential addition by the "
+                "automated review process. Run with `--mode llm` to have it "
+                "generated automatically.*\n"
             )
         return "\n".join(parts)
 
@@ -198,33 +199,57 @@ class DocumentTools:
 # ---------------------------------------------------------------------------
 _EXPECTED_SECTIONS: dict[DocumentType, list[str]] = {
     DocumentType.PRD: [
-        "Overview", "Problem", "Users", "Features",
-        "User Stories", "Acceptance Criteria",
+        "Overview",
+        "Problem",
+        "Users",
+        "Features",
+        "User Stories",
+        "Acceptance Criteria",
     ],
     DocumentType.PROPOSAL: [
-        "Value Proposition", "Solution Overview", "Architecture",
-        "Timeline", "Effort Estimate",
+        "Value Proposition",
+        "Solution Overview",
+        "Architecture",
+        "Timeline",
+        "Effort Estimate",
     ],
     DocumentType.SOP: [
-        "Setup", "Run Instructions", "Deployment",
-        "Monitoring", "Troubleshooting",
+        "Setup",
+        "Run Instructions",
+        "Deployment",
+        "Monitoring",
+        "Troubleshooting",
     ],
     DocumentType.REPORT: [
-        "Overview", "Architecture", "Modules", "Risks",
+        "Overview",
+        "Architecture",
+        "Modules",
+        "Risks",
     ],
     DocumentType.SLIDES: [
         "Slide",
     ],
     DocumentType.CHANGELOG: [
-        "Highlights", "Features", "Architecture",
-        "Dependencies", "Known Issues",
+        "Highlights",
+        "Features",
+        "Architecture",
+        "Dependencies",
+        "Known Issues",
     ],
     DocumentType.ONBOARDING: [
-        "Welcome", "Architecture", "Getting Started",
-        "Repository Structure", "Key Files", "Development Workflow",
+        "Welcome",
+        "Architecture",
+        "Getting Started",
+        "Repository Structure",
+        "Key Files",
+        "Development Workflow",
     ],
     DocumentType.TECH_DEBT: [
-        "Executive Summary", "Health Scorecard", "Testing",
-        "Architecture Debt", "Remediation", "Recommendations",
+        "Executive Summary",
+        "Health Scorecard",
+        "Testing",
+        "Architecture Debt",
+        "Remediation",
+        "Recommendations",
     ],
 }

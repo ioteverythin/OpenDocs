@@ -12,7 +12,6 @@ from typing import Any
 
 from ..core.knowledge_graph import KnowledgeGraph
 from ..core.models import DocumentModel
-from .llm_client import chat_json
 from .base import (
     AgentBase,
     AgentPlan,
@@ -21,11 +20,12 @@ from .base import (
     RepoProfile,
 )
 from .evidence import Claim, EvidenceCoverage, EvidenceRegistry
-
+from .llm_client import chat_json
 
 # ---------------------------------------------------------------------------
 # Verdict model
 # ---------------------------------------------------------------------------
+
 
 class CriticVerdict:
     """The Critic's assessment of an artifact set.
@@ -159,8 +159,7 @@ class CriticAgent(AgentBase):
         if len(flagged) > self._max_assumptions:
             approved = False
             replan_reason = (
-                f"Too many assumptions ({len(flagged)}) exceed limit "
-                f"({self._max_assumptions}). Re-planning required."
+                f"Too many assumptions ({len(flagged)}) exceed limit ({self._max_assumptions}). Re-planning required."
             )
 
         return CriticVerdict(
@@ -231,8 +230,6 @@ class CriticAgent(AgentBase):
 
         return " | ".join(lines)
 
-    def compute_artifact_score(
-        self, artifact_id: str, artifact_type: str = ""
-    ) -> EvidenceCoverage:
+    def compute_artifact_score(self, artifact_id: str, artifact_type: str = "") -> EvidenceCoverage:
         """Public API: compute coverage for a specific artifact."""
         return self._evidence.compute_coverage(artifact_id, artifact_type)

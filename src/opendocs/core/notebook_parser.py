@@ -12,7 +12,6 @@ Supports:
 
 from __future__ import annotations
 
-import base64
 import json
 import re
 from datetime import datetime, timezone
@@ -27,17 +26,14 @@ from .models import (
     DocumentModel,
     HeadingBlock,
     ImageBlock,
-    ListBlock,
     ParagraphBlock,
     Section,
-    TableBlock,
-    ThematicBreakBlock,
 )
-
 
 # ---------------------------------------------------------------------------
 # Output renderers — turn cell outputs into ContentBlocks
 # ---------------------------------------------------------------------------
+
 
 def _render_stream_output(output: dict[str, Any]) -> list[ContentBlock]:
     """Render ``stream`` output (stdout / stderr)."""
@@ -59,10 +55,12 @@ def _render_execute_result(output: dict[str, Any]) -> list[ContentBlock]:
             if isinstance(b64, list):
                 b64 = "".join(b64)
             # Store as data-URI so generators can inline it
-            blocks.append(ImageBlock(
-                alt="Cell output",
-                src=f"data:{mime};base64,{b64.strip()}",
-            ))
+            blocks.append(
+                ImageBlock(
+                    alt="Cell output",
+                    src=f"data:{mime};base64,{b64.strip()}",
+                )
+            )
             return blocks
 
     # HTML output (render as blockquote with truncated preview)
@@ -125,6 +123,7 @@ def _render_outputs(outputs: list[dict[str, Any]]) -> list[ContentBlock]:
 # Notebook parser
 # ---------------------------------------------------------------------------
 
+
 class NotebookParser:
     """Parse a Jupyter Notebook (``.ipynb``) into a ``DocumentModel``.
 
@@ -143,6 +142,7 @@ class NotebookParser:
         """Lazily create a ReadmeParser for markdown cells."""
         if self._md_parser is None:
             from .parser import ReadmeParser
+
             self._md_parser = ReadmeParser()
         return self._md_parser
 
@@ -178,9 +178,7 @@ class NotebookParser:
         with open(path, encoding="utf-8") as f:
             nb = json.load(f)
 
-        return self._parse_notebook(nb, path, repo_name=repo_name,
-                                     repo_url=repo_url,
-                                     include_outputs=include_outputs)
+        return self._parse_notebook(nb, path, repo_name=repo_name, repo_url=repo_url, include_outputs=include_outputs)
 
     def parse_content(
         self,
@@ -193,10 +191,13 @@ class NotebookParser:
     ) -> DocumentModel:
         """Parse notebook JSON content (as string) into a ``DocumentModel``."""
         nb = json.loads(content)
-        return self._parse_notebook(nb, source_path=source_path,
-                                     repo_name=repo_name,
-                                     repo_url=repo_url,
-                                     include_outputs=include_outputs)
+        return self._parse_notebook(
+            nb,
+            source_path=source_path,
+            repo_name=repo_name,
+            repo_url=repo_url,
+            include_outputs=include_outputs,
+        )
 
     # ------------------------------------------------------------------
     # Internal
@@ -217,11 +218,7 @@ class NotebookParser:
         nb_meta = nb.get("metadata", {})
         kernel_info = nb_meta.get("kernelspec", {})
         language_info = nb_meta.get("language_info", {})
-        language = (
-            language_info.get("name", "")
-            or kernel_info.get("language", "")
-            or "python"
-        )
+        language = language_info.get("name", "") or kernel_info.get("language", "") or "python"
         kernel_display = kernel_info.get("display_name", "")
 
         cells = nb.get("cells", [])
@@ -241,10 +238,6 @@ class NotebookParser:
             elif cell_type == "code":
                 cell_count["code"] += 1
                 if cell_source.strip():
-                    # Add execution count indicator
-                    exec_count = cell.get("execution_count")
-                    label = f"In [{exec_count or ' '}]" if exec_count is not None else ""
-
                     code_block = CodeBlock(
                         language=language,
                         code=cell_source,
@@ -290,9 +283,8 @@ class NotebookParser:
 
         # Collect mermaid diagrams
         from .models import MermaidBlock
-        mermaid_diagrams = [
-            b.code for b in all_blocks if isinstance(b, MermaidBlock)
-        ]
+
+        mermaid_diagrams = [b.code for b in all_blocks if isinstance(b, MermaidBlock)]
 
         # Reconstruct raw markdown from markdown cells for fallback use
         raw_parts: list[str] = []
@@ -350,11 +342,13 @@ class NotebookParser:
                 else:
                     # Content before any heading → wrap in a virtual section
                     if not root_sections or root_sections[-1].title:
-                        root_sections.append(Section(
-                            title="",
-                            level=0,
-                            blocks=[block],
-                        ))
+                        root_sections.append(
+                            Section(
+                                title="",
+                                level=0,
+                                blocks=[block],
+                            )
+                        )
                     else:
                         root_sections[-1].blocks.append(block)
 
@@ -364,6 +358,7 @@ class NotebookParser:
 # ---------------------------------------------------------------------------
 # Convenience function
 # ---------------------------------------------------------------------------
+
 
 def is_notebook(path: str | Path) -> bool:
     """Return True if the given path points to a Jupyter Notebook."""

@@ -5,8 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .base import BaseSkill
 from ..tools.repo_tools import RepoTools
+from .base import BaseSkill
 
 
 class RepoCrawlerSkill(BaseSkill):
@@ -29,12 +29,36 @@ class RepoCrawlerSkill(BaseSkill):
         self.logger.info("Found %d files", len(all_files))
 
         # Categorise files
-        source_exts = {".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rs",
-                       ".java", ".rb", ".cs", ".cpp", ".c", ".swift", ".kt"}
-        config_files = {"package.json", "pyproject.toml", "setup.py", "Cargo.toml",
-                        "go.mod", "pom.xml", "Makefile", "Dockerfile",
-                        "docker-compose.yml", "docker-compose.yaml",
-                        ".env.example", "tsconfig.json"}
+        source_exts = {
+            ".py",
+            ".js",
+            ".ts",
+            ".jsx",
+            ".tsx",
+            ".go",
+            ".rs",
+            ".java",
+            ".rb",
+            ".cs",
+            ".cpp",
+            ".c",
+            ".swift",
+            ".kt",
+        }
+        config_files = {
+            "package.json",
+            "pyproject.toml",
+            "setup.py",
+            "Cargo.toml",
+            "go.mod",
+            "pom.xml",
+            "Makefile",
+            "Dockerfile",
+            "docker-compose.yml",
+            "docker-compose.yaml",
+            ".env.example",
+            "tsconfig.json",
+        }
         doc_exts = {".md", ".rst", ".txt"}
 
         categories = {

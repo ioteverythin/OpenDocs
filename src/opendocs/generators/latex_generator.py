@@ -10,9 +10,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ..core.knowledge_graph import EntityType, KnowledgeGraph
+from ..core.knowledge_graph import EntityType
 from ..core.models import (
-    BlockType,
     CodeBlock,
     ContentBlock,
     DocumentModel,
@@ -27,7 +26,7 @@ from ..core.models import (
 from .base import BaseGenerator
 
 if TYPE_CHECKING:
-    from .diagram_extractor import ImageCache
+    pass
 
 
 class LatexGenerator(BaseGenerator):
@@ -147,10 +146,7 @@ class LatexGenerator(BaseGenerator):
         # -- References --------------------------------------------------
         parts.append(r"\begin{thebibliography}{9}")
         if url:
-            parts.append(
-                r"\bibitem{repo} " + self._escape(name)
-                + r" repository. \url{" + url + r"}"
-            )
+            parts.append(r"\bibitem{repo} " + self._escape(name) + r" repository. \url{" + url + r"}")
         parts.append(
             r"\bibitem{opendocs} opendocs --- README documentation generator. "
             r"\url{https://pypi.org/project/opendocs/}"
@@ -168,7 +164,10 @@ class LatexGenerator(BaseGenerator):
     # ------------------------------------------------------------------
 
     def _render_section(
-        self, parts: list[str], section: Section, depth: int,
+        self,
+        parts: list[str],
+        section: Section,
+        depth: int,
     ) -> None:
         """Recursively render a section as LaTeX."""
         if not section.title:
@@ -215,17 +214,10 @@ class LatexGenerator(BaseGenerator):
                 parts.append(r"\centering")
                 parts.append(f"\\begin{{tabular}}{{{col_spec}}}")
                 parts.append(r"\toprule")
-                parts.append(
-                    " & ".join(
-                        f"\\textbf{{{self._escape(h)}}}" for h in block.headers
-                    )
-                    + r" \\"
-                )
+                parts.append(" & ".join(f"\\textbf{{{self._escape(h)}}}" for h in block.headers) + r" \\")
                 parts.append(r"\midrule")
                 for row in block.rows:
-                    parts.append(
-                        " & ".join(self._escape(c) for c in row) + r" \\"
-                    )
+                    parts.append(" & ".join(self._escape(c) for c in row) + r" \\")
                 parts.append(r"\bottomrule")
                 parts.append(r"\end{tabular}")
                 parts.append(r"\end{table}")
@@ -235,10 +227,7 @@ class LatexGenerator(BaseGenerator):
             if block.src:
                 parts.append(r"\begin{figure}[h]")
                 parts.append(r"\centering")
-                parts.append(
-                    r"\includegraphics[width=\linewidth]{"
-                    + self._escape(block.src) + r"}"
-                )
+                parts.append(r"\includegraphics[width=\linewidth]{" + self._escape(block.src) + r"}")
                 if block.alt:
                     parts.append(f"\\caption{{{self._escape(block.alt)}}}")
                 parts.append(r"\end{figure}")
@@ -253,10 +242,7 @@ class LatexGenerator(BaseGenerator):
         if self.kg and self.kg.executive_summary:
             return self.kg.executive_summary
 
-        paras = [
-            b.text for b in doc.all_blocks
-            if isinstance(b, ParagraphBlock) and len(b.text) > 30
-        ]
+        paras = [b.text for b in doc.all_blocks if isinstance(b, ParagraphBlock) and len(b.text) > 30]
         if paras:
             abstract = paras[0]
             if len(paras) > 1:
@@ -275,8 +261,10 @@ class LatexGenerator(BaseGenerator):
         if self.kg:
             for e in self.kg.entities:
                 if e.entity_type in (
-                    EntityType.TECHNOLOGY, EntityType.FRAMEWORK,
-                    EntityType.LANGUAGE, EntityType.PLATFORM,
+                    EntityType.TECHNOLOGY,
+                    EntityType.FRAMEWORK,
+                    EntityType.LANGUAGE,
+                    EntityType.PLATFORM,
                 ):
                     keywords.append(e.name)
         keywords = list(dict.fromkeys(keywords))[:8]
@@ -285,22 +273,14 @@ class LatexGenerator(BaseGenerator):
     def _build_intro(self, doc: DocumentModel, name: str, url: str) -> str:
         """Build the introduction section."""
         parts: list[str] = []
-        parts.append(
-            f"{self._escape(name)} is a software project that addresses "
-            f"key challenges in its domain."
-        )
+        parts.append(f"{self._escape(name)} is a software project that addresses key challenges in its domain.")
 
-        paras = [
-            b.text for b in doc.all_blocks
-            if isinstance(b, ParagraphBlock) and len(b.text) > 40
-        ]
+        paras = [b.text for b in doc.all_blocks if isinstance(b, ParagraphBlock) and len(b.text) > 40]
         if paras:
             parts.append(self._escape(paras[0]))
 
         if url:
-            parts.append(
-                f"The source code is publicly available at \\url{{{url}}}."
-            )
+            parts.append(f"The source code is publicly available at \\url{{{url}}}.")
 
         return "\n\n".join(parts)
 
@@ -312,14 +292,13 @@ class LatexGenerator(BaseGenerator):
         items: list[str] = []
         for e in self.kg.entities:
             if e.entity_type in (
-                EntityType.TECHNOLOGY, EntityType.FRAMEWORK,
-                EntityType.LANGUAGE, EntityType.DATABASE,
+                EntityType.TECHNOLOGY,
+                EntityType.FRAMEWORK,
+                EntityType.LANGUAGE,
+                EntityType.DATABASE,
                 EntityType.CLOUD_SERVICE,
             ):
-                items.append(
-                    f"\\textbf{{{self._escape(e.name)}}} "
-                    f"({e.entity_type.value.replace('_', ' ')})"
-                )
+                items.append(f"\\textbf{{{self._escape(e.name)}}} ({e.entity_type.value.replace('_', ' ')})")
 
         if not items:
             return ""
@@ -340,10 +319,7 @@ class LatexGenerator(BaseGenerator):
             return ""
 
         parts: list[str] = []
-        parts.append(
-            "The system architecture is characterized by the following "
-            "component relationships:"
-        )
+        parts.append("The system architecture is characterized by the following component relationships:")
         parts.append("")
         parts.append(r"\begin{itemize}")
 
@@ -352,11 +328,7 @@ class LatexGenerator(BaseGenerator):
             src = self.kg.get_entity(r.source_id)
             tgt = self.kg.get_entity(r.target_id)
             if src and tgt:
-                desc = (
-                    f"{self._escape(src.name)} "
-                    f"{r.relation_type.value.replace('_', ' ')}s "
-                    f"{self._escape(tgt.name)}"
-                )
+                desc = f"{self._escape(src.name)} {r.relation_type.value.replace('_', ' ')}s {self._escape(tgt.name)}"
                 if desc not in seen:
                     seen.add(desc)
                     parts.append(f"  \\item {desc}")
