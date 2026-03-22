@@ -6,7 +6,10 @@ from pathlib import Path
 
 from rich.console import Console
 
+from .core.code_analyzer import CodebaseAnalyzer, generate_codebase_markdown
 from .core.fetcher import ReadmeFetcher, is_github_url, is_npm_source
+from .core.narrative_generator import generate_narrative_markdown
+from .core.template_doc_generator import generate_template_documentation
 from .core.models import DocumentModel, GenerationResult, OutputFormat, PipelineResult
 from .core.notebook_parser import NotebookParser, is_notebook
 from .core.parser import ReadmeParser
@@ -301,6 +304,204 @@ class Pipeline:
             f"{len(doc.mermaid_diagrams)} diagrams"
         )
 
+        return self._execute_pipeline(
+            doc,
+            result,
+            output_path,
+            formats,
+            theme,
+            tvars,
+            sort_tables=sort_tables,
+            mode=mode,
+            api_key=api_key,
+            model=model,
+            base_url=base_url,
+            provider=provider,
+        )
+
+    # ------------------------------------------------------------------
+    def run_codebase(
+        self,
+        codebase_dir: str | Path,
+        *,
+        output_dir: str | Path = "./output",
+        formats: list[OutputFormat] | None = None,
+        theme_name: str = "corporate",
+        mode: str = "basic",
+        api_key: str | None = None,
+        model: str = "gpt-4o-mini",
+        base_url: str | None = None,
+        sort_tables: str = "smart",
+        provider: str = "openai",
+        adapter_path: str | None = None,
+        template_vars: TemplateVars | None = None,
+        config_path: str | None = None,
+    ) -> PipelineResult:
+        """Analyze a codebase directory and generate documentation.
+
+        Unlike ``run()`` which requires a README / Markdown file, this
+        method walks the actual source code, extracts structure, tech
+        stack, and architecture, generates a comprehensive Markdown
+        report, and then feeds it through the standard pipeline.
+
+        When *mode* is ``"llm"`` (or *provider* is ``"slm"``), a local or
+        remote LLM is used to generate narrative prose for the Executive
+        Summary, Architecture, and Implementation Plan sections —
+        producing documentation in the style of the Dubai AI Voice Agent
+        pitch document.
+
+        Parameters
+        ----------
+        codebase_dir
+            Path to the root of the codebase to analyze.
+        output_dir
+            Directory where generated files will be written.
+        formats
+            Which formats to generate.  Defaults to all.
+        adapter_path
+            Path to a LoRA adapter directory (for ``provider="slm"``).
+        All other keyword arguments are the same as :meth:`run`.
+        """
+        codebase_dir = Path(codebase_dir).resolve()
+        output_path = Path(output_dir).resolve()
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        if formats is None:
+            formats = [
+                OutputFormat.WORD,
+                OutputFormat.PDF,
+                OutputFormat.PPTX,
+                OutputFormat.BLOG,
+                OutputFormat.JIRA,
+                OutputFormat.CHANGELOG,
+                OutputFormat.LATEX,
+                OutputFormat.ONEPAGER,
+                OutputFormat.SOCIAL,
+                OutputFormat.FAQ,
+                OutputFormat.ARCHITECTURE,
+                OutputFormat.MINDMAP,
+            ]
+
+        result = PipelineResult(source=str(codebase_dir))
+
+        # -- Resolve theme ------------------------------------------------
+        theme = get_theme(theme_name)
+        apply_theme(theme)
+        console.print(f"[dim]Theme:[/] [bold]{theme_name}[/bold]")
+
+        # -- Resolve template variables -----------------------------------
+        tvars = template_vars or EMPTY_VARS
+        if config_path and not template_vars:
+            tvars = load_template_vars(config_path)
+
+        # -- Step 1: Analyze codebase -------------------------------------
+        console.print(f"\n[bold blue]Analyzing codebase:[/] {codebase_dir}")
+        try:
+            analyzer = CodebaseAnalyzer()
+            codebase_model = analyzer.analyze(codebase_dir)
+        except Exception as exc:
+            console.print(f"[bold red]Codebase analysis failed:[/] {exc}")
+            reset_theme()
+            return result
+
+        console.print(
+            f"[green][OK][/] Analyzed: {codebase_model.total_files} files, "
+            f"{codebase_model.total_code_lines:,} code lines, "
+            f"{len(codebase_model.tech_stack)} technologies detected"
+        )
+
+        # -- Step 2: Generate Markdown from analysis ----------------------
+        use_template = mode == "template"
+        use_narrative = (mode == "llm" or provider == "slm") and not use_template
+
+        if use_template:
+            console.print(
+                "[bold blue]Generating rich documentation from code analysis (no LLM)...[/]"
+            )
+            try:
+                def _tpl_progress(name, idx, total):
+                    console.print(
+                        f"  [dim]({idx}/{total})[/dim] Building [cyan]{name}[/cyan]..."
+                    )
+
+                markdown_content = generate_template_documentation(
+                    codebase_model,
+                    progress_callback=_tpl_progress,
+                )
+                console.print(
+                    "[green][OK][/] Template documentation generated "
+                    f"({len(markdown_content):,} chars)"
+                )
+            except Exception as exc:
+                console.print(
+                    f"[bold yellow]Template generation failed ({exc}), "
+                    f"falling back to basic documentation...[/]"
+                )
+                markdown_content = generate_codebase_markdown(codebase_model)
+        elif use_narrative:
+            console.print(
+                f"[bold blue]Generating narrative documentation "
+                f"(provider={provider}, model={model})...[/]"
+            )
+            try:
+                from .llm.providers import get_provider
+
+                llm_kwargs: dict = {}
+                if provider == "slm" and adapter_path:
+                    llm_kwargs["adapter_path"] = adapter_path
+
+                llm = get_provider(
+                    provider,
+                    api_key=api_key,
+                    model=model if provider != "slm" else model,
+                    base_url=base_url,
+                    **llm_kwargs,
+                )
+
+                def _progress(name, idx, total):
+                    console.print(
+                        f"  [dim]({idx}/{total})[/dim] Generating [cyan]{name}[/cyan]..."
+                    )
+
+                markdown_content = generate_narrative_markdown(
+                    codebase_model,
+                    llm,
+                    progress_callback=_progress,
+                )
+                console.print(
+                    "[green][OK][/] Narrative documentation generated "
+                    f"({len(markdown_content):,} chars)"
+                )
+            except Exception as exc:
+                console.print(
+                    f"[bold yellow]Narrative generation failed ({exc}), "
+                    f"falling back to static documentation...[/]"
+                )
+                markdown_content = generate_codebase_markdown(codebase_model)
+        else:
+            console.print("[bold blue]Generating Markdown documentation from code analysis...[/]")
+            markdown_content = generate_codebase_markdown(codebase_model)
+
+        # Save the generated markdown
+        md_path = output_path / f"{codebase_model.project_name}_documentation.md"
+        md_path.write_text(markdown_content, encoding="utf-8")
+        console.print(f"[green][OK][/] Generated Markdown report: {md_path}")
+
+        # -- Step 3: Parse the generated Markdown -------------------------
+        console.print("[bold blue]Parsing generated Markdown...[/]")
+        doc: DocumentModel = self.parser.parse(
+            markdown_content,
+            repo_name=codebase_model.project_name,
+            repo_url="",
+            source_path=str(codebase_dir),
+        )
+        console.print(
+            f"[green][OK][/] Parsed: {len(doc.sections)} sections, "
+            f"{len(doc.all_blocks)} blocks, "
+            f"{len(doc.mermaid_diagrams)} diagrams"
+        )
+
+        # -- Step 4: Feed through the standard pipeline -------------------
         return self._execute_pipeline(
             doc,
             result,

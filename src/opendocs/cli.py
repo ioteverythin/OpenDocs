@@ -103,9 +103,9 @@ def main():
 )
 @click.option(
     "--mode",
-    type=click.Choice(["basic", "llm"], case_sensitive=False),
+    type=click.Choice(["basic", "llm", "template"], case_sensitive=False),
     default="basic",
-    help="Extraction mode: basic (deterministic) or llm (OpenAI-enhanced).",
+    help="Mode: basic (minimal), template (rich docs, no LLM), or llm (AI-enhanced).",
 )
 @click.option(
     "--api-key",
@@ -538,9 +538,9 @@ def inspect(source: str, local: bool, token: str | None):
 )
 @click.option(
     "--mode",
-    type=click.Choice(["basic", "llm"], case_sensitive=False),
+    type=click.Choice(["basic", "llm", "template"], case_sensitive=False),
     default="basic",
-    help="Extraction mode.",
+    help="Mode: basic (minimal), template (rich docs, no LLM), or llm (AI-enhanced).",
 )
 @click.option("--api-key", envvar="OPENAI_API_KEY", default=None)
 @click.option("--model", default="gpt-4o-mini")
@@ -629,6 +629,365 @@ def _add_section_tree(parent, section):
     node = parent.add(f"[blue]H{section.level}:[/blue] {section.title} [dim]({len(section.blocks)} blocks)[/dim]")
     for sub in section.subsections:
         _add_section_tree(node, sub)
+
+
+@main.command()
+@click.argument("codebase_dir", type=click.Path(exists=True))
+@click.option(
+    "-f",
+    "--format",
+    "fmt",
+    type=click.Choice(
+        [
+            "word",
+            "pdf",
+            "pptx",
+            "blog",
+            "jira",
+            "changelog",
+            "latex",
+            "onepager",
+            "social",
+            "faq",
+            "architecture",
+            "all",
+        ],
+        case_sensitive=False,
+    ),
+    default="all",
+    help="Output format (default: all).",
+)
+@click.option(
+    "-o",
+    "--output",
+    "output_dir",
+    type=click.Path(),
+    default="./output",
+    help="Output directory (default: ./output).",
+)
+@click.option(
+    "--theme",
+    "theme_name",
+    type=click.Choice([t.name for t in list_themes()], case_sensitive=False),
+    default="corporate",
+    help="Color theme for generated documents.",
+)
+@click.option(
+    "--mode",
+    type=click.Choice(["basic", "llm", "template"], case_sensitive=False),
+    default="template",
+    help="Mode: basic (minimal), template (rich docs, no LLM), or llm (AI-enhanced).",
+)
+@click.option(
+    "--api-key",
+    envvar="OPENAI_API_KEY",
+    default=None,
+    help="OpenAI API key for LLM mode (or set OPENAI_API_KEY env var).",
+)
+@click.option(
+    "--model",
+    default="gpt-4o-mini",
+    help="LLM model name (default: gpt-4o-mini).",
+)
+@click.option(
+    "--base-url",
+    default=None,
+    help="Custom OpenAI-compatible API base URL.",
+)
+@click.option(
+    "--provider",
+    "llm_provider",
+    type=click.Choice(["openai", "anthropic", "google", "ollama", "azure", "slm"], case_sensitive=False),
+    default="openai",
+    help="LLM provider. Use 'slm' for local Phi-3.5-mini model.",
+)
+@click.option(
+    "--sort-tables",
+    "sort_tables",
+    default="smart",
+    help="Table sort strategy: smart (auto), alpha, numeric, column:N, column:N:desc, or none.",
+)
+@click.option(
+    "--adapter-path",
+    "adapter_path",
+    default=None,
+    help="Path to a fine-tuned LoRA adapter directory (for --provider slm).",
+)
+@click.option(
+    "--config",
+    "config_path",
+    type=click.Path(exists=True),
+    default=None,
+    help="Path to YAML/JSON config file with template variables.",
+)
+@click.option("--project-name", default=None, help="Project name for document titles and headers.")
+@click.option("--author", default=None, help="Document author name.")
+@click.option("--doc-version", "doc_version", default=None, help="Document / project version string.")
+@click.option("--org", "organisation", default=None, help="Organisation name for headers and footers.")
+def codebase(
+    codebase_dir: str,
+    fmt: str,
+    output_dir: str,
+    theme_name: str,
+    mode: str,
+    api_key: str | None,
+    model: str,
+    base_url: str | None,
+    llm_provider: str,
+    sort_tables: str,
+    adapter_path: str | None,
+    config_path: str | None,
+    project_name: str | None,
+    author: str | None,
+    doc_version: str | None,
+    organisation: str | None,
+):
+    """Analyze a codebase directory and generate documentation from source code.
+
+    Unlike the 'generate' command which requires a README or Markdown file,
+    this command walks the actual source code in CODEBASE_DIR, extracts
+    structure, tech stack, architecture, classes, functions, and
+    dependencies, then generates comprehensive documentation.
+
+    The default mode is 'template' which generates rich documentation with
+    architecture diagrams, pie charts, risk assessment, and data-driven
+    prose — entirely from code analysis, no LLM required.
+
+    Use --mode llm (or --provider slm) for AI-enhanced narrative prose.
+
+    \b
+    Examples:
+      opendocs codebase ./my-project                              # rich template docs (default)
+      opendocs codebase ./my-project -f word                      # just Word doc
+      opendocs codebase ./my-project --mode basic                 # minimal report
+      opendocs codebase ./my-project --mode llm --provider slm    # local AI model
+      opendocs codebase ./my-project --theme ocean                # with theme
+    """
+    console.print(BANNER)
+
+    # Resolve template variables
+    tvars = load_template_vars(
+        config_path,
+        project_name=project_name,
+        author=author,
+        version=doc_version,
+        organisation=organisation,
+    )
+
+    # Resolve formats
+    chosen = FORMAT_MAP[fmt.lower()]
+    if chosen == OutputFormat.ALL:
+        formats = [
+            OutputFormat.WORD,
+            OutputFormat.PDF,
+            OutputFormat.PPTX,
+            OutputFormat.BLOG,
+            OutputFormat.JIRA,
+            OutputFormat.CHANGELOG,
+            OutputFormat.LATEX,
+            OutputFormat.ONEPAGER,
+            OutputFormat.SOCIAL,
+            OutputFormat.FAQ,
+            OutputFormat.ARCHITECTURE,
+            OutputFormat.MINDMAP,
+        ]
+    else:
+        formats = [chosen]
+
+    pipeline = Pipeline()
+
+    # When using SLM provider with basic mode, auto-switch to LLM mode.
+    # Template mode is the recommended no-LLM approach.
+    effective_mode = mode
+    if llm_provider == "slm" and mode == "basic":
+        effective_mode = "llm"
+
+    result = pipeline.run_codebase(
+        codebase_dir,
+        output_dir=output_dir,
+        formats=formats,
+        theme_name=theme_name,
+        mode=effective_mode,
+        api_key=api_key,
+        model=model,
+        base_url=base_url,
+        sort_tables=sort_tables,
+        provider=llm_provider,
+        adapter_path=adapter_path,
+        template_vars=tvars,
+    )
+
+    if not any(r.success for r in result.results):
+        raise SystemExit(1)
+
+
+# ─── SLM commands ────────────────────────────────────────────────────────
+
+@cli.command("download-model")
+@click.option(
+    "--model",
+    default="microsoft/Phi-3.5-mini-instruct",
+    help="Hugging Face model ID to download.",
+)
+@click.option(
+    "--cache-dir",
+    default=None,
+    help="Directory to cache the model (default: ~/.cache/opendocs/models).",
+)
+def download_model(model: str, cache_dir: str | None):
+    """Pre-download an SLM model so the first inference is fast.
+
+    \b
+    Examples:
+      opendocs download-model
+      opendocs download-model --model microsoft/Phi-3.5-mini-instruct
+    """
+    console.print(BANNER)
+    console.print(f"[bold blue]Downloading model:[/] {model}")
+
+    try:
+        from .llm.slm_provider import SLMProvider
+
+        path = SLMProvider.download_model(model, cache_dir=cache_dir)
+        console.print(f"[green][OK][/] Model downloaded to: {path}")
+    except ImportError:
+        console.print(
+            "[bold red]SLM dependencies not installed.[/]\n"
+            "Run: pip install opendocs[slm]"
+        )
+        raise SystemExit(1)
+    except Exception as exc:
+        console.print(f"[bold red]Download failed:[/] {exc}")
+        raise SystemExit(1)
+
+
+@cli.command("finetune")
+@click.argument("codebase_dir", type=click.Path(exists=True))
+@click.option(
+    "--reference-doc",
+    "reference_doc",
+    type=click.Path(exists=True),
+    default=None,
+    help="Reference .docx or .md file as the target documentation style.",
+)
+@click.option(
+    "--output-dir",
+    "-o",
+    default="./opendocs-adapter",
+    help="Directory to save the trained LoRA adapter.",
+)
+@click.option(
+    "--base-model",
+    default="microsoft/Phi-3.5-mini-instruct",
+    help="Hugging Face base model ID.",
+)
+@click.option("--epochs", default=3, help="Number of training epochs.")
+@click.option("--batch-size", default=1, help="Per-device batch size (1 for 6-8 GB VRAM).")
+@click.option("--lora-r", default=16, help="LoRA rank.")
+@click.option("--lora-alpha", default=32, help="LoRA alpha scaling factor.")
+@click.option("--learning-rate", default=2e-4, help="Training learning rate.")
+@click.option(
+    "--examples-file",
+    type=click.Path(exists=True),
+    default=None,
+    help="JSONL file with additional training examples.",
+)
+def finetune(
+    codebase_dir: str,
+    reference_doc: str | None,
+    output_dir: str,
+    base_model: str,
+    epochs: int,
+    batch_size: int,
+    lora_r: int,
+    lora_alpha: int,
+    learning_rate: float,
+    examples_file: str | None,
+):
+    """Fine-tune Phi-3.5-mini on codebase-to-documentation examples.
+
+    Analyzes CODEBASE_DIR and (optionally) pairs it with a reference
+    document to create training data, then runs QLoRA fine-tuning.
+
+    The resulting adapter (~50 MB) can be loaded with:
+      opendocs codebase ./project --provider slm --adapter-path ./opendocs-adapter/adapter
+
+    \b
+    Examples:
+      opendocs finetune ./my-project --reference-doc ./my-doc.docx
+      opendocs finetune ./my-project -o ./my-adapter --epochs 5
+      opendocs finetune ./my-project --examples-file ./training.jsonl
+    """
+    console.print(BANNER)
+
+    try:
+        from .llm.slm_finetune import SLMFineTuner, generate_training_data_from_codebase
+    except ImportError:
+        console.print(
+            "[bold red]SLM dependencies not installed.[/]\n"
+            "Run: pip install opendocs[slm]"
+        )
+        raise SystemExit(1)
+
+    console.print(f"[bold blue]Preparing fine-tuning data from:[/] {codebase_dir}")
+
+    tuner = SLMFineTuner(
+        base_model=base_model,
+        output_dir=output_dir,
+        lora_r=lora_r,
+        lora_alpha=lora_alpha,
+        learning_rate=learning_rate,
+    )
+
+    # Generate training example from codebase + optional reference
+    try:
+        example = generate_training_data_from_codebase(codebase_dir, reference_doc)
+        if example.documentation:
+            tuner.add_example(
+                code_context=example.code_context,
+                documentation=example.documentation,
+                project_name=example.project_name,
+            )
+            console.print(
+                f"[green][OK][/] Created training pair from codebase"
+                f"{' + reference doc' if reference_doc else ''}"
+            )
+        else:
+            console.print(
+                "[bold yellow]Warning:[/] No reference document provided. "
+                "Add examples via --examples-file or provide a --reference-doc."
+            )
+    except Exception as exc:
+        console.print(f"[bold yellow]Warning:[/] Could not analyze codebase: {exc}")
+
+    # Load additional examples if provided
+    if examples_file:
+        n = tuner.add_examples_from_file(examples_file)
+        console.print(f"[green][OK][/] Loaded {n} additional examples from {examples_file}")
+
+    if not tuner.examples:
+        console.print("[bold red]No training examples available. Provide a --reference-doc or --examples-file.[/]")
+        raise SystemExit(1)
+
+    console.print(
+        f"\n[bold blue]Starting QLoRA fine-tuning:[/]\n"
+        f"  Base model: {base_model}\n"
+        f"  Examples: {len(tuner.examples)}\n"
+        f"  Epochs: {epochs}\n"
+        f"  LoRA rank: {lora_r}, alpha: {lora_alpha}\n"
+        f"  Output: {output_dir}"
+    )
+
+    try:
+        adapter_path = tuner.train(epochs=epochs, batch_size=batch_size)
+        console.print(f"\n[green][OK][/] Fine-tuning complete! Adapter saved to: {adapter_path}")
+        console.print(
+            f"\n[dim]Use it with:[/]\n"
+            f"  opendocs codebase ./your-project --provider slm --adapter-path {adapter_path}"
+        )
+    except Exception as exc:
+        console.print(f"[bold red]Fine-tuning failed:[/] {exc}")
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
