@@ -132,6 +132,63 @@ def _add_rich_runs(paragraph, spans: list[InlineSpan]):
                 run.font.size = Pt(Fonts.CODE_SIZE_PT)
 
 
+def _fit_image_size(
+    img_path: str | Path,
+    max_width_inches: float = 5.8,
+    max_height_inches: float = 7.5,
+    min_width_inches: float = 3.0,
+    min_dpi: float = 72.0,
+) -> dict:
+    """Calculate image width/height that fits within page bounds.
+
+    Returns a dict with ``width`` and optionally ``height`` kwargs
+    suitable for ``Document.add_picture(**result)``.
+
+    When a very tall image would be scaled below *min_width_inches*,
+    the height cap is relaxed so the image remains readable
+    (it will span across pages instead of being unreadably narrow).
+
+    Small / low-resolution images are not stretched beyond *min_dpi*
+    to avoid pixelation.
+    """
+    try:
+        from PIL import Image as PILImage
+
+        with PILImage.open(str(img_path)) as img:
+            w_px, h_px = img.size
+    except Exception:
+        # If we can't read dimensions, just cap the width
+        return {"width": Inches(max_width_inches)}
+
+    if w_px <= 0 or h_px <= 0:
+        return {"width": Inches(max_width_inches)}
+
+    aspect = h_px / w_px  # height per unit width
+
+    # Don't stretch small images beyond their native resolution
+    max_width_from_dpi = w_px / min_dpi
+    effective_max_width = min(max_width_inches, max_width_from_dpi)
+    # But ensure at least 1.5 inches so we don't get invisibly small images
+    effective_max_width = max(effective_max_width, 1.5)
+
+    # Start with max width and compute resulting height
+    width_in = effective_max_width
+    height_in = width_in * aspect
+
+    # If the resulting height exceeds the page, scale down to fit
+    if height_in > max_height_inches:
+        height_in = max_height_inches
+        width_in = height_in / aspect
+
+    # Guard: if the image is extremely tall, don't shrink it below
+    # minimum readable width — let it flow across pages instead
+    if width_in < min_width_inches and max_width_from_dpi >= min_width_inches:
+        width_in = min(min_width_inches, max_width_inches)
+        height_in = width_in * aspect
+
+    return {"width": Inches(width_in), "height": Inches(height_in)}
+
+
 class WordGenerator(BaseGenerator):
     """Generates a beautifully styled ``.docx`` Word document."""
 
@@ -468,7 +525,8 @@ class WordGenerator(BaseGenerator):
                         run.font.color.rgb = RGBColor(*Colors.PRIMARY)
                         run.italic = True
 
-                    docx.add_picture(str(img_path), width=Inches(5.5))
+                    size_kw = _fit_image_size(img_path, max_width_inches=5.5, max_height_inches=7.0)
+                    docx.add_picture(str(img_path), **size_kw)
                     last_p = docx.paragraphs[-1]
                     last_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     last_p.paragraph_format.space_after = Pt(8)
@@ -541,8 +599,9 @@ class WordGenerator(BaseGenerator):
             run.font.name = Fonts.CODE
             _set_paragraph_shading(label_p, Colors.INFO)
 
-            # Add the image, scaled to fit page width
-            docx.add_picture(str(img_path), width=Inches(5.8))
+            # Add the image, scaled to fit page while preserving aspect ratio
+            size_kw = _fit_image_size(img_path, max_width_inches=5.8, max_height_inches=7.5)
+            docx.add_picture(str(img_path), **size_kw)
             last_p = docx.paragraphs[-1]
             last_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             last_p.paragraph_format.space_after = Pt(8)
@@ -922,7 +981,8 @@ class WordGenerator(BaseGenerator):
         # Try to embed rendered KG diagram image
         kg_img = self.image_cache.kg_diagram if self.image_cache else None
         if kg_img and kg_img.exists():
-            docx.add_picture(str(kg_img), width=Inches(5.8))
+            size_kw = _fit_image_size(kg_img, max_width_inches=5.8, max_height_inches=7.5)
+            docx.add_picture(str(kg_img), **size_kw)
             last_p = docx.paragraphs[-1]
             last_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             last_p.paragraph_format.space_after = Pt(8)

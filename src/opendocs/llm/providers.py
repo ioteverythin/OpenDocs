@@ -56,6 +56,7 @@ _KEY_ENV_VARS: dict[str, str] = {
     "gemini": "GOOGLE_API_KEY",
     "ollama": "",  # no key needed
     "azure": "AZURE_OPENAI_API_KEY",
+    "slm": "",  # local model, no key needed
 }
 
 # Provider → default model
@@ -66,6 +67,7 @@ _DEFAULT_MODELS: dict[str, str] = {
     "gemini": "gemini-1.5-flash",
     "ollama": "llama3.1",
     "azure": "gpt-4o-mini",
+    "slm": "microsoft/Phi-3.5-mini-instruct",
 }
 
 
@@ -783,6 +785,12 @@ class AsyncAzureProvider(AsyncLLMProvider):
 # Factory functions
 # ══════════════════════════════════════════════════════════════════════════
 
+# Lazy import to avoid loading torch at module import time
+def _get_slm_provider():
+    from .slm_provider import SLMProvider
+    return SLMProvider
+
+
 _SYNC_PROVIDERS: dict[str, type[LLMProvider]] = {
     "openai": OpenAIProvider,
     "anthropic": AnthropicProvider,
@@ -803,7 +811,7 @@ _ASYNC_PROVIDERS: dict[str, type[AsyncLLMProvider]] = {
     "azure": AsyncAzureProvider,
 }
 
-SUPPORTED_PROVIDERS = sorted(set(_SYNC_PROVIDERS.keys()) - {"claude", "gemini"})
+SUPPORTED_PROVIDERS = sorted((set(_SYNC_PROVIDERS.keys()) | {"slm"}) - {"claude", "gemini"})
 
 
 def get_provider(
@@ -822,7 +830,7 @@ def get_provider(
     Parameters
     ----------
     provider
-        Provider name: openai, anthropic, google, ollama, azure.
+        Provider name: openai, anthropic, google, ollama, azure, slm.
     api_key
         API key (falls back to provider-specific env var).
     model
@@ -831,6 +839,17 @@ def get_provider(
         Custom API endpoint.
     """
     name = provider.lower().strip()
+
+    # SLM is lazy-loaded to avoid importing torch at module level
+    if name == "slm":
+        cls = _get_slm_provider()
+        return cls(
+            model=model,
+            temperature=temperature,
+            max_new_tokens=max_tokens,
+            **kwargs,
+        )
+
     cls = _SYNC_PROVIDERS.get(name)
     if cls is None:
         raise ValueError(f"Unknown provider '{provider}'. Supported: {', '.join(SUPPORTED_PROVIDERS)}")

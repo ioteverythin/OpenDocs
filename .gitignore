@@ -51,3 +51,6 @@ _test_*.py
 .pytest_cache/
 htmlcov/
 .coverage
+node_modules
+
+WLED-main/

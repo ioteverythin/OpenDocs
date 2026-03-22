@@ -24,6 +24,7 @@ import logging
 import shutil
 import subprocess
 import tempfile
+import time
 import zlib
 from pathlib import Path
 from typing import Literal
@@ -37,8 +38,10 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 _MERMAID_INK_BASE = "https://mermaid.ink"
-_REQUEST_TIMEOUT = 30.0
+_REQUEST_TIMEOUT = 45.0
 _IMAGE_DOWNLOAD_TIMEOUT = 20.0
+_INK_MAX_RETRIES = 3
+_INK_RETRY_BACKOFF = 2.0  # seconds, doubled each retry
 
 # Mermaid.ink uses pako (zlib deflate) + base64url
 _MERMAID_INK_MAX_CHARS = 8_000  # rough safe limit before URL-length issues
@@ -112,7 +115,7 @@ class MermaidRenderer:
     def __init__(
         self,
         cache_dir: Path | None = None,
-        backend: Literal["auto", "mmdc", "ink"] = "ink",
+        backend: Literal["auto", "mmdc", "ink"] = "auto",
         theme: str = "default",
     ) -> None:
         if cache_dir is None:
@@ -151,6 +154,10 @@ class MermaidRenderer:
 
         if self._use_mmdc:
             result = self._render_mmdc(code, cached)
+            # Fallback to ink if mmdc fails
+            if not (result and result.exists() and result.stat().st_size > 100):
+                logger.info("mmdc failed for %s, falling back to mermaid.ink", label or h)
+                result = self._render_ink(code, cached)
         else:
             result = self._render_ink(code, cached)
 
@@ -242,32 +249,44 @@ class MermaidRenderer:
     # ------------------------------------------------------------------
 
     def _render_ink(self, code: str, output_path: Path) -> Path | None:
-        """Render via the mermaid.ink HTTP API.
+        """Render via the mermaid.ink HTTP API with retry logic.
 
         Uses plain URL-safe base64 encoding — the ``/img/{base64}``
         route is the most reliable across mermaid.ink versions.
+        Retries up to ``_INK_MAX_RETRIES`` times with exponential backoff.
         """
         encoded = _plain_base64(code)
         url = f"{_MERMAID_INK_BASE}/img/{encoded}"
 
-        try:
-            with httpx.Client(timeout=_REQUEST_TIMEOUT, follow_redirects=True) as client:
-                resp = client.get(url)
-                resp.raise_for_status()
+        last_exc: Exception | None = None
+        for attempt in range(_INK_MAX_RETRIES):
+            try:
+                with httpx.Client(timeout=_REQUEST_TIMEOUT, follow_redirects=True) as client:
+                    resp = client.get(url)
+                    resp.raise_for_status()
 
-                content_type = resp.headers.get("content-type", "")
-                if "image" not in content_type and len(resp.content) < 200:
-                    logger.warning(
-                        "mermaid.ink returned unexpected content-type: %s",
-                        content_type,
-                    )
-                    return None
+                    content_type = resp.headers.get("content-type", "")
+                    if "image" not in content_type and len(resp.content) < 200:
+                        logger.warning(
+                            "mermaid.ink returned unexpected content-type: %s",
+                            content_type,
+                        )
+                        return None
 
-                output_path.write_bytes(resp.content)
-                return output_path
-        except Exception as exc:
-            logger.warning("mermaid.ink render failed: %s", exc)
-            return None
+                    output_path.write_bytes(resp.content)
+                    return output_path
+            except Exception as exc:
+                last_exc = exc
+                wait = _INK_RETRY_BACKOFF * (2 ** attempt)
+                logger.info(
+                    "mermaid.ink attempt %d/%d failed (%s), retrying in %.1fs",
+                    attempt + 1, _INK_MAX_RETRIES, exc, wait,
+                )
+                if attempt < _INK_MAX_RETRIES - 1:
+                    time.sleep(wait)
+
+        logger.warning("mermaid.ink render failed after %d attempts: %s", _INK_MAX_RETRIES, last_exc)
+        return None
 
     # ------------------------------------------------------------------
     # Backend: mmdc (Mermaid CLI)
@@ -305,7 +324,7 @@ class MermaidRenderer:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=30,
+                timeout=60,
             )
             # Clean up temp
             tmp_input.unlink(missing_ok=True)
