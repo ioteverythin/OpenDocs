@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OpenDocs — Convert READMEs &amp; Notebooks into Multi-Format Docs</title>
-  <meta name="description" content="Official documentation for OpenDocs — generate Word, PDF, PowerPoint, Blog, Jira, LaTeX, FAQ, Architecture Diagrams and more from GitHub READMEs, Markdown files, npm packages, and Jupyter Notebooks." />
+  <title>OpenDocs Convert READMEs &amp; Notebooks into Multi-Format Docs</title>
+  <meta name="description" content="Official documentation for OpenDocs generate Word, PDF, PowerPoint, Blog, Jira, LaTeX, FAQ, Architecture Diagrams and more from GitHub READMEs, Markdown files, npm packages, and Jupyter Notebooks." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -384,7 +384,7 @@ tr:hover td { background: var(--bg-sidebar); }
       <div class="doc-page active" id="page-overview">
         <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Overview</div>
         <h1 class="page-title">OpenDocs</h1>
-        <p class="page-intro">Convert GitHub READMEs, npm packages, Markdown files, and Jupyter Notebooks into structured, multi-format documentation &mdash; instantly.</p>
+        <p class="page-intro">Convert GitHub READMEs, npm packages, Markdown files, and Jupyter Notebooks into structured, multi-format documentation instantly.</p>
 
         <div class="hero-badges">
           <img src="https://img.shields.io/pypi/v/opendocs.svg" alt="PyPI" />
@@ -396,7 +396,7 @@ tr:hover td { background: var(--bg-sidebar); }
 
         <div class="callout info">
           <strong>&#x1F195; What&rsquo;s new in v0.9.0</strong>
-          <p><strong>Mindmap output format</strong> &mdash; generates Mermaid mindmap diagrams + hierarchical JSON from any documentation source. Also: <code>npm:</code> package source support (v0.8) and full CI/CD pipeline.</p>
+          <p><strong>Mindmap output format</strong> generates Mermaid mindmap diagrams + hierarchical JSON from any documentation source. Also: <code>npm:</code> package source support (v0.8) and full CI/CD pipeline.</p>
         </div>
 
         <h2 id="what-is-opendocs">What is OpenDocs?</h2>
@@ -405,15 +405,15 @@ tr:hover td { background: var(--bg-sidebar); }
 
         <h2 id="key-features">Key Features</h2>
         <div class="feature-grid">
-          <div class="feat-card"><h4>&#x1F4C4; 13 Output Formats</h4><p>Word, PDF, PPTX, Blog, Jira, Changelog, LaTeX, One-Pager, Social Cards, FAQ, Architecture, Mindmap &mdash; from a single command.</p></div>
+          <div class="feat-card"><h4>&#x1F4C4; 13 Output Formats</h4><p>Word, PDF, PPTX, Blog, Jira, Changelog, LaTeX, One-Pager, Social Cards, FAQ, Architecture, Mindmap from a single command.</p></div>
           <div class="feat-card"><h4>&#x1F3A8; 25 Built-in Themes</h4><p>Classic, Professional, and Modern theme categories. Corporate, Aurora, Carbon, Graphite, and more.</p></div>
-          <div class="feat-card"><h4>&#x1F9E0; 5 LLM Providers</h4><p>OpenAI, Anthropic (Claude), Google (Gemini), Ollama (local), Azure OpenAI &mdash; or zero-LLM basic mode.</p></div>
+          <div class="feat-card"><h4>&#x1F9E0; 5 LLM Providers</h4><p>OpenAI, Anthropic (Claude), Google (Gemini), Ollama (local), Azure OpenAI or zero-LLM basic mode.</p></div>
           <div class="feat-card"><h4>&#x1F4E6; Multiple Sources</h4><p>GitHub URLs, npm packages, local .md files, folder merging, and Jupyter Notebooks (.ipynb).</p></div>
           <div class="feat-card"><h4>&#x1F50D; Knowledge Graph</h4><p>Extracts 10+ entity types: projects, technologies, APIs, metrics, prerequisites. Generates architecture diagrams.</p></div>
           <div class="feat-card"><h4>&#x1F440; File Watcher</h4><p>Monitor repos for changes, auto-regenerate docs, and create pull requests with <code>opendocs watch</code>.</p></div>
           <div class="feat-card"><h4>&#x1F4DD; Template Variables</h4><p>Inject project name, author, version, org into headers/footers via YAML config or CLI flags.</p></div>
           <div class="feat-card"><h4>&#x1F916; DocAgent</h4><p>Agentic engine generating PRD, Proposal, SOP, Report, Slides, Changelog, Onboarding, and Tech Debt docs.</p></div>
-          <div class="feat-card"><h4>&#x1F4CA; Smart Table Sorting</h4><p>6 strategies &mdash; smart, alpha, numeric, column:N, column:N:desc, none &mdash; reorder tables for cleaner output.</p></div>
+          <div class="feat-card"><h4>&#x1F4CA; Smart Table Sorting</h4><p>6 strategies smart, alpha, numeric, column:N, column:N:desc, none reorder tables for cleaner output.</p></div>
           <div class="feat-card"><h4>&#x1F5BC; Mermaid &rarr; PNG</h4><p>Auto-render Mermaid diagram blocks into PNG images embedded in Word, PDF, and PowerPoint.</p></div>
           <div class="feat-card"><h4>&#x1F4E4; Publishing</h4><p>Push generated docs directly to Notion workspaces or Confluence spaces with a single flag.</p></div>
           <div class="feat-card"><h4>&#x1F465; Stakeholder Views</h4><p>LLM-powered perspectives for CTO, Investor, and Developer audiences in every output.</p></div>
@@ -449,7 +449,7 @@ opendocs generate https://github.com/owner/repo \
 <span class="cm"># Auto-watch and create PRs on changes</span>
 opendocs watch ./my-monorepo --auto-pr --interval 120</pre></div>
 
-        <h3>Python API &mdash; batch processing</h3>
+        <h3>Python API batch processing</h3>
         <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
 <span class="kw">from</span> <span class="fn">pathlib</span> <span class="kw">import</span> Path
 
@@ -722,7 +722,7 @@ result = pipeline.run(
       <div class="doc-page" id="page-npm-source">
         <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Sources<span>/</span>npm Packages</div>
         <h1 class="page-title">npm Packages</h1>
-        <p class="page-intro">Generate documentation directly from any npm package &mdash; no clone needed. Added in v0.8.0.</p>
+        <p class="page-intro">Generate documentation directly from any npm package no clone needed. Added in v0.8.0.</p>
 
         <div class="callout info"><strong>&#8505; Available since v0.8</strong><p>Use the <code>npm:</code> prefix to fetch a package&rsquo;s README from the npm registry.</p></div>
 
@@ -807,9 +807,9 @@ opendocs generate ./research.ipynb --local --format word --theme carbon --no-out
 
         <h2 id="nb-what">What gets extracted</h2>
         <ul>
-          <li><strong>Markdown cells</strong> &mdash; parsed into headings, paragraphs, lists, tables</li>
-          <li><strong>Code cells</strong> &mdash; preserved with language detection and execution count</li>
-          <li><strong>Cell outputs</strong> &mdash; text output, images (PNG/SVG/JPEG as data URIs), HTML previews, error tracebacks</li>
+          <li><strong>Markdown cells</strong> parsed into headings, paragraphs, lists, tables</li>
+          <li><strong>Code cells</strong> preserved with language detection and execution count</li>
+          <li><strong>Cell outputs</strong> text output, images (PNG/SVG/JPEG as data URIs), HTML previews, error tracebacks</li>
         </ul>
         <p>Use <code>--no-outputs</code> to exclude cell outputs for a cleaner document.</p>
 
@@ -885,7 +885,7 @@ result = pipeline.run(
             <tr><td><code>faq</code></td><td>FAQ</td><td><code>.md</code></td><td>Auto-generated Q&amp;A from content</td></tr>
             <tr><td><code>architecture</code></td><td>Architecture</td><td><code>.mmd</code> + <code>.png</code></td><td>5 auto-generated C4-style views</td></tr>
             <tr><td><code>mindmap</code></td><td>Mindmap</td><td><code>.md</code> + <code>.json</code></td><td>Mermaid mindmap diagram + hierarchical JSON</td></tr>
-            <tr><td><code>all</code></td><td>Everything</td><td>all above</td><td>Default &mdash; generate all formats</td></tr>
+            <tr><td><code>all</code></td><td>Everything</td><td>all above</td><td>Default generate all formats</td></tr>
           </tbody>
         </table></div>
 
@@ -982,11 +982,11 @@ result = pipeline.run(
 
         <h2 id="arch-views">The 5 views</h2>
         <ul>
-          <li><strong>System Architecture</strong> &mdash; C4-style component diagram</li>
-          <li><strong>Tech Stack Layers</strong> &mdash; horizontal layer diagram</li>
-          <li><strong>Data Flow</strong> &mdash; how data moves through the system</li>
-          <li><strong>Dependency Tree</strong> &mdash; package/module dependencies</li>
-          <li><strong>Deployment View</strong> &mdash; infrastructure and hosting</li>
+          <li><strong>System Architecture</strong> C4-style component diagram</li>
+          <li><strong>Tech Stack Layers</strong> horizontal layer diagram</li>
+          <li><strong>Data Flow</strong> how data moves through the system</li>
+          <li><strong>Dependency Tree</strong> package/module dependencies</li>
+          <li><strong>Deployment View</strong> infrastructure and hosting</li>
         </ul>
 
         <h2 id="arch-usage">CLI examples</h2>
@@ -1010,12 +1010,12 @@ opendocs generate https://github.com/owner/repo --format architecture \
         <h2 id="arch-output">Output files</h2>
         <p>For each source, you get:</p>
         <ul>
-          <li><code>architecture_system.mmd</code> + <code>.png</code> &mdash; System architecture (C4-style)</li>
-          <li><code>architecture_tech_stack.mmd</code> + <code>.png</code> &mdash; Tech stack layers</li>
-          <li><code>architecture_data_flow.mmd</code> + <code>.png</code> &mdash; Data flow</li>
-          <li><code>architecture_dependencies.mmd</code> + <code>.png</code> &mdash; Dependency tree</li>
-          <li><code>architecture_deployment.mmd</code> + <code>.png</code> &mdash; Deployment view</li>
-          <li><code>architecture_report.md</code> &mdash; Summary report linking all diagrams</li>
+          <li><code>architecture_system.mmd</code> + <code>.png</code> System architecture (C4-style)</li>
+          <li><code>architecture_tech_stack.mmd</code> + <code>.png</code> Tech stack layers</li>
+          <li><code>architecture_data_flow.mmd</code> + <code>.png</code> Data flow</li>
+          <li><code>architecture_dependencies.mmd</code> + <code>.png</code> Dependency tree</li>
+          <li><code>architecture_deployment.mmd</code> + <code>.png</code> Deployment view</li>
+          <li><code>architecture_report.md</code> Summary report linking all diagrams</li>
         </ul>
 
         <h2 id="arch-python">Python API</h2>
@@ -1050,16 +1050,16 @@ opendocs generate npm:axios --format mindmap</pre></div>
 
         <h2 id="mm-output">Output files</h2>
         <ul>
-          <li><code>mindmap_&lt;name&gt;.md</code> &mdash; Mermaid mindmap diagram + section index + embedded JSON</li>
-          <li><code>mindmap_&lt;name&gt;.json</code> &mdash; Hierarchical JSON: <code>{ name, description, children[] }</code></li>
+          <li><code>mindmap_&lt;name&gt;.md</code> Mermaid mindmap diagram + section index + embedded JSON</li>
+          <li><code>mindmap_&lt;name&gt;.json</code> Hierarchical JSON: <code>{ name, description, children[] }</code></li>
         </ul>
 
         <h2 id="mm-config">Configuration</h2>
         <p>The generator respects these limits for clean output:</p>
         <ul>
-          <li><code>MAX_DEPTH = 4</code> &mdash; maximum nesting depth</li>
-          <li><code>MAX_LABEL = 48</code> &mdash; maximum characters per node label</li>
-          <li><code>MAX_LIST_CHILDREN = 5</code> &mdash; maximum list items per node</li>
+          <li><code>MAX_DEPTH = 4</code> maximum nesting depth</li>
+          <li><code>MAX_LABEL = 48</code> maximum characters per node label</li>
+          <li><code>MAX_LIST_CHILDREN = 5</code> maximum list items per node</li>
         </ul>
 
         <h2 id="mm-examples">More examples</h2>
@@ -1184,11 +1184,11 @@ result = pipeline.run(
 
         <h2 id="th-what">What themes control</h2>
         <ul>
-          <li><strong>Colours</strong> &mdash; heading, accent, background, link, and border colours</li>
-          <li><strong>Fonts</strong> &mdash; heading and body typefaces</li>
-          <li><strong>Layout</strong> &mdash; margins, spacing, and column widths</li>
-          <li><strong>Header/Footer</strong> &mdash; bar colours and text styling</li>
-          <li><strong>Code blocks</strong> &mdash; background and syntax highlight colours</li>
+          <li><strong>Colours</strong> heading, accent, background, link, and border colours</li>
+          <li><strong>Fonts</strong> heading and body typefaces</li>
+          <li><strong>Layout</strong> margins, spacing, and column widths</li>
+          <li><strong>Header/Footer</strong> bar colours and text styling</li>
+          <li><strong>Code blocks</strong> background and syntax highlight colours</li>
         </ul>
 
         <div class="page-footer">
@@ -1234,12 +1234,12 @@ opendocs generate ./README.md --local --mode llm --provider azure \
 
         <h2 id="llm-features">What LLM mode adds</h2>
         <ul>
-          <li><strong>Entity extraction</strong> &mdash; enriches the knowledge graph with LLM-discovered entities</li>
-          <li><strong>Executive summary</strong> &mdash; high-level project overview</li>
-          <li><strong>Stakeholder views</strong> &mdash; CTO, Investor, and Developer perspectives</li>
-          <li><strong>Blog rewriting</strong> &mdash; LLM-enhanced blog post generation</li>
-          <li><strong>FAQ generation</strong> &mdash; LLM-powered Q&amp;A creation</li>
-          <li><strong>Section rewrites</strong> &mdash; improved clarity and structure</li>
+          <li><strong>Entity extraction</strong> enriches the knowledge graph with LLM-discovered entities</li>
+          <li><strong>Executive summary</strong> high-level project overview</li>
+          <li><strong>Stakeholder views</strong> CTO, Investor, and Developer perspectives</li>
+          <li><strong>Blog rewriting</strong> LLM-enhanced blog post generation</li>
+          <li><strong>FAQ generation</strong> LLM-powered Q&amp;A creation</li>
+          <li><strong>Section rewrites</strong> improved clarity and structure</li>
         </ul>
 
         <div class="page-footer">
@@ -1265,7 +1265,7 @@ opendocs generate ./README.md --local --mode llm --provider azure \
 
         <h2 id="tv-yaml">Via YAML config</h2>
         <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate ./README.md --local --config opendocs.yaml</pre></div>
-        <div class="code-block"><div class="code-header"><span class="code-lang">yaml &mdash; opendocs.yaml</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="fn">project_name</span>: <span class="st">"My Project"</span>
+        <div class="code-block"><div class="code-header"><span class="code-lang">yaml opendocs.yaml</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="fn">project_name</span>: <span class="st">"My Project"</span>
 <span class="fn">author</span>: <span class="st">"Jane Doe"</span>
 <span class="fn">version</span>: <span class="st">"2.1.0"</span>
 <span class="fn">date</span>: <span class="st">"2026-03-20"</span>
@@ -1278,9 +1278,9 @@ opendocs generate ./README.md --local --mode llm --provider azure \
 
         <h2 id="tv-where">Where variables appear</h2>
         <ul>
-          <li><strong>Word (.docx)</strong> &mdash; document header, footer, and expanded metadata table on title page</li>
-          <li><strong>PowerPoint (.pptx)</strong> &mdash; title slide footer with org, author, version, and date</li>
-          <li><strong>PDF</strong> &mdash; inherits from Word generator</li>
+          <li><strong>Word (.docx)</strong> document header, footer, and expanded metadata table on title page</li>
+          <li><strong>PowerPoint (.pptx)</strong> title slide footer with org, author, version, and date</li>
+          <li><strong>PDF</strong> inherits from Word generator</li>
         </ul>
 
         <div class="page-footer">
@@ -1347,16 +1347,16 @@ opendocs watch ./my-repo --interval 60 --patterns "README.md,docs/*.md,*.ipynb"<
 
         <h2 id="kg-how">How it works</h2>
         <ul>
-          <li><strong>Semantic extraction</strong> (always on) &mdash; regex-based entity and relation discovery from document AST</li>
-          <li><strong>LLM extraction</strong> (opt-in) &mdash; uses the selected LLM provider to discover deeper entities and relationships</li>
+          <li><strong>Semantic extraction</strong> (always on) regex-based entity and relation discovery from document AST</li>
+          <li><strong>LLM extraction</strong> (opt-in) uses the selected LLM provider to discover deeper entities and relationships</li>
           <li>The graph powers architecture diagrams, PPTX knowledge slides, and the analysis report</li>
         </ul>
 
         <h2 id="kg-cli">CLI examples</h2>
-        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Basic mode — semantic extraction only (no API key needed)</span>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Basic mode semantic extraction only (no API key needed)</span>
 opendocs generate https://github.com/fastapi/fastapi --format architecture
 
-<span class="cm"># LLM mode — deeper entity discovery</span>
+<span class="cm"># LLM mode deeper entity discovery</span>
 opendocs generate https://github.com/owner/repo \
   --mode llm --api-key sk-... --format architecture
 
@@ -1371,7 +1371,7 @@ opendocs generate ./README.md --local --format all --mode llm --api-key sk-...</
 
 pipeline = Pipeline()
 
-<span class="cm"># Run pipeline — KG is built automatically</span>
+<span class="cm"># Run pipeline KG is built automatically</span>
 result = pipeline.run(
     <span class="st">"https://github.com/owner/repo"</span>,
     mode=<span class="st">"llm"</span>,
@@ -1407,7 +1407,7 @@ kg = result.knowledge_graph
       <!-- ══ DOCAGENT ═══════════════════════════════════════ -->
       <div class="doc-page" id="page-docagent">
         <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>DocAgent<span>/</span>Agentic Engine</div>
-        <h1 class="page-title">DocAgent &mdash; Agentic Engine</h1>
+        <h1 class="page-title">DocAgent Agentic Engine</h1>
         <p class="page-intro">A full agentic system that clones any GitHub repo and generates 8 enterprise document types using LLM-powered skills.</p>
 
         <div class="callout info"><strong>&#8505; Requires LLM</strong><p>Install with <code>pip install opendocs[agents]</code>. Needs an LLM API key.</p></div>
@@ -1488,12 +1488,12 @@ result = agent.run(
 
         <h2 id="da-pipeline">How it works</h2>
         <ol>
-          <li><strong>Clone</strong> &mdash; clones the repo locally</li>
-          <li><strong>Crawl</strong> &mdash; discovers file tree, key files, dependencies</li>
-          <li><strong>Index</strong> &mdash; builds a RepoKnowledgeModel with architecture, tech stack, data flow</li>
-          <li><strong>Generate</strong> &mdash; LLM skills produce each document type</li>
-          <li><strong>Review</strong> &mdash; quality checks and structure validation</li>
-          <li><strong>Export</strong> &mdash; renders to Word, PDF, Markdown</li>
+          <li><strong>Clone</strong> clones the repo locally</li>
+          <li><strong>Crawl</strong> discovers file tree, key files, dependencies</li>
+          <li><strong>Index</strong> builds a RepoKnowledgeModel with architecture, tech stack, data flow</li>
+          <li><strong>Generate</strong> LLM skills produce each document type</li>
+          <li><strong>Review</strong> quality checks and structure validation</li>
+          <li><strong>Export</strong> renders to Word, PDF, Markdown</li>
         </ol>
 
         <div class="callout tip"><strong>&#10003; Tip</strong><p>DocAgent works best with repos that have a well-structured README, a clear file hierarchy, and a <code>package.json</code> or <code>pyproject.toml</code> at the root.</p></div>
@@ -1563,7 +1563,7 @@ opendocs themes</pre></div>
           </tbody>
         </table></div>
 
-        <h2 id="cli-examples">Cookbook — Common Recipes</h2>
+        <h2 id="cli-examples">Cookbook Common Recipes</h2>
         <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Quick wins</span>
 <span class="cm"># Generate a blog post from any npm package</span>
 opendocs generate npm:axios --format blog --theme ocean
@@ -1755,7 +1755,7 @@ result = pipeline.run(
         </table></div>
 
         <h2 id="ts-cli">CLI examples</h2>
-        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Smart sort (default) — auto-detect best ordering</span>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Smart sort (default) auto-detect best ordering</span>
 opendocs generate ./README.md --local --sort smart
 
 <span class="cm"># Sort all tables alphabetically</span>
@@ -1764,7 +1764,7 @@ opendocs generate https://github.com/owner/repo --sort alpha
 <span class="cm"># Sort by the 3rd column, descending</span>
 opendocs generate ./README.md --local --sort column:2:desc
 
-<span class="cm"># Disable sorting — keep original order</span>
+<span class="cm"># Disable sorting keep original order</span>
 opendocs generate ./README.md --local --sort none</pre></div>
 
         <h2 id="ts-python">Python API</h2>
@@ -1886,10 +1886,10 @@ opendocs generate npm:express \
 
         <h2 id="sv-output">Where views appear</h2>
         <ul>
-          <li><strong>Word (.docx)</strong> &mdash; dedicated &ldquo;Executive Summary&rdquo; and &ldquo;Stakeholder Analysis&rdquo; sections</li>
-          <li><strong>PowerPoint (.pptx)</strong> &mdash; individual slides per stakeholder perspective</li>
-          <li><strong>Blog (.md)</strong> &mdash; LLM-rewritten intro with project positioning</li>
-          <li><strong>Analysis Report (.md)</strong> &mdash; full stakeholder breakdown</li>
+          <li><strong>Word (.docx)</strong> dedicated &ldquo;Executive Summary&rdquo; and &ldquo;Stakeholder Analysis&rdquo; sections</li>
+          <li><strong>PowerPoint (.pptx)</strong> individual slides per stakeholder perspective</li>
+          <li><strong>Blog (.md)</strong> LLM-rewritten intro with project positioning</li>
+          <li><strong>Analysis Report (.md)</strong> full stakeholder breakdown</li>
         </ul>
 
         <h2 id="sv-python">Python API</h2>
@@ -2129,7 +2129,7 @@ code --install-extension ioteverythin.opendocs
           <div class="feat-card"><h4>&#x1F4E6; All Sources</h4><p>GitHub repos, npm packages, local Markdown files, Jupyter notebooks, and folder merging.</p></div>
           <div class="feat-card"><h4>&#x1F4C4; All 13 Formats</h4><p>Word, PDF, PPTX, Blog, Jira, Changelog, LaTeX, One-Pager, Social, FAQ, Architecture, Mindmap.</p></div>
           <div class="feat-card"><h4>&#x1F3A8; 25 Themes</h4><p>Loop through all 5 theme families with code to generate every variant.</p></div>
-          <div class="feat-card"><h4>&#x1F9E0; 5 LLM Providers</h4><p>OpenAI, Anthropic, Google, Ollama, Azure — ready-to-run examples.</p></div>
+          <div class="feat-card"><h4>&#x1F9E0; 5 LLM Providers</h4><p>OpenAI, Anthropic, Google, Ollama, Azure ready-to-run examples.</p></div>
           <div class="feat-card"><h4>&#x1F4DD; Template Variables</h4><p>Inline TemplateVars and YAML config loading with full branding.</p></div>
           <div class="feat-card"><h4>&#x1F50D; Knowledge Graph</h4><p>Access entities and relations from the pipeline result.</p></div>
           <div class="feat-card"><h4>&#x1F916; DocAgent</h4><p>AgentOrchestrator usage for PRD, SOP, Proposal, and more.</p></div>
@@ -2232,11 +2232,11 @@ result = pipeline.run(
 
 <span class="cm"># Fetch from GitHub</span>
 content, name = fetcher.fetch(<span class="st">"https://github.com/pallets/flask"</span>)
-<span class="nb">print</span>(<span class="st">f"📦 {name} — {len(content)} chars"</span>)
+<span class="nb">print</span>(<span class="st">f"📦 {name} {len(content)} chars"</span>)
 
 <span class="cm"># Fetch from npm</span>
 content2, name2 = fetcher.fetch(<span class="st">"npm:axios"</span>)
-<span class="nb">print</span>(<span class="st">f"📦 {name2} — {len(content2)} chars"</span>)
+<span class="nb">print</span>(<span class="st">f"📦 {name2} {len(content2)} chars"</span>)
 
 <span class="cm"># Check source type</span>
 <span class="nb">print</span>(<span class="st">"Is GitHub?"</span>, is_github_url(<span class="st">"https://github.com/owner/repo"</span>))
@@ -2255,7 +2255,7 @@ content2, name2 = fetcher.fetch(<span class="st">"npm:axios"</span>)
         <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Reference<span>/</span>Changelog</div>
         <h1 class="page-title">Changelog</h1>
 
-        <h2 id="v090">v0.9.0 &mdash; <span style="font-weight:400;color:var(--muted);">Current</span></h2>
+        <h2 id="v090">v0.9.0 <span style="font-weight:400;color:var(--muted);">Current</span></h2>
         <ul>
           <li>Add <strong>Mindmap</strong> output format (Mermaid diagram + hierarchical JSON)</li>
           <li>CI/CD pipeline: test matrix (Python 3.10&ndash;3.13), ruff lint/format, OIDC PyPI publishing</li>
@@ -2264,7 +2264,7 @@ content2, name2 = fetcher.fetch(<span class="st">"npm:axios"</span>)
 
         <h2 id="v080">v0.8.0</h2>
         <ul>
-          <li>Add <code>npm:</code> source support &mdash; generate docs from any npm package</li>
+          <li>Add <code>npm:</code> source support generate docs from any npm package</li>
           <li>Scoped package handling (<code>@scope/pkg</code>), version stripping</li>
         </ul>
 
@@ -2287,7 +2287,7 @@ content2, name2 = fetcher.fetch(<span class="st">"npm:axios"</span>)
 
         <h2 id="v030">v0.3.0</h2>
         <ul>
-          <li>DocAgent &mdash; agentic engine for enterprise docs (8 document types)</li>
+          <li>DocAgent agentic engine for enterprise docs (8 document types)</li>
           <li>Social cards, FAQ, LaTeX, One-Pager formats</li>
           <li>Notion &amp; Confluence publishers</li>
         </ul>
@@ -2313,7 +2313,7 @@ content2, name2 = fetcher.fetch(<span class="st">"npm:axios"</span>)
 
         <div class="callout tip">
           <strong>&#x2728; Zero configuration</strong>
-          <p>AI reader files are generated automatically &mdash; no CLI flags or settings needed. They appear alongside your other output files.</p>
+          <p>AI reader files are generated automatically no CLI flags or settings needed. They appear alongside your other output files.</p>
         </div>
 
         <h2 id="ai-generated-files">Generated Files</h2>
@@ -2321,7 +2321,7 @@ content2, name2 = fetcher.fetch(<span class="st">"npm:axios"</span>)
           <thead><tr><th>File</th><th>Purpose</th><th>Spec</th></tr></thead>
           <tbody>
             <tr><td><code>llms.txt</code></td><td>Curated index of all generated docs</td><td><a href="https://llmstxt.org" target="_blank">llmstxt.org</a></td></tr>
-            <tr><td><code>llms-full.txt</code></td><td>All content concatenated into one file</td><td>&mdash;</td></tr>
+            <tr><td><code>llms-full.txt</code></td><td>All content concatenated into one file</td><td>-</td></tr>
             <tr><td><code>AGENTS.md</code></td><td>Cross-agent coding instructions</td><td>Codex, Devin, Copilot</td></tr>
             <tr><td><code>CLAUDE.md</code></td><td>Claude Code specific context</td><td>Claude Code</td></tr>
           </tbody>
