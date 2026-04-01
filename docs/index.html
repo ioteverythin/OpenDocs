@@ -353,6 +353,10 @@ tr:hover td { background: var(--bg-sidebar); }
       <a href="#" data-page="templates" onclick="navigate('templates');return false;">Template Variables</a>
       <a href="#" data-page="watcher" onclick="navigate('watcher');return false;">File Watcher</a>
       <a href="#" data-page="knowledge-graph" onclick="navigate('knowledge-graph');return false;">Knowledge Graph</a>
+      <a href="#" data-page="table-sorting" onclick="navigate('table-sorting');return false;">Smart Table Sorting</a>
+      <a href="#" data-page="mermaid" onclick="navigate('mermaid');return false;">Mermaid &rarr; PNG</a>
+      <a href="#" data-page="stakeholder-views" onclick="navigate('stakeholder-views');return false;">Stakeholder Views</a>
+      <a href="#" data-page="publishing" onclick="navigate('publishing');return false;">Publishing</a>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
@@ -364,6 +368,8 @@ tr:hover td { background: var(--bg-sidebar); }
       <div class="sidebar-section-label">Reference</div>
       <a href="#" data-page="cli" onclick="navigate('cli');return false;">CLI Reference</a>
       <a href="#" data-page="python-api" onclick="navigate('python-api');return false;">Python API</a>
+      <a href="#" data-page="arch-overview" onclick="navigate('arch-overview');return false;">Architecture</a>
+      <a href="#" data-page="vscode-ext" onclick="navigate('vscode-ext');return false;">VS Code Extension</a>
       <a href="#" data-page="changelog" onclick="navigate('changelog');return false;">Changelog</a>
     </div>
   </aside>
@@ -405,7 +411,56 @@ tr:hover td { background: var(--bg-sidebar); }
           <div class="feat-card"><h4>&#x1F440; File Watcher</h4><p>Monitor repos for changes, auto-regenerate docs, and create pull requests with <code>opendocs watch</code>.</p></div>
           <div class="feat-card"><h4>&#x1F4DD; Template Variables</h4><p>Inject project name, author, version, org into headers/footers via YAML config or CLI flags.</p></div>
           <div class="feat-card"><h4>&#x1F916; DocAgent</h4><p>Agentic engine generating PRD, Proposal, SOP, Report, Slides, Changelog, Onboarding, and Tech Debt docs.</p></div>
+          <div class="feat-card"><h4>&#x1F4CA; Smart Table Sorting</h4><p>6 strategies &mdash; smart, alpha, numeric, column:N, column:N:desc, none &mdash; reorder tables for cleaner output.</p></div>
+          <div class="feat-card"><h4>&#x1F5BC; Mermaid &rarr; PNG</h4><p>Auto-render Mermaid diagram blocks into PNG images embedded in Word, PDF, and PowerPoint.</p></div>
+          <div class="feat-card"><h4>&#x1F4E4; Publishing</h4><p>Push generated docs directly to Notion workspaces or Confluence spaces with a single flag.</p></div>
+          <div class="feat-card"><h4>&#x1F465; Stakeholder Views</h4><p>LLM-powered perspectives for CTO, Investor, and Developer audiences in every output.</p></div>
         </div>
+
+        <h2 id="examples-overview">Real-World Examples</h2>
+        <h3>Document a popular open-source project</h3>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate a full doc suite for FastAPI</span>
+opendocs generate https://github.com/fastapi/fastapi --theme aurora
+
+<span class="cm"># Create a corporate Word report for Django</span>
+opendocs generate https://github.com/django/django --format word --theme corporate
+
+<span class="cm"># Build a blog post from the React README</span>
+opendocs generate npm:react --format blog --theme ocean</pre></div>
+
+        <h3>Enterprise documentation workflow</h3>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Full branded docs with template variables</span>
+opendocs generate ./README.md --local \
+  --format all --theme corporate \
+  --project-name "Acme Platform" \
+  --author "Engineering Team" \
+  --org "Acme Corp" \
+  --doc-version "3.2.0" \
+  --confidentiality "Internal"
+
+<span class="cm"># LLM-enhanced analysis with stakeholder views</span>
+opendocs generate https://github.com/owner/repo \
+  --mode llm --provider anthropic \
+  --format word --theme slate
+
+<span class="cm"># Auto-watch and create PRs on changes</span>
+opendocs watch ./my-monorepo --auto-pr --interval 120</pre></div>
+
+        <h3>Python API &mdash; batch processing</h3>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">pathlib</span> <span class="kw">import</span> Path
+
+pipeline = Pipeline()
+
+<span class="cm"># Process every .md file in a folder</span>
+<span class="kw">for</span> md <span class="kw">in</span> Path(<span class="st">"./docs"</span>).glob(<span class="st">"*.md"</span>):
+    pipeline.run(
+        <span class="nb">str</span>(md),
+        local=<span class="kw">True</span>,
+        theme_name=<span class="st">"aurora"</span>,
+        output_dir=<span class="st">f"./output/{md.stem}"</span>,
+    )
+    <span class="nb">print</span>(<span class="st">f"✓ Generated docs for {md.name}"</span>)</pre></div>
 
         <h2 id="output-formats">Output Formats</h2>
         <div class="table-wrap"><table>
@@ -532,6 +587,55 @@ opendocs generate https://github.com/owner/repo --format blog --theme carbon
 <span class="cm"># All formats (default)</span>
 opendocs generate https://github.com/owner/repo --format all</pre></div>
 
+        <h2 id="gh-advanced">Advanced examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># LLM-enhanced Word report with template vars</span>
+opendocs generate https://github.com/fastapi/fastapi \
+  --format word --theme aurora \
+  --mode llm --api-key sk-... \
+  --project-name "FastAPI Analysis" \
+  --author "DevOps Team" --org "Acme Corp"
+
+<span class="cm"># Architecture diagrams from a popular framework</span>
+opendocs generate https://github.com/django/django --format architecture
+
+<span class="cm"># Mindmap of a library's documentation structure</span>
+opendocs generate https://github.com/pallets/flask --format mindmap
+
+<span class="cm"># PPTX deck for a board presentation</span>
+opendocs generate https://github.com/owner/repo \
+  --format pptx --theme graphite \
+  --mode llm --provider anthropic
+
+<span class="cm"># Generate Jira tickets + changelog</span>
+opendocs generate https://github.com/owner/repo --format jira
+opendocs generate https://github.com/owner/repo --format changelog
+
+<span class="cm"># Generate and publish to Notion</span>
+opendocs generate https://github.com/owner/repo --format blog \
+  --publish notion --notion-token ntn_... --notion-page-id abc123</pre></div>
+
+        <h2 id="gh-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+
+pipeline = Pipeline()
+
+<span class="cm"># Basic GitHub repo</span>
+result = pipeline.run(<span class="st">"https://github.com/fastapi/fastapi"</span>)
+
+<span class="cm"># With specific formats and theme</span>
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+result = pipeline.run(
+    <span class="st">"https://github.com/owner/repo"</span>,
+    formats=[OutputFormat.WORD, OutputFormat.PPTX],
+    theme_name=<span class="st">"corporate"</span>,
+)
+
+<span class="cm"># Private repo with token</span>
+result = pipeline.run(
+    <span class="st">"https://github.com/owner/private-repo"</span>,
+    github_token=<span class="st">"ghp_..."</span>,
+)</pre></div>
+
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
           <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
@@ -551,6 +655,52 @@ opendocs generate https://github.com/owner/repo --format all</pre></div>
         <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Merge all .md files in docs/ into one document</span>
 opendocs generate ./docs/ --output ./exported</pre></div>
         <p>When pointed at a directory, OpenDocs discovers all <code>.md</code> files, merges them in alphabetical order, and runs the full pipeline on the combined content.</p>
+
+        <h2 id="local-examples">More examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate a themed Word doc from a local README</span>
+opendocs generate ./README.md --local --format word --theme carbon
+
+<span class="cm"># PDF with custom branding</span>
+opendocs generate ./README.md --local --format pdf \
+  --theme corporate \
+  --project-name "Q4 Report" \
+  --author "Data Team" \
+  --org "Acme Corp"
+
+<span class="cm"># Generate architecture diagrams from a design doc</span>
+opendocs generate ./ARCHITECTURE.md --local --format architecture
+
+<span class="cm"># Blog post from a changelog</span>
+opendocs generate ./CHANGELOG.md --local --format blog --theme aurora
+
+<span class="cm"># Merge a whole docs folder into a single PPTX</span>
+opendocs generate ./docs/ --format pptx --theme graphite --output ./slides
+
+<span class="cm"># LLM-enhanced report from a local file</span>
+opendocs generate ./README.md --local \
+  --mode llm --provider google \
+  --format word --theme slate</pre></div>
+
+        <h2 id="local-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+
+pipeline = Pipeline()
+
+<span class="cm"># Single local file → Word + PDF</span>
+result = pipeline.run(
+    <span class="st">"./README.md"</span>,
+    local=<span class="kw">True</span>,
+    formats=[OutputFormat.WORD, OutputFormat.PDF],
+    theme_name=<span class="st">"aurora"</span>,
+)
+
+<span class="cm"># Folder of docs → merged PPTX</span>
+result = pipeline.run(
+    <span class="st">"./docs/"</span>,
+    formats=[OutputFormat.PPTX],
+    output_dir=<span class="st">"./presentations"</span>,
+)</pre></div>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
@@ -612,6 +762,51 @@ opendocs generate ./research.ipynb --local --format word --theme carbon --no-out
         </ul>
         <p>Use <code>--no-outputs</code> to exclude cell outputs for a cleaner document.</p>
 
+        <h2 id="nb-examples">More examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># PDF report from a data science notebook</span>
+opendocs generate ./analysis.ipynb --local --format pdf --theme slate
+
+<span class="cm"># Executive PPTX from a research notebook</span>
+opendocs generate ./research.ipynb --local --format pptx --theme corporate
+
+<span class="cm"># Blog post from a tutorial notebook</span>
+opendocs generate ./tutorial.ipynb --local --format blog --theme ocean
+
+<span class="cm"># LaTeX academic paper from notebook</span>
+opendocs generate ./experiment.ipynb --local --format latex --theme minimal
+
+<span class="cm"># Full suite with custom branding</span>
+opendocs generate ./quarterly_analysis.ipynb --local \
+  --format all --theme aurora \
+  --project-name "Q4 2025 Analysis" \
+  --author "Data Science Team" \
+  --org "Acme Corp"
+
+<span class="cm"># LLM-enhanced notebook report</span>
+opendocs generate ./ml_pipeline.ipynb --local \
+  --mode llm --provider openai \
+  --format word --no-outputs</pre></div>
+
+        <h2 id="nb-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+
+pipeline = Pipeline()
+
+<span class="cm"># Convert notebook to Word report</span>
+result = pipeline.run(
+    <span class="st">"./analysis.ipynb"</span>,
+    local=<span class="kw">True</span>,
+    formats=[OutputFormat.WORD, OutputFormat.PDF],
+    theme_name=<span class="st">"carbon"</span>,
+    no_outputs=<span class="kw">True</span>,  <span class="cm"># Exclude cell outputs</span>
+)
+
+<span class="cm"># Batch convert all notebooks in a folder</span>
+<span class="kw">from</span> <span class="fn">pathlib</span> <span class="kw">import</span> Path
+<span class="kw">for</span> nb <span class="kw">in</span> Path(<span class="st">"."</span>).glob(<span class="st">"*.ipynb"</span>):
+    pipeline.run(<span class="nb">str</span>(nb), local=<span class="kw">True</span>, formats=[OutputFormat.PDF])</pre></div>
+
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
           <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
@@ -643,16 +838,84 @@ opendocs generate ./research.ipynb --local --format word --theme carbon --no-out
           </tbody>
         </table></div>
 
-        <h2 id="fmt-examples">Examples</h2>
-        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Single format</span>
-opendocs generate https://github.com/owner/repo --format blog
+        <h2 id="fmt-examples">CLI Examples</h2>
+        <h3>Document generation</h3>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Word report from GitHub repo</span>
+opendocs generate https://github.com/fastapi/fastapi --format word --theme aurora
 
-<span class="cm"># Multiple runs with different themes</span>
-opendocs generate ./README.md --local --format word --theme corporate
-opendocs generate ./README.md --local --format pptx --theme aurora
+<span class="cm"># PDF from local Markdown</span>
+opendocs generate ./README.md --local --format pdf --theme corporate
 
-<span class="cm"># npm package to Jira tickets</span>
-opendocs generate npm:express --format jira</pre></div>
+<span class="cm"># PowerPoint deck from npm package</span>
+opendocs generate npm:express --format pptx --theme graphite
+
+<span class="cm"># Blog post with SEO front-matter</span>
+opendocs generate https://github.com/owner/repo --format blog --theme ocean</pre></div>
+
+        <h3>Project management</h3>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate Jira tickets (Epic + Stories)</span>
+opendocs generate https://github.com/owner/repo --format jira
+
+<span class="cm"># Auto-generate changelog from README</span>
+opendocs generate ./README.md --local --format changelog
+
+<span class="cm"># FAQ document from project docs</span>
+opendocs generate ./docs/ --format faq --theme minimal</pre></div>
+
+        <h3>Academic &amp; executive</h3>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># IEEE-formatted LaTeX paper</span>
+opendocs generate https://github.com/owner/repo --format latex
+
+<span class="cm"># One-page executive datasheet</span>
+opendocs generate ./README.md --local --format onepager --theme slate
+
+<span class="cm"># Social media cards (OG, Twitter, LinkedIn)</span>
+opendocs generate npm:react --format social</pre></div>
+
+        <h3>Visual &amp; structural</h3>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># 5 architecture diagrams (C4-style views)</span>
+opendocs generate https://github.com/owner/repo --format architecture
+
+<span class="cm"># Mindmap diagram + JSON hierarchy</span>
+opendocs generate npm:axios --format mindmap
+
+<span class="cm"># Generate everything at once</span>
+opendocs generate https://github.com/owner/repo --format all --theme aurora</pre></div>
+
+        <h2 id="fmt-python">Python API Examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+
+pipeline = Pipeline()
+
+<span class="cm"># Generate specific formats</span>
+result = pipeline.run(
+    <span class="st">"https://github.com/fastapi/fastapi"</span>,
+    formats=[OutputFormat.WORD, OutputFormat.PDF, OutputFormat.BLOG],
+    theme_name=<span class="st">"aurora"</span>,
+)
+
+<span class="cm"># Generate Jira tickets from local file</span>
+result = pipeline.run(
+    <span class="st">"./README.md"</span>,
+    local=<span class="kw">True</span>,
+    formats=[OutputFormat.JIRA],
+)
+
+<span class="cm"># Architecture diagrams + mindmap</span>
+result = pipeline.run(
+    <span class="st">"npm:express"</span>,
+    formats=[OutputFormat.ARCHITECTURE, OutputFormat.MINDMAP],
+)
+
+<span class="cm"># All formats with LLM enhancement</span>
+result = pipeline.run(
+    <span class="st">"./README.md"</span>,
+    local=<span class="kw">True</span>,
+    mode=<span class="st">"llm"</span>,
+    api_key=<span class="st">"sk-..."</span>,
+    provider=<span class="st">"openai"</span>,
+)</pre></div>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
@@ -675,9 +938,46 @@ opendocs generate npm:express --format jira</pre></div>
           <li><strong>Deployment View</strong> &mdash; infrastructure and hosting</li>
         </ul>
 
-        <h2 id="arch-usage">Usage</h2>
-        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate https://github.com/owner/repo --format architecture</pre></div>
-        <p>Outputs <code>.mmd</code> source files, rendered <code>.png</code> images, and a Markdown report summarizing all five views.</p>
+        <h2 id="arch-usage">CLI examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># From a GitHub repo</span>
+opendocs generate https://github.com/fastapi/fastapi --format architecture
+
+<span class="cm"># From an npm package</span>
+opendocs generate npm:express --format architecture
+
+<span class="cm"># From a local file with a theme</span>
+opendocs generate ./README.md --local --format architecture --theme carbon
+
+<span class="cm"># Architecture + Word report together</span>
+opendocs generate https://github.com/owner/repo \
+  --format architecture --format word --theme slate
+
+<span class="cm"># LLM-enhanced (richer entity discovery)</span>
+opendocs generate https://github.com/owner/repo --format architecture \
+  --mode llm --provider openai --api-key sk-...</pre></div>
+
+        <h2 id="arch-output">Output files</h2>
+        <p>For each source, you get:</p>
+        <ul>
+          <li><code>architecture_system.mmd</code> + <code>.png</code> &mdash; System architecture (C4-style)</li>
+          <li><code>architecture_tech_stack.mmd</code> + <code>.png</code> &mdash; Tech stack layers</li>
+          <li><code>architecture_data_flow.mmd</code> + <code>.png</code> &mdash; Data flow</li>
+          <li><code>architecture_dependencies.mmd</code> + <code>.png</code> &mdash; Dependency tree</li>
+          <li><code>architecture_deployment.mmd</code> + <code>.png</code> &mdash; Deployment view</li>
+          <li><code>architecture_report.md</code> &mdash; Summary report linking all diagrams</li>
+        </ul>
+
+        <h2 id="arch-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+
+pipeline = Pipeline()
+result = pipeline.run(
+    <span class="st">"https://github.com/django/django"</span>,
+    formats=[OutputFormat.ARCHITECTURE],
+    theme_name=<span class="st">"carbon"</span>,
+    output_dir=<span class="st">"./arch-output"</span>,
+)</pre></div>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
@@ -711,6 +1011,58 @@ opendocs generate npm:axios --format mindmap</pre></div>
           <li><code>MAX_LIST_CHILDREN = 5</code> &mdash; maximum list items per node</li>
         </ul>
 
+        <h2 id="mm-examples">More examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Mindmap from a GitHub repo</span>
+opendocs generate https://github.com/django/django --format mindmap
+
+<span class="cm"># Mindmap from a local README</span>
+opendocs generate ./README.md --local --format mindmap
+
+<span class="cm"># Mindmap from a Jupyter notebook</span>
+opendocs generate ./analysis.ipynb --local --format mindmap
+
+<span class="cm"># Mindmap + architecture diagrams together</span>
+opendocs generate npm:express --format mindmap --format architecture
+
+<span class="cm"># Mindmap + Word report</span>
+opendocs generate ./docs/ --format mindmap --format word --theme aurora</pre></div>
+
+        <h2 id="mm-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+
+pipeline = Pipeline()
+
+<span class="cm"># Generate mindmap from any source</span>
+result = pipeline.run(
+    <span class="st">"npm:axios"</span>,
+    formats=[OutputFormat.MINDMAP],
+    output_dir=<span class="st">"./mindmaps"</span>,
+)
+
+<span class="cm"># Combine mindmap with other formats</span>
+result = pipeline.run(
+    <span class="st">"https://github.com/owner/repo"</span>,
+    formats=[OutputFormat.MINDMAP, OutputFormat.WORD, OutputFormat.PPTX],
+    theme_name=<span class="st">"graphite"</span>,
+)</pre></div>
+
+        <h2 id="mm-sample-output">Sample Mermaid output</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">mermaid</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>mindmap
+  root((Project Name))
+    Getting Started
+      Installation
+      Quick Start
+    Features
+      Feature A
+      Feature B
+    API Reference
+      Endpoints
+      Authentication
+    Contributing
+      Development Setup
+      Pull Requests</pre></div>
+
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
           <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
@@ -733,12 +1085,60 @@ opendocs generate npm:axios --format mindmap</pre></div>
           </tbody>
         </table></div>
 
-        <h2 id="th-usage">Usage</h2>
-        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Apply a theme</span>
+        <h2 id="th-usage">CLI examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Apply a theme to any format</span>
 opendocs generate ./README.md --local --theme aurora
 
-<span class="cm"># List all themes with color previews</span>
+<span class="cm"># Corporate report for enterprise use</span>
+opendocs generate https://github.com/owner/repo --format word --theme corporate
+
+<span class="cm"># Dark-mode themed PPTX for presentations</span>
+opendocs generate npm:react --format pptx --theme obsidian
+
+<span class="cm"># Ocean-themed blog post</span>
+opendocs generate ./README.md --local --format blog --theme ocean
+
+<span class="cm"># Minimalist PDF</span>
+opendocs generate ./docs/ --format pdf --theme minimal
+
+<span class="cm"># Carbon theme for technical docs</span>
+opendocs generate https://github.com/owner/repo --format word --theme carbon
+
+<span class="cm"># Slate theme for professional reports</span>
+opendocs generate ./README.md --local --format all --theme slate
+
+<span class="cm"># List all 25 themes with colour previews</span>
 opendocs themes</pre></div>
+
+        <h2 id="th-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+
+pipeline = Pipeline()
+
+<span class="cm"># Apply theme programmatically</span>
+result = pipeline.run(
+    <span class="st">"https://github.com/owner/repo"</span>,
+    theme_name=<span class="st">"aurora"</span>,
+)
+
+<span class="cm"># Generate the same doc with multiple themes</span>
+<span class="kw">for</span> theme <span class="kw">in</span> [<span class="st">"corporate"</span>, <span class="st">"aurora"</span>, <span class="st">"carbon"</span>, <span class="st">"slate"</span>]:
+    pipeline.run(
+        <span class="st">"./README.md"</span>,
+        local=<span class="kw">True</span>,
+        theme_name=theme,
+        output_dir=<span class="st">f"./output/{theme}"</span>,
+    )
+    <span class="nb">print</span>(<span class="st">f"✓ Generated with {theme} theme"</span>)</pre></div>
+
+        <h2 id="th-what">What themes control</h2>
+        <ul>
+          <li><strong>Colours</strong> &mdash; heading, accent, background, link, and border colours</li>
+          <li><strong>Fonts</strong> &mdash; heading and body typefaces</li>
+          <li><strong>Layout</strong> &mdash; margins, spacing, and column widths</li>
+          <li><strong>Header/Footer</strong> &mdash; bar colours and text styling</li>
+          <li><strong>Code blocks</strong> &mdash; background and syntax highlight colours</li>
+        </ul>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
@@ -901,6 +1301,52 @@ opendocs watch ./my-repo --interval 60 --patterns "README.md,docs/*.md,*.ipynb"<
           <li>The graph powers architecture diagrams, PPTX knowledge slides, and the analysis report</li>
         </ul>
 
+        <h2 id="kg-cli">CLI examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Basic mode — semantic extraction only (no API key needed)</span>
+opendocs generate https://github.com/fastapi/fastapi --format architecture
+
+<span class="cm"># LLM mode — deeper entity discovery</span>
+opendocs generate https://github.com/owner/repo \
+  --mode llm --api-key sk-... --format architecture
+
+<span class="cm"># KG powers PPTX knowledge slides</span>
+opendocs generate npm:express --format pptx --theme graphite
+
+<span class="cm"># KG drives the analysis report</span>
+opendocs generate ./README.md --local --format all --mode llm --api-key sk-...</pre></div>
+
+        <h2 id="kg-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+
+pipeline = Pipeline()
+
+<span class="cm"># Run pipeline — KG is built automatically</span>
+result = pipeline.run(
+    <span class="st">"https://github.com/owner/repo"</span>,
+    mode=<span class="st">"llm"</span>,
+    api_key=<span class="st">"sk-..."</span>,
+)
+
+<span class="cm"># Access the knowledge graph from the result</span>
+kg = result.knowledge_graph
+<span class="nb">print</span>(<span class="st">f"Entities: {len(kg.entities)}"</span>)
+<span class="nb">print</span>(<span class="st">f"Relations: {len(kg.relations)}"</span>)
+
+<span class="cm"># Inspect extracted entities</span>
+<span class="kw">for</span> entity <span class="kw">in</span> kg.entities[:5]:
+    <span class="nb">print</span>(<span class="st">f"  {entity.type}: {entity.name}"</span>)</pre></div>
+
+        <h2 id="kg-where">Where the KG appears</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Output</th><th>KG Usage</th></tr></thead>
+          <tbody>
+            <tr><td>Architecture diagrams</td><td>Entities become diagram nodes, relations become edges</td></tr>
+            <tr><td>PowerPoint (.pptx)</td><td>Dedicated &ldquo;Knowledge Graph&rdquo; slide with entity summary</td></tr>
+            <tr><td>Word (.docx)</td><td>Entity tables and relationship lists in analysis sections</td></tr>
+            <tr><td>Analysis Report</td><td>Full entity breakdown with stakeholder views</td></tr>
+          </tbody>
+        </table></div>
+
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
           <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
@@ -940,6 +1386,55 @@ opendocs agent https://github.com/owner/repo --type all
 <span class="cm"># Use Claude instead of OpenAI</span>
 opendocs agent https://github.com/owner/repo --type report --provider anthropic</pre></div>
 
+        <h2 id="da-more">Per-type examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Product Requirements Document</span>
+opendocs agent https://github.com/fastapi/fastapi --type prd
+
+<span class="cm"># Technical Proposal / Statement of Work</span>
+opendocs agent https://github.com/owner/repo --type proposal
+
+<span class="cm"># Standard Operating Procedure</span>
+opendocs agent https://github.com/owner/repo --type sop
+
+<span class="cm"># Technical Assessment Report</span>
+opendocs agent https://github.com/owner/repo --type report --provider anthropic
+
+<span class="cm"># Executive Slide Deck</span>
+opendocs agent https://github.com/django/django --type slides
+
+<span class="cm"># Changelog from Git History</span>
+opendocs agent https://github.com/owner/repo --type changelog
+
+<span class="cm"># Developer Onboarding Guide</span>
+opendocs agent https://github.com/owner/repo --type onboarding
+
+<span class="cm"># Tech Debt Assessment</span>
+opendocs agent https://github.com/owner/repo --type tech-debt
+
+<span class="cm"># All 8 document types at once</span>
+opendocs agent https://github.com/owner/repo --type all</pre></div>
+
+        <h2 id="da-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.agents</span> <span class="kw">import</span> DocAgent
+
+agent = DocAgent(api_key=<span class="st">"sk-..."</span>, provider=<span class="st">"openai"</span>)
+
+<span class="cm"># Generate a PRD</span>
+result = agent.run(
+    <span class="st">"https://github.com/owner/repo"</span>,
+    doc_type=<span class="st">"prd"</span>,
+    output_dir=<span class="st">"./agent-output"</span>,
+)
+
+<span class="cm"># Generate multiple document types</span>
+<span class="kw">for</span> dtype <span class="kw">in</span> [<span class="st">"prd"</span>, <span class="st">"onboarding"</span>, <span class="st">"tech-debt"</span>]:
+    agent.run(
+        <span class="st">"https://github.com/owner/repo"</span>,
+        doc_type=dtype,
+        output_dir=<span class="st">f"./output/{dtype}"</span>,
+    )
+    <span class="nb">print</span>(<span class="st">f"✓ Generated {dtype}"</span>)</pre></div>
+
         <h2 id="da-pipeline">How it works</h2>
         <ol>
           <li><strong>Clone</strong> &mdash; clones the repo locally</li>
@@ -949,6 +1444,8 @@ opendocs agent https://github.com/owner/repo --type report --provider anthropic<
           <li><strong>Review</strong> &mdash; quality checks and structure validation</li>
           <li><strong>Export</strong> &mdash; renders to Word, PDF, Markdown</li>
         </ol>
+
+        <div class="callout tip"><strong>&#10003; Tip</strong><p>DocAgent works best with repos that have a well-structured README, a clear file hierarchy, and a <code>package.json</code> or <code>pyproject.toml</code> at the root.</p></div>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
@@ -1003,6 +1500,60 @@ opendocs agent https://github.com/owner/repo --type report --provider anthropic<
         <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># List all 25 themes with color previews</span>
 opendocs themes</pre></div>
 
+        <h2 id="cli-agent">opendocs agent</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs agent &lt;GITHUB_URL&gt; [OPTIONS]</pre></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Option</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--type</code></td><td>Document type: prd, proposal, sop, report, slides, changelog, onboarding, tech-debt, all</td></tr>
+            <tr><td><code>--provider</code></td><td>LLM provider: openai, anthropic, google, ollama, azure</td></tr>
+            <tr><td><code>--api-key</code></td><td>LLM API key</td></tr>
+            <tr><td><code>--output</code></td><td>Output directory</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="cli-examples">Cookbook — Common Recipes</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># ── Quick wins ───────────────────────────────────────────</span>
+<span class="cm"># Generate a blog post from any npm package</span>
+opendocs generate npm:axios --format blog --theme ocean
+
+<span class="cm"># Convert a notebook into a branded PDF</span>
+opendocs generate ./analysis.ipynb --local --format pdf \
+  --theme corporate --project-name "Q4 Report"
+
+<span class="cm"># Architecture diagrams for a GitHub repo</span>
+opendocs generate https://github.com/fastapi/fastapi --format architecture
+
+<span class="cm"># ── Enterprise workflows ─────────────────────────────────</span>
+<span class="cm"># Full doc suite with LLM, templates, and a theme</span>
+opendocs generate https://github.com/owner/repo \
+  --format all --theme corporate \
+  --mode llm --provider anthropic \
+  --project-name "Platform v3" \
+  --author "Engineering" --org "Acme Corp"
+
+<span class="cm"># Publish directly to Confluence</span>
+opendocs generate ./README.md --local --format word \
+  --publish confluence \
+  --confluence-url https://acme.atlassian.net/wiki \
+  --confluence-space ENG
+
+<span class="cm"># Continuous doc generation with auto-PR</span>
+opendocs watch ./my-monorepo --auto-pr --interval 120
+
+<span class="cm"># ── DocAgent enterprise docs ─────────────────────────────</span>
+<span class="cm"># PRD + Onboarding guide + Tech Debt report</span>
+opendocs agent https://github.com/owner/repo --type prd
+opendocs agent https://github.com/owner/repo --type onboarding
+opendocs agent https://github.com/owner/repo --type tech-debt
+
+<span class="cm"># ── Batch processing ─────────────────────────────────────</span>
+<span class="cm"># Process multiple repos</span>
+<span class="kw">for</span> repo <span class="kw">in</span> fastapi django flask; <span class="kw">do</span>
+  opendocs generate https://github.com/$repo/$repo \
+    --format word --theme aurora --output ./output/$repo
+<span class="kw">done</span></pre></div>
+
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
           <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
@@ -1054,8 +1605,462 @@ pipeline.run(<span class="st">"./notebook.ipynb"</span>, local=<span class="kw">
     provider=<span class="st">"anthropic"</span>,
 )</pre></div>
 
+        <h2 id="api-npm">npm packages</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate docs from an npm package</span>
+result = pipeline.run(<span class="st">"npm:axios"</span>, theme_name=<span class="st">"ocean"</span>)
+
+<span class="cm"># Scoped packages work too</span>
+result = pipeline.run(<span class="st">"npm:@angular/core"</span>, theme_name=<span class="st">"carbon"</span>)</pre></div>
+
+        <h2 id="api-notebook">Jupyter Notebooks</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Convert notebook to Word + PDF</span>
+result = pipeline.run(
+    <span class="st">"./analysis.ipynb"</span>,
+    local=<span class="kw">True</span>,
+    formats=[OutputFormat.WORD, OutputFormat.PDF],
+    theme_name=<span class="st">"slate"</span>,
+    no_outputs=<span class="kw">True</span>,  <span class="cm"># Exclude cell outputs</span>
+)</pre></div>
+
+        <h2 id="api-agent">DocAgent</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.agents</span> <span class="kw">import</span> DocAgent
+
+agent = DocAgent(api_key=<span class="st">"sk-..."</span>, provider=<span class="st">"openai"</span>)
+
+<span class="cm"># Generate a PRD</span>
+result = agent.run(<span class="st">"https://github.com/owner/repo"</span>, doc_type=<span class="st">"prd"</span>)
+
+<span class="cm"># Generate onboarding guide with Claude</span>
+agent = DocAgent(api_key=<span class="st">"sk-ant-..."</span>, provider=<span class="st">"anthropic"</span>)
+result = agent.run(<span class="st">"https://github.com/owner/repo"</span>, doc_type=<span class="st">"onboarding"</span>)</pre></div>
+
+        <h2 id="api-batch">Batch processing</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">pathlib</span> <span class="kw">import</span> Path
+
+pipeline = Pipeline()
+
+<span class="cm"># Process all Markdown files in a folder</span>
+<span class="kw">for</span> md <span class="kw">in</span> Path(<span class="st">"./docs"</span>).glob(<span class="st">"*.md"</span>):
+    pipeline.run(
+        <span class="nb">str</span>(md), local=<span class="kw">True</span>,
+        theme_name=<span class="st">"aurora"</span>,
+        output_dir=<span class="st">f"./output/{md.stem}"</span>,
+    )
+
+<span class="cm"># Process multiple GitHub repos</span>
+repos = [
+    <span class="st">"https://github.com/fastapi/fastapi"</span>,
+    <span class="st">"https://github.com/django/django"</span>,
+    <span class="st">"https://github.com/pallets/flask"</span>,
+]
+<span class="kw">for</span> repo <span class="kw">in</span> repos:
+    name = repo.split(<span class="st">"/"</span>)[-1]
+    pipeline.run(repo, output_dir=<span class="st">f"./output/{name}"</span>)
+    <span class="nb">print</span>(<span class="st">f"✓ {name}"</span>)</pre></div>
+
+        <h2 id="api-publish">Publishing</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Publish to Notion</span>
+result = pipeline.run(
+    <span class="st">"./README.md"</span>,
+    local=<span class="kw">True</span>,
+    publish=<span class="st">"notion"</span>,
+    notion_token=<span class="st">"ntn_..."</span>,
+    notion_page_id=<span class="st">"abc123"</span>,
+)
+
+<span class="cm"># Publish to Confluence</span>
+result = pipeline.run(
+    <span class="st">"./README.md"</span>,
+    local=<span class="kw">True</span>,
+    publish=<span class="st">"confluence"</span>,
+    confluence_url=<span class="st">"https://acme.atlassian.net/wiki"</span>,
+    confluence_space=<span class="st">"ENG"</span>,
+    confluence_token=<span class="st">"ATATT..."</span>,
+)</pre></div>
+
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ SMART TABLE SORTING ═══════════════════════════ -->
+      <div class="doc-page" id="page-table-sorting">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Smart Table Sorting</div>
+        <h1 class="page-title">Smart Table Sorting</h1>
+        <p class="page-intro">Automatically reorder Markdown tables using 6 built-in strategies for cleaner, more readable output.</p>
+
+        <h2 id="ts-strategies">6 Sorting Strategies</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Strategy</th><th>Description</th><th>Flag</th></tr></thead>
+          <tbody>
+            <tr><td><code>smart</code></td><td>Auto-detect column types and sort by best fit</td><td><code>--sort smart</code></td></tr>
+            <tr><td><code>alpha</code></td><td>Alphabetical sort on first column</td><td><code>--sort alpha</code></td></tr>
+            <tr><td><code>numeric</code></td><td>Numerical sort (detects numbers in cells)</td><td><code>--sort numeric</code></td></tr>
+            <tr><td><code>column:N</code></td><td>Sort ascending by column N (0-indexed)</td><td><code>--sort column:2</code></td></tr>
+            <tr><td><code>column:N:desc</code></td><td>Sort descending by column N</td><td><code>--sort column:1:desc</code></td></tr>
+            <tr><td><code>none</code></td><td>Preserve original order</td><td><code>--sort none</code></td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="ts-cli">CLI examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Smart sort (default) — auto-detect best ordering</span>
+opendocs generate ./README.md --local --sort smart
+
+<span class="cm"># Sort all tables alphabetically</span>
+opendocs generate https://github.com/owner/repo --sort alpha
+
+<span class="cm"># Sort by the 3rd column, descending</span>
+opendocs generate ./README.md --local --sort column:2:desc
+
+<span class="cm"># Disable sorting — keep original order</span>
+opendocs generate ./README.md --local --sort none</pre></div>
+
+        <h2 id="ts-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+
+pipeline = Pipeline()
+
+<span class="cm"># Sort by column 1 descending</span>
+pipeline.run(<span class="st">"./README.md"</span>, local=<span class="kw">True</span>, sort_strategy=<span class="st">"column:1:desc"</span>)
+
+<span class="cm"># Numeric sort for benchmark tables</span>
+pipeline.run(<span class="st">"./benchmarks.md"</span>, local=<span class="kw">True</span>, sort_strategy=<span class="st">"numeric"</span>)</pre></div>
+
+        <h2 id="ts-how">How it works</h2>
+        <ol>
+          <li>The parser extracts all Markdown tables from the AST</li>
+          <li>The <code>smart</code> strategy inspects each column for data types (numbers, dates, strings)</li>
+          <li>Rows are reordered in-place before being passed to generators</li>
+          <li>The sorted table appears consistently across Word, PDF, PPTX, and LaTeX outputs</li>
+        </ol>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ MERMAID RENDERING ══════════════════════════════ -->
+      <div class="doc-page" id="page-mermaid">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Mermaid &rarr; PNG</div>
+        <h1 class="page-title">Mermaid &rarr; PNG Rendering</h1>
+        <p class="page-intro">Automatically convert Mermaid diagram code blocks into rendered PNG images embedded in your documents.</p>
+
+        <h2 id="mm-auto">Automatic rendering</h2>
+        <p>Any fenced <code>```mermaid</code> code block in your Markdown is automatically detected, sent to the <a href="https://mermaid.ink" target="_blank">mermaid.ink</a> API, and the resulting PNG is embedded in Word, PDF, and PowerPoint outputs.</p>
+
+        <h2 id="mm-cli-ex">CLI examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Any README with ```mermaid blocks gets auto-rendered</span>
+opendocs generate https://github.com/owner/repo --format word
+
+<span class="cm"># Architecture diagrams are generated as Mermaid and rendered to PNG</span>
+opendocs generate ./README.md --local --format architecture
+
+<span class="cm"># Mindmaps are also generated as Mermaid syntax</span>
+opendocs generate npm:axios --format mindmap</pre></div>
+
+        <h2 id="mm-supported">Supported diagram types</h2>
+        <div class="badge-row">
+          <span class="badge purple">Flowchart</span>
+          <span class="badge green">Sequence</span>
+          <span class="badge blue">Class</span>
+          <span class="badge">State</span>
+          <span class="badge purple">ER Diagram</span>
+          <span class="badge green">Gantt</span>
+          <span class="badge blue">Pie Chart</span>
+          <span class="badge">Mindmap</span>
+          <span class="badge purple">C4 Diagram</span>
+          <span class="badge green">Git Graph</span>
+        </div>
+
+        <h2 id="mm-example-src">Example input</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">markdown</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>```mermaid
+graph TD
+    A[README.md] --&gt; B[Markdown Parser]
+    B --&gt; C[Knowledge Graph]
+    C --&gt; D[Word Generator]
+    C --&gt; E[PDF Generator]
+    C --&gt; F[PPTX Generator]
+```</pre></div>
+        <p>This is automatically converted to a PNG image and embedded in all document outputs.</p>
+
+        <h2 id="mm-python-mermaid">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.renderers.diagram_renderer</span> <span class="kw">import</span> render_mermaid
+
+<span class="cm"># Render a Mermaid diagram to PNG bytes</span>
+mermaid_code = <span class="st">"""graph TD
+    A[Source] --> B[Parser]
+    B --> C[Generator]
+"""</span>
+png_bytes = render_mermaid(mermaid_code)
+
+<span class="cm"># Save to file</span>
+<span class="kw">with</span> <span class="nb">open</span>(<span class="st">"diagram.png"</span>, <span class="st">"wb"</span>) <span class="kw">as</span> f:
+    f.write(png_bytes)</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ STAKEHOLDER VIEWS ══════════════════════════════ -->
+      <div class="doc-page" id="page-stakeholder-views">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Stakeholder Views</div>
+        <h1 class="page-title">Stakeholder Views</h1>
+        <p class="page-intro">LLM mode generates executive summaries and perspective-specific views for CTO, Investor, and Developer audiences.</p>
+
+        <div class="callout info"><strong>&#8505; Requires LLM mode</strong><p>Stakeholder views are generated when <code>--mode llm</code> is enabled with any supported provider.</p></div>
+
+        <h2 id="sv-views">Three perspectives</h2>
+        <div class="feature-grid">
+          <div class="feat-card"><h4>&#x1F4BC; CTO View</h4><p>Architecture decisions, scalability, tech debt, integration complexity, and security considerations.</p></div>
+          <div class="feat-card"><h4>&#x1F4C8; Investor View</h4><p>Market positioning, competitive landscape, growth potential, monetisation, and risk assessment.</p></div>
+          <div class="feat-card"><h4>&#x1F468;&#x200D;&#x1F4BB; Developer View</h4><p>Setup complexity, API quality, documentation gaps, onboarding time, and contribution friendliness.</p></div>
+        </div>
+
+        <h2 id="sv-cli">CLI examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate all formats with stakeholder views (OpenAI)</span>
+opendocs generate https://github.com/fastapi/fastapi \
+  --mode llm --api-key sk-...
+
+<span class="cm"># Use Claude for stakeholder analysis</span>
+opendocs generate ./README.md --local \
+  --mode llm --provider anthropic --api-key sk-ant-...
+
+<span class="cm"># Gemini for cost-effective analysis</span>
+opendocs generate npm:express \
+  --mode llm --provider google --api-key AIza...</pre></div>
+
+        <h2 id="sv-output">Where views appear</h2>
+        <ul>
+          <li><strong>Word (.docx)</strong> &mdash; dedicated &ldquo;Executive Summary&rdquo; and &ldquo;Stakeholder Analysis&rdquo; sections</li>
+          <li><strong>PowerPoint (.pptx)</strong> &mdash; individual slides per stakeholder perspective</li>
+          <li><strong>Blog (.md)</strong> &mdash; LLM-rewritten intro with project positioning</li>
+          <li><strong>Analysis Report (.md)</strong> &mdash; full stakeholder breakdown</li>
+        </ul>
+
+        <h2 id="sv-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+
+pipeline = Pipeline()
+result = pipeline.run(
+    <span class="st">"https://github.com/langchain-ai/langchain"</span>,
+    mode=<span class="st">"llm"</span>,
+    api_key=<span class="st">"sk-..."</span>,
+    provider=<span class="st">"openai"</span>,
+)
+
+<span class="cm"># Access stakeholder views from the result</span>
+<span class="nb">print</span>(result.executive_summary)
+<span class="nb">print</span>(result.cto_view)
+<span class="nb">print</span>(result.investor_view)
+<span class="nb">print</span>(result.developer_view)</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ PUBLISHING ═════════════════════════════════════ -->
+      <div class="doc-page" id="page-publishing">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Publishing</div>
+        <h1 class="page-title">Publishing (Notion &amp; Confluence)</h1>
+        <p class="page-intro">Push generated documentation directly to Notion workspaces or Confluence spaces.</p>
+
+        <div class="callout tip"><strong>&#10003; Install the publish extra</strong><p><code>pip install opendocs[publish]</code></p></div>
+
+        <h2 id="pub-notion">Notion</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate + publish to Notion</span>
+opendocs generate https://github.com/owner/repo \
+  --publish notion \
+  --notion-token ntn_... \
+  --notion-page-id abc123
+
+<span class="cm"># Publish only the blog post</span>
+opendocs generate ./README.md --local --format blog \
+  --publish notion \
+  --notion-token ntn_... \
+  --notion-page-id abc123</pre></div>
+
+        <h2 id="pub-confluence">Confluence</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate + publish to Confluence</span>
+opendocs generate https://github.com/owner/repo \
+  --publish confluence \
+  --confluence-url https://your-org.atlassian.net/wiki \
+  --confluence-space ENG \
+  --confluence-token ATATT...
+
+<span class="cm"># Publish a specific format</span>
+opendocs generate ./README.md --local --format word \
+  --publish confluence \
+  --confluence-url https://your-org.atlassian.net/wiki \
+  --confluence-space DOCS \
+  --confluence-token ATATT...</pre></div>
+
+        <h2 id="pub-env">Environment variables</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Set once, use everywhere</span>
+<span class="kw">export</span> NOTION_TOKEN=ntn_...
+<span class="kw">export</span> NOTION_PAGE_ID=abc123
+<span class="kw">export</span> CONFLUENCE_URL=https://your-org.atlassian.net/wiki
+<span class="kw">export</span> CONFLUENCE_SPACE=ENG
+<span class="kw">export</span> CONFLUENCE_TOKEN=ATATT...
+
+<span class="cm"># Then just use --publish</span>
+opendocs generate ./README.md --local --publish notion
+opendocs generate ./README.md --local --publish confluence</pre></div>
+
+        <h2 id="pub-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+
+pipeline = Pipeline()
+result = pipeline.run(
+    <span class="st">"./README.md"</span>,
+    local=<span class="kw">True</span>,
+    publish=<span class="st">"notion"</span>,
+    notion_token=<span class="st">"ntn_..."</span>,
+    notion_page_id=<span class="st">"abc123"</span>,
+)</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ ARCHITECTURE OVERVIEW ══════════════════════════ -->
+      <div class="doc-page" id="page-arch-overview">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Reference<span>/</span>Architecture</div>
+        <h1 class="page-title">Pipeline Architecture</h1>
+        <p class="page-intro">How OpenDocs processes sources and generates documents through the deterministic pipeline.</p>
+
+        <h2 id="ao-flow">Pipeline flow</h2>
+        <div class="arch-block"><pre>GitHub URL / npm:pkg / Local .md / .ipynb
+        |
+        v
++-------------------+
+|  README Fetch /   |  &lt;-- httpx + GitHub API / npm registry
+|  Notebook Parser  |  &lt;-- .ipynb cell extraction
++--------+----------+
+         v
++-------------------+
+|  Markdown Parser  |  &lt;-- mistune 3.x AST
++--------+----------+
+         v
++-------------------+
+|  Template Vars    |  &lt;-- YAML/JSON config or CLI flags
++--------+----------+
+         v
++-------------------+
+|  Table Sorting    |  &lt;-- 6 strategies (smart, alpha, numeric, column:N)
++--------+----------+
+         v
++-------------------+
+|  KG Extraction    |  &lt;-- Semantic + optional LLM (5 providers)
++--------+----------+
+         v
++-------------------+
+|  Diagram Renderer |  &lt;-- mermaid.ink API
++--------+----------+
+         |
+    +----+----+----+----+------+------+-------+------+-----+------+------+------+
+    v    v    v    v    v      v      v       v      v     v      v      v
+  Word  PDF  PPTX  Blog  Jira  Change  LaTeX  1-Pgr  Social  FAQ  Arch  Mindmap
+                                 log</pre></div>
+
+        <h2 id="ao-stages">Pipeline stages</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Stage</th><th>Module</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>1. Fetch</td><td><code>opendocs.fetchers</code></td><td>Downloads README from GitHub API, npm registry, or reads local files/notebooks</td></tr>
+            <tr><td>2. Parse</td><td><code>opendocs.parsers</code></td><td>Converts Markdown/Notebook to AST using mistune 3.x</td></tr>
+            <tr><td>3. Template</td><td><code>opendocs.core.template_vars</code></td><td>Injects project metadata (name, author, org, version) into document context</td></tr>
+            <tr><td>4. Sort</td><td><code>opendocs.processors.table_sorter</code></td><td>Reorders table rows using selected sort strategy</td></tr>
+            <tr><td>5. Extract</td><td><code>opendocs.extractors</code></td><td>Builds knowledge graph from entities and relationships</td></tr>
+            <tr><td>6. Render</td><td><code>opendocs.renderers</code></td><td>Converts Mermaid diagrams to PNG via mermaid.ink</td></tr>
+            <tr><td>7. Generate</td><td><code>opendocs.generators</code></td><td>Produces output files in each requested format</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="ao-watcher-flow">File watcher flow</h2>
+        <div class="arch-block"><pre>opendocs watch ./repo
+        |
+        v
+  Discover watched files (README.md, *.ipynb, docs/)
+        |
+        v
+  SHA-256 hash each file
+        |
+        v
+  Compare against .opendocs-watch-state.json
+        |
+        v
+  If changed --&gt; Pipeline.run() for each file
+        |
+        v
+  Update state file
+        |
+        v
+  If --auto-pr --&gt; git branch + commit + push + gh pr create</pre></div>
+
+        <h2 id="ao-deps">Core dependencies</h2>
+        <div class="badge-row">
+          <span class="badge purple">mistune 3.x</span>
+          <span class="badge green">python-docx</span>
+          <span class="badge blue">python-pptx</span>
+          <span class="badge">httpx</span>
+          <span class="badge purple">Pillow</span>
+          <span class="badge green">PyYAML</span>
+          <span class="badge blue">nbformat</span>
+          <span class="badge">Jinja2</span>
+        </div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ VS CODE EXTENSION ══════════════════════════════ -->
+      <div class="doc-page" id="page-vscode-ext">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Reference<span>/</span>VS Code Extension</div>
+        <h1 class="page-title">VS Code Extension</h1>
+        <p class="page-intro">Generate documentation directly from the VS Code editor with the OpenDocs extension.</p>
+
+        <div class="callout tip"><strong>&#10003; Install from Marketplace</strong><p>Search &ldquo;OpenDocs&rdquo; in the VS Code Extensions panel or visit <a href="https://github.com/ioteverythin/Opendocs-ext" target="_blank">ioteverythin/Opendocs-ext</a>.</p></div>
+
+        <h2 id="vsc-features">Extension features</h2>
+        <div class="feature-grid">
+          <div class="feat-card"><h4>&#x1F4C4; Generate from Editor</h4><p>Right-click any Markdown or Notebook file to generate docs directly.</p></div>
+          <div class="feat-card"><h4>&#x1F3A8; Theme Picker</h4><p>Visual theme selector showing colour previews for all 25 themes.</p></div>
+          <div class="feat-card"><h4>&#x26A1; Format Selector</h4><p>Choose output formats from a quick-pick menu before generating.</p></div>
+          <div class="feat-card"><h4>&#x1F4C2; Output Panel</h4><p>View generation progress and open output files directly in the editor.</p></div>
+        </div>
+
+        <h2 id="vsc-commands">Available commands</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Command</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>OpenDocs: Generate Documentation</code></td><td>Generate all formats from the current file</td></tr>
+            <tr><td><code>OpenDocs: Generate (Pick Format)</code></td><td>Choose specific format(s) to generate</td></tr>
+            <tr><td><code>OpenDocs: Select Theme</code></td><td>Pick a theme from the visual selector</td></tr>
+            <tr><td><code>OpenDocs: Open Output Folder</code></td><td>Open the output directory in the file explorer</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="vsc-install">Installation</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Install from VS Code CLI</span>
+code --install-extension ioteverythin.opendocs
+
+<span class="cm"># Or from the Extensions panel:</span>
+<span class="cm"># 1. Open VS Code</span>
+<span class="cm"># 2. Ctrl+Shift+X → Search "OpenDocs"</span>
+<span class="cm"># 3. Click Install</span></pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/Opendocs-ext" class="edit-link" target="_blank">&#9998; View extension on GitHub</a>
           <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
         </div>
       </div>
