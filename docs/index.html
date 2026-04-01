@@ -185,7 +185,7 @@ body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color
 .breadcrumb span { opacity: 0.5; }
 .page-title { font-size: 2rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--text); margin-bottom: 0.5rem; }
 .page-intro { font-size: 1.05rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.65; }
-h2 { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-top: 2.5rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); letter-spacing: -0.01em; }
+h2 { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-top: 2.5rem; margin-bottom: 0.75rem; letter-spacing: -0.01em; }
 h3 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-top: 1.5rem; margin-bottom: 0.5rem; }
 p { margin-bottom: 1rem; color: var(--text); }
 a { color: var(--link); text-decoration: none; }
@@ -329,6 +329,7 @@ tr:hover td { background: var(--bg-sidebar); }
       <a href="#" class="active" data-page="overview" onclick="navigate('overview');return false;">Overview</a>
       <a href="#" data-page="quickstart" onclick="navigate('quickstart');return false;">Quickstart</a>
       <a href="#" data-page="install" onclick="navigate('install');return false;">Installation</a>
+      <a href="#" data-page="notebook-examples" onclick="navigate('notebook-examples');return false;">Interactive Notebook <span class="sbadge new-b">NEW</span></a>
     </div>
     <div class="sidebar-divider"></div>
     <div class="sidebar-section">
@@ -490,6 +491,13 @@ pipeline = Pipeline()
           <span class="badge green">Jupyter Notebooks</span>
           <span class="badge">Folder Merging</span>
         </div>
+
+        <h2 id="interactive-notebook">Interactive Notebook</h2>
+        <p>Want to try everything hands-on? We have a <strong>comprehensive Jupyter notebook</strong> with 40+ working code examples covering every feature.</p>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>git clone https://github.com/ioteverythin/OpenDocs.git
+cd OpenDocs/examples
+jupyter notebook opendocs_examples.ipynb</pre></div>
+        <p>Or <a href="#" onclick="navigate('notebook-examples');return false;">view the full notebook reference &rarr;</a></p>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs/blob/main/README.md" class="edit-link" target="_blank">&#9998; Edit this page on GitHub</a>
@@ -725,6 +733,47 @@ result = pipeline.run(
         <h2 id="npm-format">With format and theme</h2>
         <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate npm:express --format word --theme ocean
 opendocs generate npm:react --format blog --theme aurora</pre></div>
+
+        <h2 id="npm-examples">More examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Blog + PDF with sunset theme</span>
+opendocs generate npm:express --format blog --theme sunset
+opendocs generate npm:express --format pdf --theme sunset
+
+<span class="cm"># Generate all formats from lodash</span>
+opendocs generate npm:lodash --format all --theme ocean
+
+<span class="cm"># LLM-enhanced docs from React</span>
+opendocs generate npm:react --format word \
+  --mode llm --provider openai --api-key sk-...
+
+<span class="cm"># Architecture diagrams from Vue</span>
+opendocs generate npm:vue --format architecture --theme carbon</pre></div>
+
+        <h2 id="npm-python">Python API</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+
+pipeline = Pipeline()
+
+<span class="cm"># npm package → Word document</span>
+result = pipeline.run(
+    <span class="st">"npm:axios"</span>,
+    formats=[OutputFormat.WORD],
+    theme_name=<span class="st">"corporate"</span>,
+)
+
+<span class="cm"># Scoped package → Blog + PDF</span>
+result = pipeline.run(
+    <span class="st">"npm:@angular/core"</span>,
+    formats=[OutputFormat.BLOG, OutputFormat.PDF],
+    theme_name=<span class="st">"sunset"</span>,
+)
+
+<span class="cm"># Batch process multiple npm packages</span>
+<span class="kw">for</span> pkg <span class="kw">in</span> [<span class="st">"npm:axios"</span>, <span class="st">"npm:express"</span>, <span class="st">"npm:react"</span>, <span class="st">"npm:vue"</span>]:
+    name = pkg.replace(<span class="st">"npm:"</span>, <span class="st">""</span>)
+    pipeline.run(pkg, output_dir=<span class="st">f"./output/{name}"</span>)
+    <span class="nb">print</span>(<span class="st">f"✓ {name}"</span>)</pre></div>
 
         <h2 id="npm-how">How it works</h2>
         <ul>
@@ -1513,7 +1562,7 @@ opendocs themes</pre></div>
         </table></div>
 
         <h2 id="cli-examples">Cookbook — Common Recipes</h2>
-        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># ── Quick wins ───────────────────────────────────────────</span>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Quick wins</span>
 <span class="cm"># Generate a blog post from any npm package</span>
 opendocs generate npm:axios --format blog --theme ocean
 
@@ -1524,7 +1573,7 @@ opendocs generate ./analysis.ipynb --local --format pdf \
 <span class="cm"># Architecture diagrams for a GitHub repo</span>
 opendocs generate https://github.com/fastapi/fastapi --format architecture
 
-<span class="cm"># ── Enterprise workflows ─────────────────────────────────</span>
+<span class="cm"># Enterprise workflows</span>
 <span class="cm"># Full doc suite with LLM, templates, and a theme</span>
 opendocs generate https://github.com/owner/repo \
   --format all --theme corporate \
@@ -1541,13 +1590,13 @@ opendocs generate ./README.md --local --format word \
 <span class="cm"># Continuous doc generation with auto-PR</span>
 opendocs watch ./my-monorepo --auto-pr --interval 120
 
-<span class="cm"># ── DocAgent enterprise docs ─────────────────────────────</span>
+<span class="cm"># DocAgent enterprise docs</span>
 <span class="cm"># PRD + Onboarding guide + Tech Debt report</span>
 opendocs agent https://github.com/owner/repo --type prd
 opendocs agent https://github.com/owner/repo --type onboarding
 opendocs agent https://github.com/owner/repo --type tech-debt
 
-<span class="cm"># ── Batch processing ─────────────────────────────────────</span>
+<span class="cm"># Batch processing</span>
 <span class="cm"># Process multiple repos</span>
 <span class="kw">for</span> repo <span class="kw">in</span> fastapi django flask; <span class="kw">do</span>
   opendocs generate https://github.com/$repo/$repo \
@@ -2061,6 +2110,140 @@ code --install-extension ioteverythin.opendocs
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/Opendocs-ext" class="edit-link" target="_blank">&#9998; View extension on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- Interactive Notebook Examples -->
+      <div class="doc-page" id="page-notebook-examples">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Get Started<span>/</span>Interactive Notebook</div>
+        <h1 class="page-title">Interactive Notebook</h1>
+        <p class="page-intro">A comprehensive Jupyter notebook with working code examples for every OpenDocs feature. Run each cell to learn the full API.</p>
+
+        <div class="callout tip"><strong>&#10003; Download</strong><p>The notebook is available at <a href="https://github.com/ioteverythin/OpenDocs/blob/main/examples/opendocs_examples.ipynb" target="_blank"><code>examples/opendocs_examples.ipynb</code></a> in the OpenDocs repository.</p></div>
+
+        <h2 id="nb-ex-what">What's covered</h2>
+        <div class="feature-grid">
+          <div class="feat-card"><h4>&#x1F4E6; All Sources</h4><p>GitHub repos, npm packages, local Markdown files, Jupyter notebooks, and folder merging.</p></div>
+          <div class="feat-card"><h4>&#x1F4C4; All 13 Formats</h4><p>Word, PDF, PPTX, Blog, Jira, Changelog, LaTeX, One-Pager, Social, FAQ, Architecture, Mindmap.</p></div>
+          <div class="feat-card"><h4>&#x1F3A8; 25 Themes</h4><p>Loop through all 5 theme families with code to generate every variant.</p></div>
+          <div class="feat-card"><h4>&#x1F9E0; 5 LLM Providers</h4><p>OpenAI, Anthropic, Google, Ollama, Azure — ready-to-run examples.</p></div>
+          <div class="feat-card"><h4>&#x1F4DD; Template Variables</h4><p>Inline TemplateVars and YAML config loading with full branding.</p></div>
+          <div class="feat-card"><h4>&#x1F50D; Knowledge Graph</h4><p>Access entities and relations from the pipeline result.</p></div>
+          <div class="feat-card"><h4>&#x1F916; DocAgent</h4><p>AgentOrchestrator usage for PRD, SOP, Proposal, and more.</p></div>
+          <div class="feat-card"><h4>&#x1F504; Batch Processing</h4><p>Process multiple repos, packages, and themes in a single script.</p></div>
+        </div>
+
+        <h2 id="nb-ex-install">Getting started</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Clone the repo and open the notebook</span>
+git clone https://github.com/ioteverythin/OpenDocs.git
+cd OpenDocs/examples
+jupyter notebook opendocs_examples.ipynb</pre></div>
+
+        <h2 id="nb-ex-imports">Core imports</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+<span class="kw">from</span> <span class="fn">opendocs.core.template_vars</span> <span class="kw">import</span> TemplateVars, load_template_vars
+<span class="kw">from</span> <span class="fn">opendocs.core.fetcher</span> <span class="kw">import</span> ReadmeFetcher, is_github_url, is_npm_source</pre></div>
+
+        <h2 id="nb-ex-github">GitHub source example</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>pipeline = Pipeline()
+result = pipeline.run(
+    <span class="st">"https://github.com/expressjs/express"</span>,
+    output_dir=<span class="st">"./output/github_express"</span>,
+)
+<span class="nb">print</span>(<span class="st">f"Generated {len(result.generated_files)} files"</span>)</pre></div>
+
+        <h2 id="nb-ex-npm">npm package example</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>pipeline = Pipeline()
+result = pipeline.run(
+    <span class="st">"npm:axios"</span>,
+    output_dir=<span class="st">"./output/npm_axios"</span>,
+    formats=[OutputFormat.WORD],
+    theme_name=<span class="st">"corporate"</span>,
+)
+<span class="nb">print</span>(<span class="st">f"axios → {result.generated_files}"</span>)</pre></div>
+
+        <h2 id="nb-ex-batch">Batch processing example</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>pipeline = Pipeline()
+repos = [
+    <span class="st">"https://github.com/pallets/flask"</span>,
+    <span class="st">"https://github.com/psf/requests"</span>,
+    <span class="st">"https://github.com/fastapi/fastapi"</span>,
+    <span class="st">"https://github.com/django/django"</span>,
+]
+
+<span class="kw">for</span> repo <span class="kw">in</span> repos:
+    name = repo.split(<span class="st">"/"</span>)[-1]
+    result = pipeline.run(
+        repo,
+        output_dir=<span class="st">f"./output/batch/{name}"</span>,
+        formats=[OutputFormat.WORD, OutputFormat.PDF],
+        theme_name=<span class="st">"corporate"</span>,
+    )
+    <span class="nb">print</span>(<span class="st">f"✅ {name} → {len(result.generated_files)} files"</span>)</pre></div>
+
+        <h2 id="nb-ex-themes">All themes example</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>pipeline = Pipeline()
+themes = [
+    <span class="st">"corporate"</span>, <span class="st">"corporate-blue"</span>, <span class="st">"corporate-dark"</span>,
+    <span class="st">"ocean"</span>, <span class="st">"ocean-deep"</span>, <span class="st">"ocean-light"</span>,
+    <span class="st">"sunset"</span>, <span class="st">"sunset-warm"</span>, <span class="st">"sunset-cool"</span>,
+    <span class="st">"forest"</span>, <span class="st">"forest-dark"</span>, <span class="st">"forest-light"</span>,
+    <span class="st">"minimal"</span>, <span class="st">"minimal-dark"</span>, <span class="st">"minimal-serif"</span>,
+]
+
+<span class="kw">for</span> theme <span class="kw">in</span> themes:
+    result = pipeline.run(
+        <span class="st">"./README.md"</span>,
+        local=<span class="kw">True</span>,
+        output_dir=<span class="st">f"./output/themes/{theme}"</span>,
+        formats=[OutputFormat.WORD],
+        theme_name=theme,
+    )
+    <span class="nb">print</span>(<span class="st">f"🎨 {theme} → {result.generated_files}"</span>)</pre></div>
+
+        <h2 id="nb-ex-template">Template variables example</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>tv = TemplateVars(
+    project_name=<span class="st">"Acme Platform"</span>,
+    author=<span class="st">"Jane Doe"</span>,
+    version=<span class="st">"2.1.0"</span>,
+    date=<span class="st">"2026-04-02"</span>,
+    organisation=<span class="st">"Acme Corp"</span>,
+    confidentiality=<span class="st">"Internal"</span>,
+    department=<span class="st">"Engineering"</span>,
+    custom={<span class="st">"reviewer"</span>: <span class="st">"John Smith"</span>, <span class="st">"sprint"</span>: <span class="st">"Q2-2026"</span>},
+)
+
+pipeline = Pipeline()
+result = pipeline.run(
+    <span class="st">"https://github.com/pallets/flask"</span>,
+    output_dir=<span class="st">"./output/branded"</span>,
+    formats=[OutputFormat.WORD, OutputFormat.PDF],
+    theme_name=<span class="st">"corporate"</span>,
+    template_vars=tv,
+)
+<span class="nb">print</span>(<span class="st">f"Branded docs → {result.generated_files}"</span>)</pre></div>
+
+        <h2 id="nb-ex-fetcher">ReadmeFetcher direct access</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>fetcher = ReadmeFetcher(timeout=<span class="nb">30.0</span>)
+
+<span class="cm"># Fetch from GitHub</span>
+content, name = fetcher.fetch(<span class="st">"https://github.com/pallets/flask"</span>)
+<span class="nb">print</span>(<span class="st">f"📦 {name} — {len(content)} chars"</span>)
+
+<span class="cm"># Fetch from npm</span>
+content2, name2 = fetcher.fetch(<span class="st">"npm:axios"</span>)
+<span class="nb">print</span>(<span class="st">f"📦 {name2} — {len(content2)} chars"</span>)
+
+<span class="cm"># Check source type</span>
+<span class="nb">print</span>(<span class="st">"Is GitHub?"</span>, is_github_url(<span class="st">"https://github.com/owner/repo"</span>))
+<span class="nb">print</span>(<span class="st">"Is npm?"</span>, is_npm_source(<span class="st">"npm:axios"</span>))</pre></div>
+
+        <div class="callout info"><strong>&#8505; 40+ working examples</strong><p>The full notebook contains 40+ runnable code cells covering every feature. <a href="https://github.com/ioteverythin/OpenDocs/blob/main/examples/opendocs_examples.ipynb" target="_blank">View on GitHub &rarr;</a></p></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs/blob/main/examples/opendocs_examples.ipynb" class="edit-link" target="_blank">&#9998; View notebook on GitHub</a>
           <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
         </div>
       </div>
