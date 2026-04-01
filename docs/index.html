@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenDocs — Convert READMEs &amp; Notebooks into Multi-Format Docs</title>
+  <meta name="description" content="Official documentation for OpenDocs — generate Word, PDF, PowerPoint, Blog, Jira, LaTeX, FAQ, Architecture Diagrams and more from GitHub READMEs, Markdown files, npm packages, and Jupyter Notebooks." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+/* ── Reset & Tokens ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --sidebar-w: 264px;
+  --toc-w: 210px;
+  --top-h: 56px;
+  --bg: #ffffff;
+  --bg-sidebar: #f8f9fb;
+  --bg-code: #f4f5f7;
+  --bg-dark-code: #1e2030;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --link: #7c3aed;
+  --link-hover: #6d28d9;
+  --accent: #7c3aed;
+  --accent-bg: #f5f3ff;
+  --tip-bg: #f0fdf4;
+  --tip-border: #22c55e;
+  --warn-bg: #fffbeb;
+  --warn-border: #f59e0b;
+  --info-bg: #f5f3ff;
+  --info-border: #7c3aed;
+  --nav-active-bg: #f5f3ff;
+  --nav-active-text: #6d28d9;
+  --tag-bg: #ede9fe;
+  --tag-text: #5b21b6;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+}
+
+[data-theme="dark"] {
+  --bg: #0f1117;
+  --bg-sidebar: #161b27;
+  --bg-code: #1e2030;
+  --border: #2a2f3e;
+  --text: #e2e8f0;
+  --muted: #8892a4;
+  --link: #a78bfa;
+  --link-hover: #c4b5fd;
+  --accent: #a78bfa;
+  --accent-bg: #1e1b4b;
+  --tip-bg: #052e16;
+  --tip-border: #16a34a;
+  --warn-bg: #1c1506;
+  --warn-border: #d97706;
+  --info-bg: #1e1b4b;
+  --info-border: #7c3aed;
+  --nav-active-bg: #1e1b4b;
+  --nav-active-text: #c4b5fd;
+  --tag-bg: #2e1065;
+  --tag-text: #c4b5fd;
+}
+
+html { scroll-behavior: smooth; font-size: 15px; }
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
+
+/* ── Top Nav ─────────────────────────────────────────────── */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  height: var(--top-h);
+  display: flex; align-items: center;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.25rem 0 0;
+}
+.topnav-logo {
+  display: flex; align-items: center; gap: 0.5rem;
+  width: var(--sidebar-w);
+  padding: 0 1.25rem;
+  font-weight: 700; font-size: 1rem;
+  color: var(--text); text-decoration: none;
+  border-right: 1px solid var(--border);
+  height: 100%; flex-shrink: 0;
+}
+.topnav-logo .ver {
+  font-size: 0.65rem; font-weight: 600; letter-spacing: 0.04em;
+  background: var(--tag-bg); color: var(--tag-text);
+  padding: 0.1rem 0.45rem; border-radius: 999px; margin-left: 0.3rem;
+}
+.topnav-right { margin-left: auto; display: flex; align-items: center; gap: 0.5rem; }
+.nav-link {
+  font-size: 0.82rem; color: var(--muted); text-decoration: none; padding: 0.3rem 0.55rem;
+  border-radius: 6px; font-weight: 500; display: flex; align-items: center; gap: 0.3rem;
+  transition: color 0.15s, background 0.15s;
+}
+.nav-link:hover { color: var(--text); background: var(--bg-code); }
+.nav-link.btn-nav { background: var(--accent); color: #fff; padding: 0.35rem 0.85rem; }
+.nav-link.btn-nav:hover { background: var(--link-hover); color: #fff; }
+.theme-btn {
+  width: 32px; height: 32px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg-code); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 0.9rem; transition: all 0.15s;
+}
+.theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── Layout ──────────────────────────────────────────────── */
+.layout { display: flex; margin-top: var(--top-h); min-height: calc(100vh - var(--top-h)); }
+
+/* ── Left Sidebar ────────────────────────────────────────── */
+.sidebar {
+  position: fixed; top: var(--top-h); left: 0; bottom: 0;
+  width: var(--sidebar-w);
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 1.25rem 0 3rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  z-index: 100;
+}
+.sidebar::-webkit-scrollbar { width: 4px; }
+.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.sidebar-section { margin-bottom: 0.25rem; }
+.sidebar-section-label {
+  padding: 0.55rem 1.25rem 0.3rem;
+  font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+}
+.sidebar a {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.32rem 1.25rem;
+  font-size: 0.84rem; color: var(--muted);
+  text-decoration: none; font-weight: 400;
+  transition: color 0.12s, background 0.12s;
+  position: relative;
+}
+.sidebar a:hover { color: var(--text); background: rgba(0,0,0,0.035); }
+.sidebar a.active {
+  color: var(--nav-active-text);
+  background: var(--nav-active-bg);
+  font-weight: 600;
+}
+.sidebar a.active::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 2px; background: var(--accent); border-radius: 0 2px 2px 0;
+}
+.sidebar-divider { height: 1px; background: var(--border); margin: 0.75rem 1.25rem; }
+.sidebar .sbadge {
+  margin-left: auto; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em;
+  padding: 0.1rem 0.45rem; border-radius: 999px;
+}
+.sbadge.new-b { background: #dcfce7; color: #15803d; }
+[data-theme="dark"] .sbadge.new-b { background: #052e16; color: #4ade80; }
+.sbadge.v9-b  { background: #f5f3ff; color: #7c3aed; }
+[data-theme="dark"] .sbadge.v9-b  { background: #1e1b4b; color: #a78bfa; }
+
+/* ── Main ────────────────────────────────────────────────── */
+.main { margin-left: var(--sidebar-w); flex: 1; min-width: 0; display: flex; justify-content: center; }
+.content { width: 100%; max-width: 760px; padding: 2.5rem 3rem 5rem 3rem; margin-right: var(--toc-w); }
+
+/* ── Right TOC ───────────────────────────────────────────── */
+.toc {
+  position: fixed; top: var(--top-h); right: 0;
+  width: var(--toc-w); padding: 2rem 1.25rem 2rem 0.75rem;
+  height: calc(100vh - var(--top-h)); overflow-y: auto; font-size: 0.78rem;
+}
+.toc-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem; }
+.toc a {
+  display: block; color: var(--muted); text-decoration: none;
+  padding: 0.22rem 0; line-height: 1.4;
+  border-left: 2px solid var(--border); padding-left: 0.75rem;
+  transition: color 0.12s, border-color 0.12s;
+}
+.toc a:hover { color: var(--text); border-left-color: var(--accent); }
+.toc a.active { color: var(--accent); border-left-color: var(--accent); font-weight: 500; }
+.toc a.toc-h3 { padding-left: 1.5rem; }
+
+/* ── Typography ──────────────────────────────────────────── */
+.breadcrumb { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; color: var(--muted); margin-bottom: 1.5rem; }
+.breadcrumb a { color: var(--muted); text-decoration: none; }
+.breadcrumb a:hover { color: var(--text); }
+.breadcrumb span { opacity: 0.5; }
+.page-title { font-size: 2rem; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; color: var(--text); margin-bottom: 0.5rem; }
+.page-intro { font-size: 1.05rem; color: var(--muted); margin-bottom: 2rem; line-height: 1.65; }
+h2 { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-top: 2.5rem; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); letter-spacing: -0.01em; }
+h3 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-top: 1.5rem; margin-bottom: 0.5rem; }
+p { margin-bottom: 1rem; color: var(--text); }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; color: var(--link-hover); }
+code {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.82em;
+  background: var(--bg-code); border: 1px solid var(--border);
+  padding: 0.1em 0.35em; border-radius: 4px; color: var(--text);
+}
+ul, ol { padding-left: 1.4rem; margin-bottom: 1rem; }
+li { margin-bottom: 0.3rem; color: var(--text); }
+li code { font-size: 0.8em; }
+
+/* ── Code Block ──────────────────────────────────────────── */
+.code-block { background: var(--bg-dark-code); border-radius: var(--radius); overflow: hidden; margin: 1rem 0; box-shadow: var(--shadow); }
+.code-header { display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 1rem; background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.07); }
+.code-lang { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.04em; color: #8892a4; text-transform: uppercase; }
+.copy-btn {
+  display: flex; align-items: center; gap: 0.3rem;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 5px; padding: 0.2rem 0.6rem;
+  font-size: 0.72rem; font-weight: 500; color: #8892a4;
+  cursor: pointer; transition: all 0.15s; font-family: inherit;
+}
+.copy-btn:hover { background: rgba(255,255,255,0.12); color: #e2e8f0; }
+.copy-btn.copied { color: #4ade80; border-color: rgba(74,222,128,0.3); }
+pre {
+  padding: 1.1rem 1.25rem; overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.825rem; line-height: 1.75; color: #cdd6f4; margin: 0;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+.kw  { color: #cba6f7; }
+.fn  { color: #89b4fa; }
+.st  { color: #a6e3a1; }
+.cm  { color: #585b70; font-style: italic; }
+.nb  { color: #fab387; }
+.op  { color: #89dceb; }
+
+/* ── Callout Boxes ───────────────────────────────────────── */
+.callout { border-left: 3px solid; border-radius: 0 var(--radius) var(--radius) 0; padding: 0.85rem 1.1rem; margin: 1.25rem 0; font-size: 0.88rem; line-height: 1.65; }
+.callout strong { display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.35rem; font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.callout p { margin: 0; }
+.callout.tip  { background: var(--tip-bg); border-color: var(--tip-border); color: #166534; }
+.callout.warn { background: var(--warn-bg); border-color: var(--warn-border); color: #92400e; }
+.callout.info { background: var(--info-bg); border-color: var(--info-border); color: #5b21b6; }
+[data-theme="dark"] .callout.tip  { color: #86efac; }
+[data-theme="dark"] .callout.warn { color: #fcd34d; }
+[data-theme="dark"] .callout.info { color: #c4b5fd; }
+
+/* ── Feature cards ───────────────────────────────────────── */
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0; }
+.feat-card {
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.feat-card:hover { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,58,237,0.06); }
+.feat-card h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
+.feat-card p { font-size: 0.82rem; color: var(--muted); margin: 0; line-height: 1.55; }
+
+/* ── Badge row ───────────────────────────────────────────── */
+.badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+.badge {
+  padding: 0.25rem 0.7rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+  border: 1px solid var(--border); background: var(--bg-sidebar); color: var(--text);
+}
+.badge.purple { background: #f5f3ff; border-color: #ddd6fe; color: #7c3aed; }
+.badge.green  { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+.badge.blue   { background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8; }
+[data-theme="dark"] .badge.purple { background: #1e1b4b; border-color: #2e1065; color: #a78bfa; }
+[data-theme="dark"] .badge.green  { background: #052e16; border-color: #14532d; color: #4ade80; }
+[data-theme="dark"] .badge.blue   { background: #0c1a2e; border-color: #1e3a5f; color: #60a5fa; }
+
+/* ── Table ───────────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th { text-align: left; padding: 0.6rem 0.9rem; background: var(--bg-sidebar); border-bottom: 2px solid var(--border); font-weight: 600; font-size: 0.78rem; letter-spacing: 0.03em; color: var(--muted); }
+td { padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--border); }
+tr:hover td { background: var(--bg-sidebar); }
+.chk { color: #16a34a; font-weight: 700; }
+
+/* ── Page footer ─────────────────────────────────────────── */
+.page-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; font-size: 0.8rem; color: var(--muted); }
+.page-footer a { color: var(--link); }
+.edit-link { display: flex; align-items: center; gap: 0.35rem; font-size: 0.8rem; color: var(--muted); text-decoration: none; }
+.edit-link:hover { color: var(--link); text-decoration: underline; }
+.helpful { display: flex; align-items: center; gap: 0.5rem; }
+.helpful span { font-size: 0.8rem; color: var(--muted); }
+.helpful button { padding: 0.25rem 0.7rem; border-radius: 999px; border: 1px solid var(--border); background: none; cursor: pointer; font-size: 0.8rem; font-weight: 500; color: var(--muted); font-family: inherit; transition: all 0.15s; }
+.helpful button:hover { border-color: var(--accent); color: var(--accent); }
+.helpful button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── SPA page visibility ─────────────────────────────────── */
+.doc-page { display: none; }
+.doc-page.active { display: block; }
+
+/* ── Hero section ────────────────────────────────────────── */
+.hero-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 1.5rem; }
+.hero-badges img { height: 22px; }
+
+/* ── Architecture ────────────────────────────────────────── */
+.arch-block { background: var(--bg-dark-code); border-radius: var(--radius); padding: 1.5rem; margin: 1rem 0; overflow-x: auto; }
+.arch-block pre { padding: 0; font-size: 0.78rem; line-height: 1.6; }
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) { .toc { display: none; } .content { margin-right: 0; } }
+@media (max-width: 800px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .content { padding: 1.5rem 1.25rem 4rem; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .topnav-logo { width: auto; border-right: none; }
+}
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <a href="#" class="topnav-logo" onclick="navigate('overview');return false;">
+    &#x1F4DA; OpenDocs <span class="ver">v0.9.0</span>
+  </a>
+  <div class="topnav-right">
+    <a href="#" class="nav-link" onclick="navigate('overview');return false;">Docs</a>
+    <a href="https://pypi.org/project/opendocs/" class="nav-link" target="_blank">PyPI</a>
+    <a href="https://github.com/ioteverythin/OpenDocs" class="nav-link" target="_blank">GitHub</a>
+    <button class="theme-btn" onclick="toggleTheme()" title="Toggle theme">&#127763;</button>
+    <a href="https://pypi.org/project/opendocs/" class="nav-link btn-nav" target="_blank">Install &#8594;</a>
+  </div>
+</nav>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Get Started</div>
+      <a href="#" class="active" data-page="overview" onclick="navigate('overview');return false;">Overview</a>
+      <a href="#" data-page="quickstart" onclick="navigate('quickstart');return false;">Quickstart</a>
+      <a href="#" data-page="install" onclick="navigate('install');return false;">Installation</a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Sources</div>
+      <a href="#" data-page="github-source" onclick="navigate('github-source');return false;">GitHub URLs</a>
+      <a href="#" data-page="local-source" onclick="navigate('local-source');return false;">Local Files &amp; Folders</a>
+      <a href="#" data-page="npm-source" onclick="navigate('npm-source');return false;">npm Packages <span class="sbadge v9-b">v0.8</span></a>
+      <a href="#" data-page="notebook-source" onclick="navigate('notebook-source');return false;">Jupyter Notebooks</a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Output Formats</div>
+      <a href="#" data-page="formats" onclick="navigate('formats');return false;">All 13 Formats</a>
+      <a href="#" data-page="architecture" onclick="navigate('architecture');return false;">Architecture Diagrams</a>
+      <a href="#" data-page="mindmap" onclick="navigate('mindmap');return false;">Mindmap <span class="sbadge new-b">NEW</span></a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Features</div>
+      <a href="#" data-page="themes" onclick="navigate('themes');return false;">25 Themes</a>
+      <a href="#" data-page="llm" onclick="navigate('llm');return false;">LLM Providers</a>
+      <a href="#" data-page="templates" onclick="navigate('templates');return false;">Template Variables</a>
+      <a href="#" data-page="watcher" onclick="navigate('watcher');return false;">File Watcher</a>
+      <a href="#" data-page="knowledge-graph" onclick="navigate('knowledge-graph');return false;">Knowledge Graph</a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">DocAgent</div>
+      <a href="#" data-page="docagent" onclick="navigate('docagent');return false;">Agentic Engine</a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Reference</div>
+      <a href="#" data-page="cli" onclick="navigate('cli');return false;">CLI Reference</a>
+      <a href="#" data-page="python-api" onclick="navigate('python-api');return false;">Python API</a>
+      <a href="#" data-page="changelog" onclick="navigate('changelog');return false;">Changelog</a>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <div class="content">
+
+      <!-- ══ OVERVIEW ═══════════════════════════════════════ -->
+      <div class="doc-page active" id="page-overview">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Overview</div>
+        <h1 class="page-title">OpenDocs</h1>
+        <p class="page-intro">Convert GitHub READMEs, npm packages, Markdown files, and Jupyter Notebooks into structured, multi-format documentation &mdash; instantly.</p>
+
+        <div class="hero-badges">
+          <img src="https://img.shields.io/pypi/v/opendocs.svg" alt="PyPI" />
+          <img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+" />
+          <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License" />
+          <img src="https://img.shields.io/badge/formats-13-7c3aed.svg" alt="13 Formats" />
+          <img src="https://img.shields.io/badge/themes-25-7c3aed.svg" alt="25 Themes" />
+        </div>
+
+        <div class="callout info">
+          <strong>&#x1F195; What&rsquo;s new in v0.9.0</strong>
+          <p><strong>Mindmap output format</strong> &mdash; generates Mermaid mindmap diagrams + hierarchical JSON from any documentation source. Also: <code>npm:</code> package source support (v0.8) and full CI/CD pipeline.</p>
+        </div>
+
+        <h2 id="what-is-opendocs">What is OpenDocs?</h2>
+        <p>OpenDocs (by <a href="https://www.ioteverythin.com/" target="_blank">ioteverythin</a>) takes a GitHub repository README, npm package, local Markdown file, or Jupyter Notebook and automatically generates beautiful, professional documentation in <strong>13 output formats</strong>.</p>
+        <p>It ships two engines: a <strong>deterministic pipeline</strong> (fast, free, no LLM needed) and <strong>DocAgent</strong> (a full agentic system for enterprise document generation).</p>
+
+        <h2 id="key-features">Key Features</h2>
+        <div class="feature-grid">
+          <div class="feat-card"><h4>&#x1F4C4; 13 Output Formats</h4><p>Word, PDF, PPTX, Blog, Jira, Changelog, LaTeX, One-Pager, Social Cards, FAQ, Architecture, Mindmap &mdash; from a single command.</p></div>
+          <div class="feat-card"><h4>&#x1F3A8; 25 Built-in Themes</h4><p>Classic, Professional, and Modern theme categories. Corporate, Aurora, Carbon, Graphite, and more.</p></div>
+          <div class="feat-card"><h4>&#x1F9E0; 5 LLM Providers</h4><p>OpenAI, Anthropic (Claude), Google (Gemini), Ollama (local), Azure OpenAI &mdash; or zero-LLM basic mode.</p></div>
+          <div class="feat-card"><h4>&#x1F4E6; Multiple Sources</h4><p>GitHub URLs, npm packages, local .md files, folder merging, and Jupyter Notebooks (.ipynb).</p></div>
+          <div class="feat-card"><h4>&#x1F50D; Knowledge Graph</h4><p>Extracts 10+ entity types: projects, technologies, APIs, metrics, prerequisites. Generates architecture diagrams.</p></div>
+          <div class="feat-card"><h4>&#x1F440; File Watcher</h4><p>Monitor repos for changes, auto-regenerate docs, and create pull requests with <code>opendocs watch</code>.</p></div>
+          <div class="feat-card"><h4>&#x1F4DD; Template Variables</h4><p>Inject project name, author, version, org into headers/footers via YAML config or CLI flags.</p></div>
+          <div class="feat-card"><h4>&#x1F916; DocAgent</h4><p>Agentic engine generating PRD, Proposal, SOP, Report, Slides, Changelog, Onboarding, and Tech Debt docs.</p></div>
+        </div>
+
+        <h2 id="output-formats">Output Formats</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Output</th><th>Format</th><th>Flag</th></tr></thead>
+          <tbody>
+            <tr><td>Technical Report</td><td><code>.docx</code></td><td><code>word</code></td></tr>
+            <tr><td>PDF Documentation</td><td><code>.pdf</code></td><td><code>pdf</code></td></tr>
+            <tr><td>Executive Deck</td><td><code>.pptx</code></td><td><code>pptx</code></td></tr>
+            <tr><td>Blog Post</td><td><code>.md</code> (SEO-ready)</td><td><code>blog</code></td></tr>
+            <tr><td>Jira Tickets</td><td><code>.json</code></td><td><code>jira</code></td></tr>
+            <tr><td>Changelog</td><td><code>.md</code></td><td><code>changelog</code></td></tr>
+            <tr><td>Academic Paper</td><td><code>.tex</code> (IEEE)</td><td><code>latex</code></td></tr>
+            <tr><td>One-Pager</td><td><code>.pdf</code></td><td><code>onepager</code></td></tr>
+            <tr><td>Social Cards</td><td><code>.json</code></td><td><code>social</code></td></tr>
+            <tr><td>FAQ Document</td><td><code>.md</code></td><td><code>faq</code></td></tr>
+            <tr><td>Architecture Diagrams</td><td><code>.mmd</code> + <code>.png</code></td><td><code>architecture</code></td></tr>
+            <tr><td>Mindmap</td><td><code>.md</code> + <code>.json</code></td><td><code>mindmap</code></td></tr>
+            <tr><td>Everything</td><td>all above</td><td><code>all</code></td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="supported-sources">Supported Sources</h2>
+        <div class="badge-row">
+          <span class="badge purple">GitHub URLs</span>
+          <span class="badge green">Local Markdown</span>
+          <span class="badge blue">npm Packages</span>
+          <span class="badge green">Jupyter Notebooks</span>
+          <span class="badge">Folder Merging</span>
+        </div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs/blob/main/README.md" class="edit-link" target="_blank">&#9998; Edit this page on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ QUICKSTART ═════════════════════════════════════ -->
+      <div class="doc-page" id="page-quickstart">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Get Started<span>/</span>Quickstart</div>
+        <h1 class="page-title">Quickstart</h1>
+        <p class="page-intro">Go from zero to multi-format documentation in under 2 minutes.</p>
+
+        <div class="callout tip"><strong>&#10003; Prerequisites</strong><p>Python &ge; 3.10. Install with <code>pip install opendocs</code>.</p></div>
+
+        <h2 id="qs-install">1. Install</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>pip install opendocs</pre></div>
+
+        <h2 id="qs-generate">2. Generate docs from a GitHub repo</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate https://github.com/fastapi/fastapi</pre></div>
+        <p>This fetches the README and generates <strong>all 13 formats</strong> into an <code>./output</code> folder.</p>
+
+        <h2 id="qs-specific">3. Pick a specific format and theme</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate https://github.com/fastapi/fastapi --format word --theme aurora</pre></div>
+
+        <h2 id="qs-npm">4. Generate from an npm package</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate npm:axios --format blog</pre></div>
+
+        <h2 id="qs-local">5. Generate from a local file</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate ./README.md --local --format pdf</pre></div>
+
+        <h2 id="qs-llm">6. Enable LLM mode</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate ./README.md --local --mode llm --api-key sk-...</pre></div>
+        <p>LLM mode adds knowledge graph extraction, executive summaries, and stakeholder views (CTO, Investor, Developer).</p>
+
+        <div class="callout tip"><strong>&#10003; Next steps</strong><p>Explore <a href="#" onclick="navigate('formats');return false;">all 13 output formats</a>, try <a href="#" onclick="navigate('themes');return false;">25 built-in themes</a>, or set up the <a href="#" onclick="navigate('watcher');return false;">file watcher</a>.</p></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs/blob/main/README.md" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ INSTALLATION ═══════════════════════════════════ -->
+      <div class="doc-page" id="page-install">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Get Started<span>/</span>Installation</div>
+        <h1 class="page-title">Installation</h1>
+        <p class="page-intro">OpenDocs requires Python &ge; 3.10. Install from PyPI or from source.</p>
+
+        <h2 id="inst-basic">Basic install</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>pip install opendocs</pre></div>
+
+        <h2 id="inst-extras">Optional extras</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>pip install opendocs[llm]             <span class="cm"># OpenAI LLM features</span>
+pip install opendocs[anthropic]       <span class="cm"># Claude support</span>
+pip install opendocs[google]          <span class="cm"># Gemini support</span>
+pip install opendocs[all-providers]   <span class="cm"># All LLM providers</span>
+pip install opendocs[templates]       <span class="cm"># YAML config file support</span>
+pip install opendocs[agents]          <span class="cm"># DocAgent (agentic system)</span>
+pip install opendocs[watch]           <span class="cm"># File watcher</span>
+pip install opendocs[publish]         <span class="cm"># Notion &amp; Confluence publishing</span></pre></div>
+
+        <h2 id="inst-source">From source</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>git clone https://github.com/ioteverythin/OpenDocs.git
+cd OpenDocs
+pip install -e ".[dev,llm,templates]"</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs/blob/main/README.md" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ GITHUB SOURCE ══════════════════════════════════ -->
+      <div class="doc-page" id="page-github-source">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Sources<span>/</span>GitHub URLs</div>
+        <h1 class="page-title">GitHub URLs</h1>
+        <p class="page-intro">Point OpenDocs at any public GitHub repository to fetch the README and generate documentation.</p>
+
+        <h2 id="gh-basic">Basic usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate https://github.com/owner/repo</pre></div>
+        <p>OpenDocs extracts the <code>owner</code> and <code>repo</code> from the URL, fetches the default-branch README via the GitHub API (using <code>httpx</code>), and passes it through the full pipeline.</p>
+
+        <h2 id="gh-private">Private repos</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate https://github.com/owner/private-repo --token ghp_...</pre></div>
+        <p>Pass a GitHub Personal Access Token with <code>--token</code> or set <code>GITHUB_TOKEN</code> in your environment.</p>
+
+        <h2 id="gh-formats">Choose output format</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Just a Word document</span>
+opendocs generate https://github.com/owner/repo --format word
+
+<span class="cm"># Blog post with a theme</span>
+opendocs generate https://github.com/owner/repo --format blog --theme carbon
+
+<span class="cm"># All formats (default)</span>
+opendocs generate https://github.com/owner/repo --format all</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ LOCAL SOURCE ═══════════════════════════════════ -->
+      <div class="doc-page" id="page-local-source">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Sources<span>/</span>Local Files</div>
+        <h1 class="page-title">Local Files &amp; Folders</h1>
+        <p class="page-intro">Generate docs from local Markdown files or merge an entire folder of <code>.md</code> files.</p>
+
+        <h2 id="local-file">Single file</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate ./README.md --local</pre></div>
+
+        <h2 id="local-folder">Folder merging</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Merge all .md files in docs/ into one document</span>
+opendocs generate ./docs/ --output ./exported</pre></div>
+        <p>When pointed at a directory, OpenDocs discovers all <code>.md</code> files, merges them in alphabetical order, and runs the full pipeline on the combined content.</p>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ NPM SOURCE ═════════════════════════════════════ -->
+      <div class="doc-page" id="page-npm-source">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Sources<span>/</span>npm Packages</div>
+        <h1 class="page-title">npm Packages</h1>
+        <p class="page-intro">Generate documentation directly from any npm package &mdash; no clone needed. Added in v0.8.0.</p>
+
+        <div class="callout info"><strong>&#8505; Available since v0.8</strong><p>Use the <code>npm:</code> prefix to fetch a package&rsquo;s README from the npm registry.</p></div>
+
+        <h2 id="npm-basic">Basic usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate npm:axios</pre></div>
+
+        <h2 id="npm-scoped">Scoped packages</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate npm:@angular/core</pre></div>
+
+        <h2 id="npm-format">With format and theme</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate npm:express --format word --theme ocean
+opendocs generate npm:react --format blog --theme aurora</pre></div>
+
+        <h2 id="npm-how">How it works</h2>
+        <ul>
+          <li>Queries the npm registry at <code>https://registry.npmjs.org/&lt;package&gt;</code></li>
+          <li>Extracts the <code>readme</code> field from the package metadata</li>
+          <li>Strips version specifiers (<code>axios@1.6.0</code> &rarr; <code>axios</code>)</li>
+          <li>Handles scoped packages (<code>@scope/pkg</code>) automatically</li>
+          <li>Links back to <code>https://www.npmjs.com/package/&lt;name&gt;</code></li>
+        </ul>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ NOTEBOOK SOURCE ════════════════════════════════ -->
+      <div class="doc-page" id="page-notebook-source">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Sources<span>/</span>Jupyter Notebooks</div>
+        <h1 class="page-title">Jupyter Notebooks</h1>
+        <p class="page-intro">Generate polished reports from <code>.ipynb</code> research notebooks and data-science projects.</p>
+
+        <h2 id="nb-usage">Usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate all formats from a notebook</span>
+opendocs generate ./analysis.ipynb --local
+
+<span class="cm"># Word report with a theme, excluding cell outputs</span>
+opendocs generate ./research.ipynb --local --format word --theme carbon --no-outputs</pre></div>
+
+        <h2 id="nb-what">What gets extracted</h2>
+        <ul>
+          <li><strong>Markdown cells</strong> &mdash; parsed into headings, paragraphs, lists, tables</li>
+          <li><strong>Code cells</strong> &mdash; preserved with language detection and execution count</li>
+          <li><strong>Cell outputs</strong> &mdash; text output, images (PNG/SVG/JPEG as data URIs), HTML previews, error tracebacks</li>
+        </ul>
+        <p>Use <code>--no-outputs</code> to exclude cell outputs for a cleaner document.</p>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ FORMATS ════════════════════════════════════════ -->
+      <div class="doc-page" id="page-formats">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Output Formats<span>/</span>All 13 Formats</div>
+        <h1 class="page-title">All 13 Output Formats</h1>
+        <p class="page-intro">Use <code>-f</code> / <code>--format</code> to generate specific formats, or omit for all.</p>
+
+        <div class="table-wrap"><table>
+          <thead><tr><th>Flag</th><th>Output</th><th>File</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>word</code></td><td>Word Document</td><td><code>.docx</code></td><td>Full technical report with themed styles, ToC, headers/footers</td></tr>
+            <tr><td><code>pdf</code></td><td>PDF</td><td><code>.pdf</code></td><td>Portable document from the Word generator</td></tr>
+            <tr><td><code>pptx</code></td><td>PowerPoint Deck</td><td><code>.pptx</code></td><td>Executive slide deck with architecture &amp; KG slides</td></tr>
+            <tr><td><code>blog</code></td><td>Blog Post</td><td><code>.md</code></td><td>SEO-ready Markdown with front-matter</td></tr>
+            <tr><td><code>jira</code></td><td>Jira Tickets</td><td><code>.json</code></td><td>Epic + Stories structured as JSON</td></tr>
+            <tr><td><code>changelog</code></td><td>Changelog</td><td><code>.md</code></td><td>Keep-a-Changelog style release notes</td></tr>
+            <tr><td><code>latex</code></td><td>Academic Paper</td><td><code>.tex</code></td><td>IEEE two-column conference paper</td></tr>
+            <tr><td><code>onepager</code></td><td>One-Pager</td><td><code>.pdf</code></td><td>Executive single-page datasheet</td></tr>
+            <tr><td><code>social</code></td><td>Social Cards</td><td><code>.json</code></td><td>Open Graph, Twitter, LinkedIn, Reddit posts</td></tr>
+            <tr><td><code>faq</code></td><td>FAQ</td><td><code>.md</code></td><td>Auto-generated Q&amp;A from content</td></tr>
+            <tr><td><code>architecture</code></td><td>Architecture</td><td><code>.mmd</code> + <code>.png</code></td><td>5 auto-generated C4-style views</td></tr>
+            <tr><td><code>mindmap</code></td><td>Mindmap</td><td><code>.md</code> + <code>.json</code></td><td>Mermaid mindmap diagram + hierarchical JSON</td></tr>
+            <tr><td><code>all</code></td><td>Everything</td><td>all above</td><td>Default &mdash; generate all formats</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="fmt-examples">Examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Single format</span>
+opendocs generate https://github.com/owner/repo --format blog
+
+<span class="cm"># Multiple runs with different themes</span>
+opendocs generate ./README.md --local --format word --theme corporate
+opendocs generate ./README.md --local --format pptx --theme aurora
+
+<span class="cm"># npm package to Jira tickets</span>
+opendocs generate npm:express --format jira</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ ARCHITECTURE ═══════════════════════════════════ -->
+      <div class="doc-page" id="page-architecture">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Output Formats<span>/</span>Architecture Diagrams</div>
+        <h1 class="page-title">Architecture Diagrams</h1>
+        <p class="page-intro">Auto-generate 5 architectural views from the knowledge graph as Mermaid diagrams rendered to PNG.</p>
+
+        <h2 id="arch-views">The 5 views</h2>
+        <ul>
+          <li><strong>System Architecture</strong> &mdash; C4-style component diagram</li>
+          <li><strong>Tech Stack Layers</strong> &mdash; horizontal layer diagram</li>
+          <li><strong>Data Flow</strong> &mdash; how data moves through the system</li>
+          <li><strong>Dependency Tree</strong> &mdash; package/module dependencies</li>
+          <li><strong>Deployment View</strong> &mdash; infrastructure and hosting</li>
+        </ul>
+
+        <h2 id="arch-usage">Usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate https://github.com/owner/repo --format architecture</pre></div>
+        <p>Outputs <code>.mmd</code> source files, rendered <code>.png</code> images, and a Markdown report summarizing all five views.</p>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ MINDMAP ════════════════════════════════════════ -->
+      <div class="doc-page" id="page-mindmap">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Output Formats<span>/</span>Mindmap</div>
+        <h1 class="page-title">Mindmap</h1>
+        <p class="page-intro">Generate a Mermaid mindmap diagram and hierarchical JSON from any documentation source. Added in v0.9.0.</p>
+
+        <div class="callout info"><strong>&#8505; Available since v0.9</strong><p>The mindmap format walks the document&rsquo;s section tree and produces a visual overview of the entire document.</p></div>
+
+        <h2 id="mm-usage">Usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate https://github.com/owner/repo --format mindmap
+opendocs generate npm:axios --format mindmap</pre></div>
+
+        <h2 id="mm-output">Output files</h2>
+        <ul>
+          <li><code>mindmap_&lt;name&gt;.md</code> &mdash; Mermaid mindmap diagram + section index + embedded JSON</li>
+          <li><code>mindmap_&lt;name&gt;.json</code> &mdash; Hierarchical JSON: <code>{ name, description, children[] }</code></li>
+        </ul>
+
+        <h2 id="mm-config">Configuration</h2>
+        <p>The generator respects these limits for clean output:</p>
+        <ul>
+          <li><code>MAX_DEPTH = 4</code> &mdash; maximum nesting depth</li>
+          <li><code>MAX_LABEL = 48</code> &mdash; maximum characters per node label</li>
+          <li><code>MAX_LIST_CHILDREN = 5</code> &mdash; maximum list items per node</li>
+        </ul>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ THEMES ═════════════════════════════════════════ -->
+      <div class="doc-page" id="page-themes">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Themes</div>
+        <h1 class="page-title">25 Built-in Themes</h1>
+        <p class="page-intro">Apply visual themes to Word, PDF, and PowerPoint outputs. Every theme defines colors, fonts, and layout styles.</p>
+
+        <h2 id="th-list">Available themes</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Category</th><th>Themes</th></tr></thead>
+          <tbody>
+            <tr><td>Classic</td><td>corporate, ocean, sunset, dark, minimal, emerald, royal</td></tr>
+            <tr><td>Professional</td><td>slate, rose, nordic, cyber, terracotta, sapphire, mint, monochrome</td></tr>
+            <tr><td>Modern</td><td>aurora, carbon, lavender, graphite, obsidian, coral, zen, nebula, sand, glacier</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="th-usage">Usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Apply a theme</span>
+opendocs generate ./README.md --local --theme aurora
+
+<span class="cm"># List all themes with color previews</span>
+opendocs themes</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ LLM PROVIDERS ══════════════════════════════════ -->
+      <div class="doc-page" id="page-llm">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>LLM Providers</div>
+        <h1 class="page-title">5 LLM Providers</h1>
+        <p class="page-intro">Enhance documentation with knowledge graph extraction, executive summaries, and stakeholder views using any supported LLM.</p>
+
+        <h2 id="llm-providers">Supported providers</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Provider</th><th>Models</th><th>Env Variable</th></tr></thead>
+          <tbody>
+            <tr><td><code>openai</code></td><td>gpt-4o-mini (default), gpt-4o</td><td><code>OPENAI_API_KEY</code></td></tr>
+            <tr><td><code>anthropic</code></td><td>claude-sonnet-4-20250514, claude-3-haiku</td><td><code>ANTHROPIC_API_KEY</code></td></tr>
+            <tr><td><code>google</code></td><td>gemini-1.5-flash (default), gemini-pro</td><td><code>GOOGLE_API_KEY</code></td></tr>
+            <tr><td><code>ollama</code></td><td>llama3.1 (default), any local model</td><td>None (local)</td></tr>
+            <tr><td><code>azure</code></td><td>Any Azure-deployed model</td><td><code>AZURE_OPENAI_API_KEY</code></td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="llm-usage">Usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># OpenAI (default)</span>
+opendocs generate ./README.md --local --mode llm --api-key sk-...
+
+<span class="cm"># Anthropic Claude</span>
+opendocs generate ./README.md --local --mode llm --provider anthropic
+
+<span class="cm"># Google Gemini</span>
+opendocs generate ./README.md --local --mode llm --provider google
+
+<span class="cm"># Ollama (local, no API key needed)</span>
+opendocs generate ./README.md --local --mode llm --provider ollama
+
+<span class="cm"># Azure OpenAI</span>
+opendocs generate ./README.md --local --mode llm --provider azure \
+  --base-url https://your-resource.openai.azure.com/</pre></div>
+
+        <h2 id="llm-features">What LLM mode adds</h2>
+        <ul>
+          <li><strong>Entity extraction</strong> &mdash; enriches the knowledge graph with LLM-discovered entities</li>
+          <li><strong>Executive summary</strong> &mdash; high-level project overview</li>
+          <li><strong>Stakeholder views</strong> &mdash; CTO, Investor, and Developer perspectives</li>
+          <li><strong>Blog rewriting</strong> &mdash; LLM-enhanced blog post generation</li>
+          <li><strong>FAQ generation</strong> &mdash; LLM-powered Q&amp;A creation</li>
+          <li><strong>Section rewrites</strong> &mdash; improved clarity and structure</li>
+        </ul>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ TEMPLATES ══════════════════════════════════════ -->
+      <div class="doc-page" id="page-templates">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Template Variables</div>
+        <h1 class="page-title">Template Variables</h1>
+        <p class="page-intro">Inject project metadata into document headers, footers, and title pages via CLI flags or a YAML config file.</p>
+
+        <h2 id="tv-cli">Via CLI flags</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate ./README.md --local \
+  --project-name "My Project" \
+  --author "Jane Doe" \
+  --doc-version "2.1.0" \
+  --org "Acme Corp" \
+  --department "Engineering" \
+  --confidentiality "Internal"</pre></div>
+
+        <h2 id="tv-yaml">Via YAML config</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate ./README.md --local --config opendocs.yaml</pre></div>
+        <div class="code-block"><div class="code-header"><span class="code-lang">yaml &mdash; opendocs.yaml</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="fn">project_name</span>: <span class="st">"My Project"</span>
+<span class="fn">author</span>: <span class="st">"Jane Doe"</span>
+<span class="fn">version</span>: <span class="st">"2.1.0"</span>
+<span class="fn">date</span>: <span class="st">"2026-03-20"</span>
+<span class="fn">organisation</span>: <span class="st">"Acme Corp"</span>
+<span class="fn">department</span>: <span class="st">"Engineering"</span>
+<span class="fn">confidentiality</span>: <span class="st">"Internal"</span>
+<span class="fn">custom</span>:
+  <span class="fn">reviewer</span>: <span class="st">"John Smith"</span>
+  <span class="fn">status</span>: <span class="st">"Draft"</span></pre></div>
+
+        <h2 id="tv-where">Where variables appear</h2>
+        <ul>
+          <li><strong>Word (.docx)</strong> &mdash; document header, footer, and expanded metadata table on title page</li>
+          <li><strong>PowerPoint (.pptx)</strong> &mdash; title slide footer with org, author, version, and date</li>
+          <li><strong>PDF</strong> &mdash; inherits from Word generator</li>
+        </ul>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ WATCHER ════════════════════════════════════════ -->
+      <div class="doc-page" id="page-watcher">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>File Watcher</div>
+        <h1 class="page-title">File Watcher &amp; Auto-PR</h1>
+        <p class="page-intro">Monitor a repository for changes and auto-regenerate documentation. Optionally create pull requests automatically.</p>
+
+        <h2 id="watch-usage">Usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Continuous watch (checks every 30 seconds)</span>
+opendocs watch ./my-repo
+
+<span class="cm"># One-shot mode for cron jobs</span>
+opendocs watch ./my-repo --once
+
+<span class="cm"># Watch + auto-create pull requests</span>
+opendocs watch ./my-repo --auto-pr --branch docs-update
+
+<span class="cm"># Custom interval and file patterns</span>
+opendocs watch ./my-repo --interval 60 --patterns "README.md,docs/*.md,*.ipynb"</pre></div>
+
+        <h2 id="watch-how">How it works</h2>
+        <ol>
+          <li>Discovers files matching watch patterns (<code>README.md</code>, <code>CHANGELOG.md</code>, <code>docs/**/*.md</code>, <code>*.ipynb</code>)</li>
+          <li>Computes SHA-256 hashes and compares against saved state (<code>.opendocs-watch-state.json</code>)</li>
+          <li>If changes detected: runs the full pipeline for each changed file</li>
+          <li>If <code>--auto-pr</code>: creates a timestamped git branch, commits outputs, pushes, and opens a PR via GitHub CLI (<code>gh</code>)</li>
+        </ol>
+
+        <h2 id="watch-cron">Cron integration</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">cron</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>0 * * * * cd /path/to/repo &amp;&amp; opendocs watch . --once --auto-pr</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ KNOWLEDGE GRAPH ════════════════════════════════ -->
+      <div class="doc-page" id="page-knowledge-graph">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Knowledge Graph</div>
+        <h1 class="page-title">Knowledge Graph</h1>
+        <p class="page-intro">OpenDocs automatically extracts entities and relationships from your documentation to power architecture diagrams, PowerPoint slides, and analysis reports.</p>
+
+        <h2 id="kg-entities">Entity types</h2>
+        <div class="badge-row">
+          <span class="badge purple">PROJECT</span>
+          <span class="badge green">TECHNOLOGY</span>
+          <span class="badge blue">API_ENDPOINT</span>
+          <span class="badge">METRIC</span>
+          <span class="badge">CONCEPT</span>
+          <span class="badge purple">PREREQUISITE</span>
+          <span class="badge green">CLOUD_SERVICE</span>
+          <span class="badge blue">DATABASE</span>
+          <span class="badge">FRAMEWORK</span>
+          <span class="badge">PLATFORM</span>
+        </div>
+
+        <h2 id="kg-how">How it works</h2>
+        <ul>
+          <li><strong>Semantic extraction</strong> (always on) &mdash; regex-based entity and relation discovery from document AST</li>
+          <li><strong>LLM extraction</strong> (opt-in) &mdash; uses the selected LLM provider to discover deeper entities and relationships</li>
+          <li>The graph powers architecture diagrams, PPTX knowledge slides, and the analysis report</li>
+        </ul>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ DOCAGENT ═══════════════════════════════════════ -->
+      <div class="doc-page" id="page-docagent">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>DocAgent<span>/</span>Agentic Engine</div>
+        <h1 class="page-title">DocAgent &mdash; Agentic Engine</h1>
+        <p class="page-intro">A full agentic system that clones any GitHub repo and generates 8 enterprise document types using LLM-powered skills.</p>
+
+        <div class="callout info"><strong>&#8505; Requires LLM</strong><p>Install with <code>pip install opendocs[agents]</code>. Needs an LLM API key.</p></div>
+
+        <h2 id="da-docs">Document types</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>prd</code></td><td>Product Requirements Document</td></tr>
+            <tr><td><code>proposal</code></td><td>Technical Proposal / SOW</td></tr>
+            <tr><td><code>sop</code></td><td>Standard Operating Procedure</td></tr>
+            <tr><td><code>report</code></td><td>Technical Assessment Report</td></tr>
+            <tr><td><code>slides</code></td><td>Executive Slide Deck</td></tr>
+            <tr><td><code>changelog</code></td><td>Changelog from Git History</td></tr>
+            <tr><td><code>onboarding</code></td><td>Developer Onboarding Guide</td></tr>
+            <tr><td><code>tech-debt</code></td><td>Tech Debt Assessment</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="da-usage">Usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate a PRD from a GitHub repo</span>
+opendocs agent https://github.com/owner/repo --type prd
+
+<span class="cm"># Generate all document types</span>
+opendocs agent https://github.com/owner/repo --type all
+
+<span class="cm"># Use Claude instead of OpenAI</span>
+opendocs agent https://github.com/owner/repo --type report --provider anthropic</pre></div>
+
+        <h2 id="da-pipeline">How it works</h2>
+        <ol>
+          <li><strong>Clone</strong> &mdash; clones the repo locally</li>
+          <li><strong>Crawl</strong> &mdash; discovers file tree, key files, dependencies</li>
+          <li><strong>Index</strong> &mdash; builds a RepoKnowledgeModel with architecture, tech stack, data flow</li>
+          <li><strong>Generate</strong> &mdash; LLM skills produce each document type</li>
+          <li><strong>Review</strong> &mdash; quality checks and structure validation</li>
+          <li><strong>Export</strong> &mdash; renders to Word, PDF, Markdown</li>
+        </ol>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ CLI REFERENCE ══════════════════════════════════ -->
+      <div class="doc-page" id="page-cli">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Reference<span>/</span>CLI</div>
+        <h1 class="page-title">CLI Reference</h1>
+        <p class="page-intro">The <code>opendocs</code> command-line interface.</p>
+
+        <h2 id="cli-generate">opendocs generate</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate &lt;SOURCE&gt; [OPTIONS]</pre></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Option</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>SOURCE</code></td><td>GitHub URL, <code>npm:package</code>, local file, or folder path</td></tr>
+            <tr><td><code>--format</code></td><td>Output format: word, pdf, pptx, blog, jira, changelog, latex, onepager, social, faq, architecture, mindmap, all</td></tr>
+            <tr><td><code>--output</code></td><td>Output directory (default: <code>./output</code>)</td></tr>
+            <tr><td><code>--theme</code></td><td>Theme name (25 options)</td></tr>
+            <tr><td><code>--local</code></td><td>Treat source as a local file path</td></tr>
+            <tr><td><code>--mode</code></td><td><code>basic</code> (default) or <code>llm</code></td></tr>
+            <tr><td><code>--api-key</code></td><td>LLM API key</td></tr>
+            <tr><td><code>--provider</code></td><td>openai, anthropic, google, ollama, azure</td></tr>
+            <tr><td><code>--model</code></td><td>Specific model name</td></tr>
+            <tr><td><code>--token</code></td><td>GitHub token for private repos</td></tr>
+            <tr><td><code>--config</code></td><td>Path to YAML/JSON template vars config</td></tr>
+            <tr><td><code>--project-name</code></td><td>Project name for headers</td></tr>
+            <tr><td><code>--author</code></td><td>Author name</td></tr>
+            <tr><td><code>--doc-version</code></td><td>Document version string</td></tr>
+            <tr><td><code>--org</code></td><td>Organisation name</td></tr>
+            <tr><td><code>--no-outputs</code></td><td>Exclude notebook cell outputs</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="cli-watch">opendocs watch</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs watch &lt;REPO_PATH&gt; [OPTIONS]</pre></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Option</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>--once</code></td><td>One-shot mode (for cron)</td></tr>
+            <tr><td><code>--auto-pr</code></td><td>Auto-create pull requests</td></tr>
+            <tr><td><code>--branch</code></td><td>Branch name for PRs</td></tr>
+            <tr><td><code>--interval</code></td><td>Check interval in seconds (default: 30)</td></tr>
+            <tr><td><code>--patterns</code></td><td>File patterns to watch</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="cli-themes">opendocs themes</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># List all 25 themes with color previews</span>
+opendocs themes</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ PYTHON API ═════════════════════════════════════ -->
+      <div class="doc-page" id="page-python-api">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Reference<span>/</span>Python API</div>
+        <h1 class="page-title">Python API</h1>
+        <p class="page-intro">Use OpenDocs programmatically in your Python applications.</p>
+
+        <h2 id="api-basic">Basic usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+
+pipeline = Pipeline()
+result = pipeline.run(<span class="st">"https://github.com/owner/repo"</span>, theme_name=<span class="st">"aurora"</span>)</pre></div>
+
+        <h2 id="api-formats">Specific formats</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.models</span> <span class="kw">import</span> OutputFormat
+
+pipeline = Pipeline()
+result = pipeline.run(
+    <span class="st">"./README.md"</span>,
+    local=<span class="kw">True</span>,
+    formats=[OutputFormat.WORD, OutputFormat.PDF, OutputFormat.MINDMAP],
+)</pre></div>
+
+        <h2 id="api-templates">With template variables</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">from</span> <span class="fn">opendocs.pipeline</span> <span class="kw">import</span> Pipeline
+<span class="kw">from</span> <span class="fn">opendocs.core.template_vars</span> <span class="kw">import</span> TemplateVars
+
+tvars = TemplateVars(
+    project_name=<span class="st">"Q4 Analysis"</span>,
+    author=<span class="st">"Data Team"</span>,
+    version=<span class="st">"1.0"</span>,
+    organisation=<span class="st">"Acme Corp"</span>,
+)
+pipeline = Pipeline()
+pipeline.run(<span class="st">"./notebook.ipynb"</span>, local=<span class="kw">True</span>, template_vars=tvars)</pre></div>
+
+        <h2 id="api-llm">LLM mode</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>pipeline.run(
+    <span class="st">"./README.md"</span>,
+    local=<span class="kw">True</span>,
+    mode=<span class="st">"llm"</span>,
+    api_key=<span class="st">"sk-..."</span>,
+    provider=<span class="st">"anthropic"</span>,
+)</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ CHANGELOG ══════════════════════════════════════ -->
+      <div class="doc-page" id="page-changelog">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Reference<span>/</span>Changelog</div>
+        <h1 class="page-title">Changelog</h1>
+
+        <h2 id="v090">v0.9.0 &mdash; <span style="font-weight:400;color:var(--muted);">Current</span></h2>
+        <ul>
+          <li>Add <strong>Mindmap</strong> output format (Mermaid diagram + hierarchical JSON)</li>
+          <li>CI/CD pipeline: test matrix (Python 3.10&ndash;3.13), ruff lint/format, OIDC PyPI publishing</li>
+          <li>Agent skill files for Claude Code, Cursor, and GitHub Copilot</li>
+        </ul>
+
+        <h2 id="v080">v0.8.0</h2>
+        <ul>
+          <li>Add <code>npm:</code> source support &mdash; generate docs from any npm package</li>
+          <li>Scoped package handling (<code>@scope/pkg</code>), version stripping</li>
+        </ul>
+
+        <h2 id="v050">v0.5.0</h2>
+        <ul>
+          <li>Jupyter Notebook ingestion (.ipynb)</li>
+          <li>Parameterized report templates (YAML/JSON config + CLI flags)</li>
+          <li>File watcher + auto-PR (<code>opendocs watch</code>)</li>
+          <li>5 LLM providers: OpenAI, Anthropic, Google, Ollama, Azure</li>
+          <li>25 built-in themes (15 original + 10 new modern themes)</li>
+        </ul>
+
+        <h2 id="v040">v0.4.0</h2>
+        <ul>
+          <li>Architecture diagrams (5 auto-generated C4-style views)</li>
+          <li>Knowledge graph entity extraction (10+ entity types)</li>
+          <li>Smart table sorting (6 strategies)</li>
+          <li>Mermaid &rarr; PNG rendering via mermaid.ink</li>
+        </ul>
+
+        <h2 id="v030">v0.3.0</h2>
+        <ul>
+          <li>DocAgent &mdash; agentic engine for enterprise docs (8 document types)</li>
+          <li>Social cards, FAQ, LaTeX, One-Pager formats</li>
+          <li>Notion &amp; Confluence publishers</li>
+        </ul>
+
+        <h2 id="v010">v0.1.0</h2>
+        <ul>
+          <li>Initial release: Word, PDF, PPTX, Blog, Jira, Changelog generators</li>
+          <li>GitHub URL fetching, local file support</li>
+          <li>Theme system (7 original themes)</li>
+        </ul>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs/releases" class="edit-link" target="_blank">&#9998; View full releases on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+
+  <!-- RIGHT TOC -->
+  <aside class="toc" id="toc">
+    <div class="toc-title">On this page</div>
+    <div id="toc-links"></div>
+  </aside>
+
+</div><!-- /layout -->
+
+<script>
+// ── Navigation ──────────────────────────────────────────────
+function navigate(page) {
+  document.querySelectorAll('.doc-page').forEach(function(p) { p.classList.remove('active'); });
+  var target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.sidebar a').forEach(function(a) { a.classList.remove('active'); });
+  var match = document.querySelector('.sidebar a[data-page="' + page + '"]');
+  if (match) match.classList.add('active');
+  buildTOC(page);
+  window.scrollTo(0, 0);
+  history.pushState(null, '', '#' + page);
+}
+
+// ── Hash-based routing ──────────────────────────────────────
+window.addEventListener('load', function() {
+  var hash = location.hash.replace('#', '');
+  if (hash && document.getElementById('page-' + hash)) navigate(hash);
+});
+window.addEventListener('popstate', function() {
+  var hash = location.hash.replace('#', '');
+  if (hash && document.getElementById('page-' + hash)) navigate(hash);
+});
+
+// ── TOC Builder ─────────────────────────────────────────────
+function buildTOC(page) {
+  var container = document.getElementById('toc-links');
+  container.innerHTML = '';
+  var target = document.getElementById('page-' + page);
+  if (!target) return;
+  target.querySelectorAll('h2, h3').forEach(function(h) {
+    var a = document.createElement('a');
+    a.href = '#';
+    a.textContent = h.textContent.trim();
+    if (h.tagName === 'H3') a.classList.add('toc-h3');
+    a.onclick = function(e) { e.preventDefault(); h.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+    container.appendChild(a);
+  });
+}
+
+// ── Dark mode ───────────────────────────────────────────────
+function toggleTheme() {
+  var html = document.documentElement;
+  html.dataset.theme = html.dataset.theme === 'dark' ? 'light' : 'dark';
+  try { localStorage.setItem('odtheme', html.dataset.theme); } catch(e) {}
+}
+(function() {
+  try { var saved = localStorage.getItem('odtheme'); if (saved) { document.documentElement.dataset.theme = saved; return; } } catch(e) {}
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.dataset.theme = 'dark';
+})();
+
+// ── Copy code ───────────────────────────────────────────────
+function copyCode(btn) {
+  var pre = btn.closest('.code-block').querySelector('pre');
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(pre.innerText).then(function() {
+      btn.textContent = '\u2713 Copied';
+      btn.classList.add('copied');
+      setTimeout(function() { btn.textContent = '\u2318 Copy'; btn.classList.remove('copied'); }, 1800);
+    });
+  }
+}
+
+// ── Helpful ─────────────────────────────────────────────────
+function markHelpful(btn, yes) {
+  btn.closest('.helpful').querySelectorAll('button').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+// ── Init ────────────────────────────────────────────────────
+buildTOC('overview');
+</script>
+</body>
+</html>
