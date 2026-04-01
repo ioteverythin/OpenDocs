@@ -331,6 +331,12 @@ def generate(
             template_vars=tvars,
         )
 
+    # ---- AI Reader files summary ------------------------------------
+    if result.ai_reader_files:
+        console.print("\n[bold cyan]AI Reader Files Generated:[/]")
+        for af in result.ai_reader_files:
+            console.print(f"  [green]✓[/] {af.name}")
+
     # ---- Post-generation publishing ------------------------------------
     # Find the best Markdown file to publish (blog_post.md preferred)
     def _find_markdown_output() -> Path | None:
@@ -823,6 +829,7 @@ def codebase(
 
 # ─── SLM commands ────────────────────────────────────────────────────────
 
+
 @cli.command("download-model")
 @click.option(
     "--model",
@@ -851,10 +858,7 @@ def download_model(model: str, cache_dir: str | None):
         path = SLMProvider.download_model(model, cache_dir=cache_dir)
         console.print(f"[green][OK][/] Model downloaded to: {path}")
     except ImportError:
-        console.print(
-            "[bold red]SLM dependencies not installed.[/]\n"
-            "Run: pip install opendocs[slm]"
-        )
+        console.print("[bold red]SLM dependencies not installed.[/]\nRun: pip install opendocs[slm]")
         raise SystemExit(1)
     except Exception as exc:
         console.print(f"[bold red]Download failed:[/] {exc}")
@@ -923,10 +927,7 @@ def finetune(
     try:
         from .llm.slm_finetune import SLMFineTuner, generate_training_data_from_codebase
     except ImportError:
-        console.print(
-            "[bold red]SLM dependencies not installed.[/]\n"
-            "Run: pip install opendocs[slm]"
-        )
+        console.print("[bold red]SLM dependencies not installed.[/]\nRun: pip install opendocs[slm]")
         raise SystemExit(1)
 
     console.print(f"[bold blue]Preparing fine-tuning data from:[/] {codebase_dir}")
@@ -949,8 +950,7 @@ def finetune(
                 project_name=example.project_name,
             )
             console.print(
-                f"[green][OK][/] Created training pair from codebase"
-                f"{' + reference doc' if reference_doc else ''}"
+                f"[green][OK][/] Created training pair from codebase{' + reference doc' if reference_doc else ''}"
             )
         else:
             console.print(
@@ -982,8 +982,7 @@ def finetune(
         adapter_path = tuner.train(epochs=epochs, batch_size=batch_size)
         console.print(f"\n[green][OK][/] Fine-tuning complete! Adapter saved to: {adapter_path}")
         console.print(
-            f"\n[dim]Use it with:[/]\n"
-            f"  opendocs codebase ./your-project --provider slm --adapter-path {adapter_path}"
+            f"\n[dim]Use it with:[/]\n  opendocs codebase ./your-project --provider slm --adapter-path {adapter_path}"
         )
     except Exception as exc:
         console.print(f"[bold red]Fine-tuning failed:[/] {exc}")

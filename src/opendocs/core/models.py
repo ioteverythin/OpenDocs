@@ -216,6 +216,7 @@ class PipelineResult(BaseModel):
 
     source: str = ""
     results: list[GenerationResult] = Field(default_factory=list)
+    ai_reader_files: list[Path] = Field(default_factory=list)
 
     @property
     def word_path(self) -> Optional[Path]:

@@ -8,12 +8,12 @@ from rich.console import Console
 
 from .core.code_analyzer import CodebaseAnalyzer, generate_codebase_markdown
 from .core.fetcher import ReadmeFetcher, is_github_url, is_npm_source
-from .core.narrative_generator import generate_narrative_markdown
-from .core.template_doc_generator import generate_template_documentation
 from .core.models import DocumentModel, GenerationResult, OutputFormat, PipelineResult
+from .core.narrative_generator import generate_narrative_markdown
 from .core.notebook_parser import NotebookParser, is_notebook
 from .core.parser import ReadmeParser
 from .core.semantic_extractor import SemanticExtractor
+from .core.template_doc_generator import generate_template_documentation
 from .core.template_vars import EMPTY_VARS, TemplateVars, load_template_vars
 from .generators.architecture_generator import ArchitectureGenerator
 from .generators.blog_generator import BlogGenerator
@@ -415,34 +415,24 @@ class Pipeline:
         use_narrative = (mode == "llm" or provider == "slm") and not use_template
 
         if use_template:
-            console.print(
-                "[bold blue]Generating rich documentation from code analysis (no LLM)...[/]"
-            )
+            console.print("[bold blue]Generating rich documentation from code analysis (no LLM)...[/]")
             try:
+
                 def _tpl_progress(name, idx, total):
-                    console.print(
-                        f"  [dim]({idx}/{total})[/dim] Building [cyan]{name}[/cyan]..."
-                    )
+                    console.print(f"  [dim]({idx}/{total})[/dim] Building [cyan]{name}[/cyan]...")
 
                 markdown_content = generate_template_documentation(
                     codebase_model,
                     progress_callback=_tpl_progress,
                 )
-                console.print(
-                    "[green][OK][/] Template documentation generated "
-                    f"({len(markdown_content):,} chars)"
-                )
+                console.print(f"[green][OK][/] Template documentation generated ({len(markdown_content):,} chars)")
             except Exception as exc:
                 console.print(
-                    f"[bold yellow]Template generation failed ({exc}), "
-                    f"falling back to basic documentation...[/]"
+                    f"[bold yellow]Template generation failed ({exc}), falling back to basic documentation...[/]"
                 )
                 markdown_content = generate_codebase_markdown(codebase_model)
         elif use_narrative:
-            console.print(
-                f"[bold blue]Generating narrative documentation "
-                f"(provider={provider}, model={model})...[/]"
-            )
+            console.print(f"[bold blue]Generating narrative documentation (provider={provider}, model={model})...[/]")
             try:
                 from .llm.providers import get_provider
 
@@ -459,23 +449,17 @@ class Pipeline:
                 )
 
                 def _progress(name, idx, total):
-                    console.print(
-                        f"  [dim]({idx}/{total})[/dim] Generating [cyan]{name}[/cyan]..."
-                    )
+                    console.print(f"  [dim]({idx}/{total})[/dim] Generating [cyan]{name}[/cyan]...")
 
                 markdown_content = generate_narrative_markdown(
                     codebase_model,
                     llm,
                     progress_callback=_progress,
                 )
-                console.print(
-                    "[green][OK][/] Narrative documentation generated "
-                    f"({len(markdown_content):,} chars)"
-                )
+                console.print(f"[green][OK][/] Narrative documentation generated ({len(markdown_content):,} chars)")
             except Exception as exc:
                 console.print(
-                    f"[bold yellow]Narrative generation failed ({exc}), "
-                    f"falling back to static documentation...[/]"
+                    f"[bold yellow]Narrative generation failed ({exc}), falling back to static documentation...[/]"
                 )
                 markdown_content = generate_codebase_markdown(codebase_model)
         else:
@@ -669,6 +653,42 @@ class Pipeline:
                 console.print(f"[green][OK][/] {report_result.output_path}")
             else:
                 console.print(f"[red][FAIL][/] Analysis report: {report_result.error}")
+
+        # -- Step 6: AI-reader companion files ----------------------------
+        from .generators.ai_readers import AIReadersGenerator
+
+        ai_gen = AIReadersGenerator()
+        project_name = tvars.project_name or doc.metadata.repo_name or "Project"
+        description = doc.metadata.description or ""
+
+        ai_files: list[Path] = []
+        console.print("[bold blue]Generating AI reader files...[/]")
+        try:
+            p = ai_gen.generate_llms_txt(result.results, project_name, description, output_path)
+            ai_files.append(p)
+            console.print(f"[green]  ✓[/] {p.name}")
+        except Exception as exc:
+            console.print(f"[red]  ✗[/] llms.txt: {exc}")
+        try:
+            p = ai_gen.generate_llms_full_txt(result.results, output_path)
+            ai_files.append(p)
+            console.print(f"[green]  ✓[/] {p.name}")
+        except Exception as exc:
+            console.print(f"[red]  ✗[/] llms-full.txt: {exc}")
+        try:
+            p = ai_gen.generate_agents_md(project_name, tvars, output_path, result.results)
+            ai_files.append(p)
+            console.print(f"[green]  ✓[/] {p.name}")
+        except Exception as exc:
+            console.print(f"[red]  ✗[/] AGENTS.md: {exc}")
+        try:
+            p = ai_gen.generate_claude_md(project_name, tvars, output_path, result.results)
+            ai_files.append(p)
+            console.print(f"[green]  ✓[/] {p.name}")
+        except Exception as exc:
+            console.print(f"[red]  ✗[/] CLAUDE.md: {exc}")
+
+        result.ai_reader_files = ai_files
 
         # -- Summary ------------------------------------------------------
         success = sum(1 for r in result.results if r.success)
