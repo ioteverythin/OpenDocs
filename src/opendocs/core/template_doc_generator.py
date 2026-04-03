@@ -26,7 +26,6 @@ Usage::
 from __future__ import annotations
 
 import logging
-import math
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,8 +33,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .code_analyzer import (
-        ArchitectureLayer,
-        ClassInfo,
         CodebaseModel,
         FileAnalysis,
         TechStackItem,
@@ -48,15 +45,10 @@ logger = logging.getLogger("opendocs.core.template_doc_generator")
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _mermaid_id(path: str) -> str:
     """Make a path safe for Mermaid node IDs."""
-    return (
-        path.replace("/", "_")
-        .replace("\\", "_")
-        .replace(".", "_")
-        .replace("-", "_")
-        .replace(" ", "_")
-    )
+    return path.replace("/", "_").replace("\\", "_").replace(".", "_").replace("-", "_").replace(" ", "_")
 
 
 def _pct(part: int, whole: int) -> str:
@@ -80,10 +72,7 @@ def _doc_coverage(files: list["FileAnalysis"]) -> tuple[int, int, float]:
     src = [f for f in files if not f.is_test]
     if not src:
         return 0, 0, 0.0
-    documented = sum(
-        1 for f in src
-        if f.module_docstring or any(c.docstring for c in f.classes)
-    )
+    documented = sum(1 for f in src if f.module_docstring or any(c.docstring for c in f.classes))
     return documented, len(src), (documented / len(src) * 100)
 
 
@@ -92,10 +81,7 @@ def _avg_complexity(files: list["FileAnalysis"]) -> float:
     src = [f for f in files if not f.is_test and (f.functions or f.classes)]
     if not src:
         return 0.0
-    total_funcs = sum(
-        len(f.functions) + sum(len(c.methods) for c in f.classes)
-        for f in src
-    )
+    total_funcs = sum(len(f.functions) + sum(len(c.methods) for c in f.classes) for f in src)
     return total_funcs / len(src)
 
 
@@ -108,8 +94,7 @@ def _maturity_label(model: "CodebaseModel") -> str:
     """Infer a project maturity label from metrics."""
     doc_count, total, doc_pct = _doc_coverage(model.files)
     has_tests = len(model.test_files) > 0
-    has_ci = any("docker" in c.lower() or "makefile" in c.lower() or "ci" in c.lower()
-                 for c in model.config_files)
+    has_ci = any("docker" in c.lower() or "makefile" in c.lower() or "ci" in c.lower() for c in model.config_files)
     has_config = len(model.config_files) >= 3
 
     score = 0
@@ -139,6 +124,7 @@ def _maturity_label(model: "CodebaseModel") -> str:
 # ---------------------------------------------------------------------------
 # Section builders
 # ---------------------------------------------------------------------------
+
 
 def _build_header(model: "CodebaseModel") -> str:
     title = model.project_name or "Project"
@@ -208,8 +194,7 @@ def _build_executive_summary(model: "CodebaseModel") -> str:
     maturity = _maturity_label(model)
     total_classes = sum(len(f.classes) for f in model.files if not f.is_test)
     total_functions = sum(
-        len(f.functions) + sum(len(c.methods) for c in f.classes)
-        for f in model.files if not f.is_test
+        len(f.functions) + sum(len(c.methods) for c in f.classes) for f in model.files if not f.is_test
     )
 
     # Entry points prose
@@ -228,7 +213,7 @@ def _build_executive_summary(model: "CodebaseModel") -> str:
     if model.architecture_layers:
         arch_prose = (
             f"The codebase is organized into {_plural(len(model.architecture_layers), 'architectural layer')}: "
-            f"{', '.join(l.name for l in model.architecture_layers)}."
+            f"{', '.join(layer.name for layer in model.architecture_layers)}."
         )
     else:
         arch_prose = "The codebase follows a flat module structure."
@@ -241,7 +226,6 @@ def _build_executive_summary(model: "CodebaseModel") -> str:
         f"The project is built on a technology stack that includes {tech_prose}, "
         f"reflecting a {'comprehensive' if len(tech_names) >= 5 else 'focused'} approach to "
         f"its problem domain.\n",
-
         f"At a structural level, the codebase contains **{src_count} source modules** defining "
         f"**{total_classes:,} classes** and **{total_functions:,} functions/methods**, "
         f"supported by **{test_count} test file{'s' if test_count != 1 else ''}** and "
@@ -249,7 +233,6 @@ def _build_executive_summary(model: "CodebaseModel") -> str:
         f"Documentation coverage stands at **{doc_pct:.0f}%** ({doc_count} of {src_count} modules "
         f"have docstrings), placing the project at a **{maturity}** maturity level. "
         f"{ep_prose}\n",
-
         f"{arch_prose} "
         f"{'The architecture suggests a well-separated concern model with clear boundaries between layers.' if len(model.architecture_layers) >= 3 else 'The architecture provides a solid foundation for future growth.'}\n",
     ]
@@ -260,7 +243,7 @@ def _build_architecture_section(model: "CodebaseModel") -> str:
     lines = ["## System Architecture\n"]
 
     if model.architecture_layers:
-        layer_names = [l.name for l in model.architecture_layers]
+        layer_names = [layer.name for layer in model.architecture_layers]
         lines.append(
             f"The system follows a **layered architecture** pattern with "
             f"{_plural(len(model.architecture_layers), 'distinct layer')}: "
@@ -297,13 +280,13 @@ def _build_architecture_section(model: "CodebaseModel") -> str:
             safe_name = layer.name.replace('"', "'")
             n_mods = len(layer.modules)
             # Use subgraph style for richer diagrams
-            lines.append(f"    subgraph {lid}[\"{safe_name}\"]")
+            lines.append(f'    subgraph {lid}["{safe_name}"]')
             for j, mod in enumerate(layer.modules[:6]):
                 mid = _mermaid_id(mod)
                 label = Path(mod).stem
-                lines.append(f"        {mid}[\"{label}\"]")
+                lines.append(f'        {mid}["{label}"]')
             if n_mods > 6:
-                lines.append(f"        {lid}_more[\"... +{n_mods - 6} more\"]")
+                lines.append(f'        {lid}_more["... +{n_mods - 6} more"]')
             lines.append("    end")
 
         # Connect layers top-down
@@ -393,9 +376,7 @@ def _build_language_breakdown(model: "CodebaseModel") -> str:
         avg_loc = total_loc // len(lang_files) if lang_files else 0
         n_classes = sum(len(f.classes) for f in lang_files)
         n_funcs = sum(len(f.functions) + sum(len(c.methods) for c in f.classes) for f in lang_files)
-        lines.append(
-            f"| {lang.title()} | {count} | {total_loc:,} | {avg_loc:,} | {n_classes} | {n_funcs} |"
-        )
+        lines.append(f"| {lang.title()} | {count} | {total_loc:,} | {avg_loc:,} | {n_classes} | {n_funcs} |")
 
     lines.append("")
 
@@ -524,10 +505,7 @@ def _build_codebase_status(model: "CodebaseModel") -> str:
         else:
             status = "📋 Skeleton"
 
-        lines.append(
-            f"| `{fa.path}` | {purpose} | {fa.line_count} | "
-            f"{n_classes} | {n_funcs} | {status} |"
-        )
+        lines.append(f"| `{fa.path}` | {purpose} | {fa.line_count} | {n_classes} | {n_funcs} | {status} |")
 
     lines.append("")
     return "\n".join(lines)
@@ -542,15 +520,12 @@ def _build_implementation_plan(model: "CodebaseModel") -> str:
     test_count = len(model.test_files)
     large_files = [f for f in src_files if f.line_count > 300]
     undoc_files = [
-        f for f in src_files
-        if not f.module_docstring and not any(c.docstring for c in f.classes)
-        and (f.functions or f.classes)
+        f
+        for f in src_files
+        if not f.module_docstring and not any(c.docstring for c in f.classes) and (f.functions or f.classes)
     ]
     has_tests = test_count > 0
-    has_ci = any(
-        "docker" in c.lower() or "makefile" in c.lower()
-        for c in model.config_files
-    )
+    has_ci = any("docker" in c.lower() or "makefile" in c.lower() for c in model.config_files)
 
     # P0 — Critical: based on actual gaps
     lines.append("### P0 — Critical (Immediate)\n")
@@ -621,8 +596,7 @@ def _build_implementation_plan(model: "CodebaseModel") -> str:
     # P2 — Medium Priority
     lines.append("### P2 — Medium Priority (Next Quarter)\n")
     lines.append(
-        "- **API documentation** — Generate OpenAPI/Swagger docs if applicable. "
-        "Effort: 2-3 hours | Impact: Medium"
+        "- **API documentation** — Generate OpenAPI/Swagger docs if applicable. Effort: 2-3 hours | Impact: Medium"
     )
     if len(model.architecture_layers) <= 2:
         lines.append(
@@ -651,28 +625,37 @@ def _build_implementation_plan(model: "CodebaseModel") -> str:
 
     matrix_rows = []
     if undoc_files:
-        matrix_rows.append((
-            "P0", "Add module docstrings",
-            f"{len(undoc_files) * 30}m",
-            "High",
-            ", ".join(f"`{f.path}`" for f in undoc_files[:2]),
-        ))
+        matrix_rows.append(
+            (
+                "P0",
+                "Add module docstrings",
+                f"{len(undoc_files) * 30}m",
+                "High",
+                ", ".join(f"`{f.path}`" for f in undoc_files[:2]),
+            )
+        )
     if large_files:
-        matrix_rows.append((
-            "P0", "Refactor large modules",
-            f"{len(large_files) * 90}m",
-            "High",
-            ", ".join(f"`{f.path}`" for f in large_files[:2]),
-        ))
+        matrix_rows.append(
+            (
+                "P0",
+                "Refactor large modules",
+                f"{len(large_files) * 90}m",
+                "High",
+                ", ".join(f"`{f.path}`" for f in large_files[:2]),
+            )
+        )
     if not has_tests:
         matrix_rows.append(("P0", "Create test suite", "4h", "Critical", "All core modules"))
     elif test_count < total_src // 2:
-        matrix_rows.append((
-            "P1", "Expand test coverage",
-            f"{(total_src - test_count) * 30}m",
-            "High",
-            "Untested modules",
-        ))
+        matrix_rows.append(
+            (
+                "P1",
+                "Expand test coverage",
+                f"{(total_src - test_count) * 30}m",
+                "High",
+                "Untested modules",
+            )
+        )
     if not has_ci:
         matrix_rows.append(("P1", "CI/CD pipeline", "3h", "High", "Repository root"))
     matrix_rows.append(("P2", "Integration tests", "5h", "Medium", "Cross-module boundaries"))
@@ -695,68 +678,116 @@ def _build_risk_assessment(model: "CodebaseModel") -> str:
     doc_count, total_src, doc_pct = _doc_coverage(model.files)
     test_count = len(model.test_files)
     large_files = [f for f in src_files if f.line_count > 300]
-    avg_complex = _avg_complexity(model.files)
+    _avg_complexity(model.files)
 
     risks = []
 
     # Documentation risk
     if doc_pct < 30:
-        risks.append(("🔴 High", "Low Documentation Coverage",
-                       f"Only {doc_pct:.0f}% of modules have docstrings. "
-                       "This increases onboarding time and maintenance burden.",
-                       "Add docstrings to all public modules and classes"))
+        risks.append(
+            (
+                "🔴 High",
+                "Low Documentation Coverage",
+                f"Only {doc_pct:.0f}% of modules have docstrings. "
+                "This increases onboarding time and maintenance burden.",
+                "Add docstrings to all public modules and classes",
+            )
+        )
     elif doc_pct < 60:
-        risks.append(("🟡 Medium", "Moderate Documentation Gaps",
-                       f"{doc_pct:.0f}% of modules documented. "
-                       "Some modules lack sufficient documentation.",
-                       "Document remaining modules, prioritizing public APIs"))
+        risks.append(
+            (
+                "🟡 Medium",
+                "Moderate Documentation Gaps",
+                f"{doc_pct:.0f}% of modules documented. Some modules lack sufficient documentation.",
+                "Document remaining modules, prioritizing public APIs",
+            )
+        )
     else:
-        risks.append(("🟢 Low", "Good Documentation Coverage",
-                       f"{doc_pct:.0f}% of modules have documentation.",
-                       "Maintain current standards"))
+        risks.append(
+            (
+                "🟢 Low",
+                "Good Documentation Coverage",
+                f"{doc_pct:.0f}% of modules have documentation.",
+                "Maintain current standards",
+            )
+        )
 
     # Test coverage risk
     if test_count == 0:
-        risks.append(("🔴 High", "No Test Coverage",
-                       "No test files detected in the project.",
-                       "Establish unit test suite for core modules"))
+        risks.append(
+            (
+                "🔴 High",
+                "No Test Coverage",
+                "No test files detected in the project.",
+                "Establish unit test suite for core modules",
+            )
+        )
     elif test_count < total_src * 0.3:
-        risks.append(("🟡 Medium", "Low Test-to-Source Ratio",
-                       f"{test_count} test files for {total_src} source modules "
-                       f"({_pct(test_count, total_src)}).",
-                       "Add tests for untested modules"))
+        risks.append(
+            (
+                "🟡 Medium",
+                "Low Test-to-Source Ratio",
+                f"{test_count} test files for {total_src} source modules ({_pct(test_count, total_src)}).",
+                "Add tests for untested modules",
+            )
+        )
     else:
-        risks.append(("🟢 Low", "Adequate Test Coverage",
-                       f"{test_count} test files cover {total_src} source modules.",
-                       "Continue expanding tests with new features"))
+        risks.append(
+            (
+                "🟢 Low",
+                "Adequate Test Coverage",
+                f"{test_count} test files cover {total_src} source modules.",
+                "Continue expanding tests with new features",
+            )
+        )
 
     # Complexity risk
     if large_files:
-        risks.append(("🟡 Medium", "Module Complexity",
-                       f"{len(large_files)} modules exceed 300 lines "
-                       f"(largest: `{large_files[0].path}` at {large_files[0].line_count} lines).",
-                       "Refactor into smaller, focused modules"))
+        risks.append(
+            (
+                "🟡 Medium",
+                "Module Complexity",
+                f"{len(large_files)} modules exceed 300 lines "
+                f"(largest: `{large_files[0].path}` at {large_files[0].line_count} lines).",
+                "Refactor into smaller, focused modules",
+            )
+        )
     else:
-        risks.append(("🟢 Low", "Module Size",
-                       "All modules are under 300 lines.",
-                       "Maintain current module boundaries"))
+        risks.append(
+            ("🟢 Low", "Module Size", "All modules are under 300 lines.", "Maintain current module boundaries")
+        )
 
     # Architecture risk
     if len(model.architecture_layers) <= 1:
-        risks.append(("🟡 Medium", "Flat Architecture",
-                       "No clear architectural layering detected.",
-                       "Introduce separation of concerns with distinct layers"))
+        risks.append(
+            (
+                "🟡 Medium",
+                "Flat Architecture",
+                "No clear architectural layering detected.",
+                "Introduce separation of concerns with distinct layers",
+            )
+        )
     else:
-        risks.append(("🟢 Low", "Layered Architecture",
-                       f"{len(model.architecture_layers)} distinct layers identified.",
-                       "Maintain layer boundaries"))
+        risks.append(
+            (
+                "🟢 Low",
+                "Layered Architecture",
+                f"{len(model.architecture_layers)} distinct layers identified.",
+                "Maintain layer boundaries",
+            )
+        )
 
     # Dependency risk
     ext_deps = len(model.dependencies)
     if ext_deps > 20:
-        risks.append(("🟡 Medium", "Dependency Count",
-                       f"{ext_deps} external dependencies detected.",
-                       "Audit dependencies for security and necessity"))
+        risks.append(
+            (
+                "🟡 Medium",
+                "Dependency Count",
+                f"{ext_deps} external dependencies detected.",
+                "Audit dependencies for security and necessity",
+            )
+        )
 
     lines.append("| Risk Level | Area | Finding | Mitigation |")
     lines.append("|-----------|------|---------|------------|")
@@ -769,7 +800,7 @@ def _build_risk_assessment(model: "CodebaseModel") -> str:
     # Overall risk score
     high_count = sum(1 for r in risks if "High" in r[0])
     med_count = sum(1 for r in risks if "Medium" in r[0])
-    low_count = sum(1 for r in risks if "Low" in r[0])
+    sum(1 for r in risks if "Low" in r[0])
 
     if high_count >= 2:
         overall = "🔴 **High** — Significant improvements needed before production deployment"
@@ -799,15 +830,11 @@ def _build_dependency_graph(model: "CodebaseModel") -> str:
             continue
         src_id = _mermaid_id(fa.path)
         for imp in fa.imports:
-            imp_path = imp.replace(".", "/")
+            imp.replace(".", "/")
             for target in model.files:
                 if target.is_test:
                     continue
-                target_stem = (
-                    target.path.replace("/", ".")
-                    .replace("\\", ".")
-                    .removesuffix(".py")
-                )
+                target_stem = target.path.replace("/", ".").replace("\\", ".").removesuffix(".py")
                 if imp in target_stem or target_stem.endswith(imp):
                     edge = (src_id, _mermaid_id(target.path))
                     if edge not in edges and edge[0] != edge[1]:
@@ -866,10 +893,7 @@ def _build_dependency_graph(model: "CodebaseModel") -> str:
 def _build_module_docs(model: "CodebaseModel") -> str:
     lines = ["## Module Documentation\n"]
 
-    documented_files = [
-        f for f in model.files
-        if not f.is_test and (f.classes or f.functions or f.module_docstring)
-    ]
+    documented_files = [f for f in model.files if not f.is_test and (f.classes or f.functions or f.module_docstring)]
 
     if not documented_files:
         lines.append("_No documented modules found._\n")
@@ -907,10 +931,7 @@ def _build_module_docs(model: "CodebaseModel") -> str:
                 else:
                     lines.append("")
 
-                public_methods = [
-                    m for m in ci.methods
-                    if not m.name.startswith("_") or m.name == "__init__"
-                ]
+                public_methods = [m for m in ci.methods if not m.name.startswith("_") or m.name == "__init__"]
                 if public_methods:
                     lines.append("| Method | Async | Args | Returns | Description |")
                     lines.append("|--------|-------|------|---------|-------------|")
@@ -1048,13 +1069,11 @@ def _build_next_steps(model: "CodebaseModel") -> str:
 
     if not any("docker" in c.lower() for c in model.config_files):
         steps.append(
-            "**Containerize the application** — Add Dockerfile for consistent "
-            "development and deployment environments."
+            "**Containerize the application** — Add Dockerfile for consistent development and deployment environments."
         )
 
     steps.append(
-        "**Continuous integration** — Set up automated testing, linting, "
-        "and documentation generation on every commit."
+        "**Continuous integration** — Set up automated testing, linting, and documentation generation on every commit."
     )
 
     for i, step in enumerate(steps[:5], 1):
@@ -1066,6 +1085,7 @@ def _build_next_steps(model: "CodebaseModel") -> str:
 # ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
+
 
 def generate_template_documentation(
     model: "CodebaseModel",

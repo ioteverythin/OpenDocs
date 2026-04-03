@@ -830,7 +830,7 @@ def codebase(
 # ─── SLM commands ────────────────────────────────────────────────────────
 
 
-@cli.command("download-model")
+@main.command("download-model")
 @click.option(
     "--model",
     default="microsoft/Phi-3.5-mini-instruct",
@@ -865,7 +865,7 @@ def download_model(model: str, cache_dir: str | None):
         raise SystemExit(1)
 
 
-@cli.command("finetune")
+@main.command("finetune")
 @click.argument("codebase_dir", type=click.Path(exists=True))
 @click.option(
     "--reference-doc",

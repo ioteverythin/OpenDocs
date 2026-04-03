@@ -277,10 +277,13 @@ class MermaidRenderer:
                     return output_path
             except Exception as exc:
                 last_exc = exc
-                wait = _INK_RETRY_BACKOFF * (2 ** attempt)
+                wait = _INK_RETRY_BACKOFF * (2**attempt)
                 logger.info(
                     "mermaid.ink attempt %d/%d failed (%s), retrying in %.1fs",
-                    attempt + 1, _INK_MAX_RETRIES, exc, wait,
+                    attempt + 1,
+                    _INK_MAX_RETRIES,
+                    exc,
+                    wait,
                 )
                 if attempt < _INK_MAX_RETRIES - 1:
                     time.sleep(wait)

@@ -28,11 +28,32 @@ from typing import Iterator
 # ---------------------------------------------------------------------------
 
 _IGNORE_DIRS: set[str] = {
-    ".git", ".hg", ".svn", "__pycache__", ".tox", ".venv", "venv",
-    "env", "node_modules", "dist", "build", "site-packages",
-    ".mypy_cache", ".ruff_cache", ".pytest_cache", ".next",
-    ".nuxt", "target", "out", ".idea", ".vscode", ".eggs",
-    "egg-info", "htmlcov", "coverage", ".cargo",
+    ".git",
+    ".hg",
+    ".svn",
+    "__pycache__",
+    ".tox",
+    ".venv",
+    "venv",
+    "env",
+    "node_modules",
+    "dist",
+    "build",
+    "site-packages",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".pytest_cache",
+    ".next",
+    ".nuxt",
+    "target",
+    "out",
+    ".idea",
+    ".vscode",
+    ".eggs",
+    "egg-info",
+    "htmlcov",
+    "coverage",
+    ".cargo",
 }
 
 _SOURCE_EXTENSIONS: dict[str, str] = {
@@ -65,15 +86,39 @@ _SOURCE_EXTENSIONS: dict[str, str] = {
 }
 
 _CONFIG_FILES: set[str] = {
-    "pyproject.toml", "setup.py", "setup.cfg", "requirements.txt",
-    "Pipfile", "poetry.lock", "package.json", "package-lock.json",
-    "yarn.lock", "pnpm-lock.yaml", "tsconfig.json", "webpack.config.js",
-    "vite.config.ts", "vite.config.js", "Cargo.toml", "go.mod",
-    "Gemfile", "composer.json", "build.gradle", "pom.xml",
-    "Makefile", "CMakeLists.txt", "Dockerfile", "docker-compose.yml",
-    "docker-compose.yaml", ".env.example", ".env.sample",
-    "Procfile", "railway.toml", "vercel.json", "netlify.toml",
-    "fly.toml", "render.yaml",
+    "pyproject.toml",
+    "setup.py",
+    "setup.cfg",
+    "requirements.txt",
+    "Pipfile",
+    "poetry.lock",
+    "package.json",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    "tsconfig.json",
+    "webpack.config.js",
+    "vite.config.ts",
+    "vite.config.js",
+    "Cargo.toml",
+    "go.mod",
+    "Gemfile",
+    "composer.json",
+    "build.gradle",
+    "pom.xml",
+    "Makefile",
+    "CMakeLists.txt",
+    "Dockerfile",
+    "docker-compose.yml",
+    "docker-compose.yaml",
+    ".env.example",
+    ".env.sample",
+    "Procfile",
+    "railway.toml",
+    "vercel.json",
+    "netlify.toml",
+    "fly.toml",
+    "render.yaml",
 }
 
 _TEST_PATTERNS = re.compile(r"(^test_|_test\.py$|\.test\.|\.spec\.|__tests__)", re.IGNORECASE)
@@ -145,6 +190,7 @@ _TECH_PATTERNS: dict[str, dict] = {
 @dataclass
 class FunctionInfo:
     """Extracted function/method metadata."""
+
     name: str
     docstring: str = ""
     args: list[str] = field(default_factory=list)
@@ -158,6 +204,7 @@ class FunctionInfo:
 @dataclass
 class ClassInfo:
     """Extracted class metadata."""
+
     name: str
     docstring: str = ""
     bases: list[str] = field(default_factory=list)
@@ -170,6 +217,7 @@ class ClassInfo:
 @dataclass
 class FileAnalysis:
     """Analysis of a single source file."""
+
     path: str  # relative to project root
     language: str
     line_count: int = 0
@@ -189,6 +237,7 @@ class FileAnalysis:
 @dataclass
 class TechStackItem:
     """A detected technology / library."""
+
     name: str
     category: str
     language: str = ""
@@ -199,6 +248,7 @@ class TechStackItem:
 @dataclass
 class ArchitectureLayer:
     """A logical architecture layer with its components."""
+
     name: str
     description: str
     modules: list[str] = field(default_factory=list)
@@ -207,6 +257,7 @@ class ArchitectureLayer:
 @dataclass
 class CodebaseModel:
     """Complete structured analysis of a codebase."""
+
     project_name: str
     root_path: str
     total_files: int = 0
@@ -234,10 +285,7 @@ def _iter_source_files(root: Path) -> Iterator[Path]:
     """Yield source files from *root*, skipping ignored directories."""
     for dirpath, dirnames, filenames in os.walk(root):
         # Prune ignored directories in-place
-        dirnames[:] = [
-            d for d in dirnames
-            if d not in _IGNORE_DIRS and not d.endswith(".egg-info")
-        ]
+        dirnames[:] = [d for d in dirnames if d not in _IGNORE_DIRS and not d.endswith(".egg-info")]
         for fname in sorted(filenames):
             fpath = Path(dirpath) / fname
             if fpath.suffix.lower() in _SOURCE_EXTENSIONS or fname in _CONFIG_FILES:
@@ -248,12 +296,13 @@ def _iter_source_files(root: Path) -> Iterator[Path]:
 # Python AST analysis
 # ---------------------------------------------------------------------------
 
+
 def _analyze_python(source: str, rel_path: str) -> FileAnalysis:
     """Deep analysis of a Python file using AST."""
     lines = source.splitlines()
     total = len(lines)
-    blank = sum(1 for l in lines if not l.strip())
-    comment = sum(1 for l in lines if l.strip().startswith("#"))
+    blank = sum(1 for ln in lines if not ln.strip())
+    comment = sum(1 for ln in lines if ln.strip().startswith("#"))
 
     fa = FileAnalysis(
         path=rel_path,
@@ -277,11 +326,7 @@ def _analyze_python(source: str, rel_path: str) -> FileAnalysis:
         return fa
 
     # Module docstring
-    if (
-        tree.body
-        and isinstance(tree.body[0], ast.Expr)
-        and isinstance(tree.body[0].value, ast.Constant)
-    ):
+    if tree.body and isinstance(tree.body[0], ast.Expr) and isinstance(tree.body[0].value, ast.Constant):
         ds = getattr(tree.body[0].value, "value", None)
         if isinstance(ds, str):
             fa.module_docstring = ds.strip()
@@ -308,11 +353,7 @@ def _analyze_python(source: str, rel_path: str) -> FileAnalysis:
                 decorators=[_ast_name(d) for d in node.decorator_list],
             )
             # Class docstring
-            if (
-                node.body
-                and isinstance(node.body[0], ast.Expr)
-                and isinstance(node.body[0].value, ast.Constant)
-            ):
+            if node.body and isinstance(node.body[0], ast.Expr) and isinstance(node.body[0].value, ast.Constant):
                 ds = getattr(node.body[0].value, "value", None)
                 if isinstance(ds, str):
                     ci.docstring = ds.strip()
@@ -347,11 +388,7 @@ def _extract_func(node: ast.FunctionDef | ast.AsyncFunctionDef) -> FunctionInfo:
     )
 
     # Docstring
-    if (
-        node.body
-        and isinstance(node.body[0], ast.Expr)
-        and isinstance(node.body[0].value, ast.Constant)
-    ):
+    if node.body and isinstance(node.body[0], ast.Expr) and isinstance(node.body[0].value, ast.Constant):
         ds = getattr(node.body[0].value, "value", None)
         if isinstance(ds, str):
             fi.docstring = ds.strip()
@@ -388,16 +425,17 @@ def _ast_name(node) -> str:
 # Generic (non-Python) analysis
 # ---------------------------------------------------------------------------
 
+
 def _analyze_generic(source: str, rel_path: str, language: str) -> FileAnalysis:
     """Basic analysis for non-Python source files."""
     lines = source.splitlines()
     total = len(lines)
-    blank = sum(1 for l in lines if not l.strip())
+    blank = sum(1 for ln in lines if not ln.strip())
 
     # Rough comment detection
     comment = 0
-    for l in lines:
-        stripped = l.strip()
+    for ln in lines:
+        stripped = ln.strip()
         if stripped.startswith("//") or stripped.startswith("#") or stripped.startswith("*"):
             comment += 1
 
@@ -413,11 +451,11 @@ def _analyze_generic(source: str, rel_path: str, language: str) -> FileAnalysis:
 
     # Extract imports (simple patterns)
     import_patterns = [
-        re.compile(r'^import\s+(.+)', re.MULTILINE),
-        re.compile(r'^from\s+(\S+)\s+import', re.MULTILINE),
+        re.compile(r"^import\s+(.+)", re.MULTILINE),
+        re.compile(r"^from\s+(\S+)\s+import", re.MULTILINE),
         re.compile(r"require\(['\"]([^'\"]+)['\"]\)", re.MULTILINE),
         re.compile(r"import\s+.*\s+from\s+['\"]([^'\"]+)['\"]", re.MULTILINE),
-        re.compile(r'^use\s+(\S+)', re.MULTILINE),  # Rust
+        re.compile(r"^use\s+(\S+)", re.MULTILINE),  # Rust
         re.compile(r'^\s*#include\s*[<"]([^>"]+)[>"]', re.MULTILINE),  # C/C++
     ]
     for pat in import_patterns:
@@ -425,8 +463,8 @@ def _analyze_generic(source: str, rel_path: str, language: str) -> FileAnalysis:
             fa.imports.append(m.group(1).strip().rstrip(";"))
 
     # First comment block as summary
-    for l in lines[:20]:
-        stripped = l.strip()
+    for ln in lines[:20]:
+        stripped = ln.strip()
         if stripped.startswith("//") or stripped.startswith("#"):
             text = stripped.lstrip("/#").strip()
             if text and len(text) > 10:
@@ -478,20 +516,60 @@ _JAVA_CLASS_RE = re.compile(
 )
 
 # C/C++ keywords and types to ignore as false-positive function names
-_CPP_KEYWORDS = frozenset({
-    "if", "else", "for", "while", "do", "switch", "case", "return", "break",
-    "continue", "goto", "try", "catch", "throw", "new", "delete", "sizeof",
-    "typedef", "using", "namespace", "class", "struct", "enum", "union",
-    "public", "private", "protected", "virtual", "override", "final",
-    "const", "static", "extern", "inline", "volatile", "register",
-    "template", "typename", "define", "include", "ifdef", "ifndef",
-    "endif", "elif", "pragma", "PROGMEM", "IRAM_ATTR",
-})
+_CPP_KEYWORDS = frozenset(
+    {
+        "if",
+        "else",
+        "for",
+        "while",
+        "do",
+        "switch",
+        "case",
+        "return",
+        "break",
+        "continue",
+        "goto",
+        "try",
+        "catch",
+        "throw",
+        "new",
+        "delete",
+        "sizeof",
+        "typedef",
+        "using",
+        "namespace",
+        "class",
+        "struct",
+        "enum",
+        "union",
+        "public",
+        "private",
+        "protected",
+        "virtual",
+        "override",
+        "final",
+        "const",
+        "static",
+        "extern",
+        "inline",
+        "volatile",
+        "register",
+        "template",
+        "typename",
+        "define",
+        "include",
+        "ifdef",
+        "ifndef",
+        "endif",
+        "elif",
+        "pragma",
+        "PROGMEM",
+        "IRAM_ATTR",
+    }
+)
 
 
-def _extract_classes_funcs_generic(
-    source: str, language: str, fa: "FileAnalysis"
-) -> None:
+def _extract_classes_funcs_generic(source: str, language: str, fa: "FileAnalysis") -> None:
     """Extract classes and functions for non-Python languages using regex."""
     lang_lower = language.lower()
 
@@ -516,7 +594,7 @@ def _extract_cpp(source: str, fa: "FileAnalysis") -> None:
                 parts = b.split()
                 bases.append(parts[-1] if parts else b)
 
-        ci = ClassInfo(name=name, bases=bases, line_number=source[:m.start()].count("\n") + 1)
+        ci = ClassInfo(name=name, bases=bases, line_number=source[: m.start()].count("\n") + 1)
 
         # Scan the block after the class/struct for methods
         # Find the opening brace
@@ -545,10 +623,12 @@ def _extract_cpp(source: str, fa: "FileAnalysis") -> None:
     for m in _CPP_FUNC_RE.finditer(source):
         fname = m.group(1)
         if fname not in _CPP_KEYWORDS and fname not in {c.name for c in fa.classes}:
-            fa.functions.append(FunctionInfo(
-                name=fname,
-                line_number=source[:m.start()].count("\n") + 1,
-            ))
+            fa.functions.append(
+                FunctionInfo(
+                    name=fname,
+                    line_number=source[: m.start()].count("\n") + 1,
+                )
+            )
 
 
 def _extract_js_ts(source: str, fa: "FileAnalysis") -> None:
@@ -557,7 +637,7 @@ def _extract_js_ts(source: str, fa: "FileAnalysis") -> None:
         ci = ClassInfo(
             name=m.group(1),
             bases=[m.group(2)] if m.group(2) else [],
-            line_number=source[:m.start()].count("\n") + 1,
+            line_number=source[: m.start()].count("\n") + 1,
         )
         fa.classes.append(ci)
 
@@ -567,11 +647,13 @@ def _extract_js_ts(source: str, fa: "FileAnalysis") -> None:
             fname = m.group(1)
             if fname not in seen_funcs:
                 seen_funcs.add(fname)
-                fa.functions.append(FunctionInfo(
-                    name=fname,
-                    is_async="async" in source[max(0, m.start() - 20):m.start()],
-                    line_number=source[:m.start()].count("\n") + 1,
-                ))
+                fa.functions.append(
+                    FunctionInfo(
+                        name=fname,
+                        is_async="async" in source[max(0, m.start() - 20) : m.start()],
+                        line_number=source[: m.start()].count("\n") + 1,
+                    )
+                )
 
 
 def _extract_java(source: str, fa: "FileAnalysis") -> None:
@@ -580,7 +662,7 @@ def _extract_java(source: str, fa: "FileAnalysis") -> None:
         ci = ClassInfo(
             name=m.group(1),
             bases=[m.group(2)] if m.group(2) else [],
-            line_number=source[:m.start()].count("\n") + 1,
+            line_number=source[: m.start()].count("\n") + 1,
         )
         fa.classes.append(ci)
 
@@ -588,6 +670,7 @@ def _extract_java(source: str, fa: "FileAnalysis") -> None:
 # ---------------------------------------------------------------------------
 # Config file analysis
 # ---------------------------------------------------------------------------
+
 
 def _analyze_config(root: Path, rel_path: str, content: str) -> dict:
     """Extract metadata from config files (pyproject.toml, package.json, etc.)."""
@@ -652,6 +735,7 @@ def _analyze_config(root: Path, rel_path: str, content: str) -> dict:
 # Tech stack detection
 # ---------------------------------------------------------------------------
 
+
 def _detect_tech_stack(files: list[FileAnalysis]) -> list[TechStackItem]:
     """Detect technologies from imports and file patterns."""
     tech_hits: dict[str, TechStackItem] = {}
@@ -686,6 +770,7 @@ def _detect_tech_stack(files: list[FileAnalysis]) -> list[TechStackItem]:
 # ---------------------------------------------------------------------------
 # Architecture inference
 # ---------------------------------------------------------------------------
+
 
 def _infer_architecture(files: list[FileAnalysis], root: Path) -> list[ArchitectureLayer]:
     """Infer architecture layers from directory structure and file purposes."""
@@ -757,12 +842,13 @@ def _infer_architecture(files: list[FileAnalysis], root: Path) -> list[Architect
         for fa in dir_file_list:
             layers[layer_name].modules.append(fa.path)
 
-    return sorted(layers.values(), key=lambda l: l.name)
+    return sorted(layers.values(), key=lambda layer: layer.name)
 
 
 # ---------------------------------------------------------------------------
 # Main analyzer
 # ---------------------------------------------------------------------------
+
 
 class CodebaseAnalyzer:
     """Analyze a codebase directory and produce a structured ``CodebaseModel``."""
@@ -847,6 +933,7 @@ class CodebaseAnalyzer:
 # ---------------------------------------------------------------------------
 # Markdown report generation
 # ---------------------------------------------------------------------------
+
 
 def generate_codebase_markdown(model: CodebaseModel) -> str:
     """Convert a ``CodebaseModel`` into a comprehensive Markdown document.
@@ -951,10 +1038,7 @@ def generate_codebase_markdown(model: CodebaseModel) -> str:
     # ── Codebase Status ────────────────────────────────────────────────
     lines.append("## Codebase Status")
     lines.append("")
-    lines.append(
-        "A thorough audit of the codebase reveals the following modules, "
-        "their purpose, and key metrics."
-    )
+    lines.append("A thorough audit of the codebase reveals the following modules, their purpose, and key metrics.")
     lines.append("")
 
     # Module table
@@ -1039,10 +1123,7 @@ def generate_codebase_markdown(model: CodebaseModel) -> str:
     lines.append("## Module Documentation")
     lines.append("")
 
-    documented_files = [
-        f for f in model.files
-        if not f.is_test and (f.classes or f.functions or f.module_docstring)
-    ]
+    documented_files = [f for f in model.files if not f.is_test and (f.classes or f.functions or f.module_docstring)]
 
     for fa in documented_files[:30]:  # Cap to avoid enormous docs
         lines.append(f"### `{fa.path}`")
@@ -1098,7 +1179,7 @@ def generate_codebase_markdown(model: CodebaseModel) -> str:
     lines.append("graph LR")
 
     # Build internal dependency edges
-    file_set = {fa.path for fa in model.files}
+    {fa.path for fa in model.files}
     edges: set[tuple[str, str]] = set()
     edge_count = 0
     max_edges = 40
@@ -1109,7 +1190,7 @@ def generate_codebase_markdown(model: CodebaseModel) -> str:
         src_id = _mermaid_id(fa.path)
         for imp in fa.imports:
             # Convert import to potential file path
-            imp_path = imp.replace(".", "/")
+            imp.replace(".", "/")
             for target in model.files:
                 if target.is_test:
                     continue
@@ -1171,10 +1252,4 @@ def generate_codebase_markdown(model: CodebaseModel) -> str:
 
 def _mermaid_id(path: str) -> str:
     """Make a path safe for Mermaid node IDs."""
-    return (
-        path.replace("/", "_")
-        .replace("\\", "_")
-        .replace(".", "_")
-        .replace("-", "_")
-        .replace(" ", "_")
-    )
+    return path.replace("/", "_").replace("\\", "_").replace(".", "_").replace("-", "_").replace(" ", "_")

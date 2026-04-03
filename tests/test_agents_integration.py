@@ -15,19 +15,19 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+# ── agents ──
+from opendocs.agents.base import RepoProfile, RepoSignal
+
+# ── diff pipeline ──
+from opendocs.agents.diff import DiffAgent, ImpactAgent, ReleaseNotesAgent
+from opendocs.agents.diff.diff_agent import DiffSummary, FileDiff
+from opendocs.agents.orchestrator import AgentOrchestrator
+from opendocs.agents.privacy import PrivacyMode
+
 # ── opendocs core ──
 from opendocs.core.fetcher import ReadmeFetcher
 from opendocs.core.parser import ReadmeParser
 from opendocs.core.semantic_extractor import SemanticExtractor
-
-# ── agents ──
-from opendocs.agents.base import RepoProfile, RepoSignal
-from opendocs.agents.orchestrator import AgentOrchestrator
-from opendocs.agents.privacy import PrivacyMode
-
-# ── diff pipeline ──
-from opendocs.agents.diff import DiffAgent, ImpactAgent, RegenerationAgent, ReleaseNotesAgent
-from opendocs.agents.diff.diff_agent import DiffSummary, FileDiff
 
 console = Console()
 
@@ -60,20 +60,24 @@ def detect_signals(content: str, file_tree: list[str]) -> list[RepoSignal]:
             # Check file tree
             for path in file_tree:
                 if pat in path.lower():
-                    signals.append(RepoSignal(
-                        signal_type=signal_type,
-                        file_path=path,
-                        confidence=0.9,
-                    ))
+                    signals.append(
+                        RepoSignal(
+                            signal_type=signal_type,
+                            file_path=path,
+                            confidence=0.9,
+                        )
+                    )
                     break
             else:
                 # Check README content
                 if pat.lower() in content_lower:
-                    signals.append(RepoSignal(
-                        signal_type=signal_type,
-                        confidence=0.6,
-                        details={"source": "readme_mention"},
-                    ))
+                    signals.append(
+                        RepoSignal(
+                            signal_type=signal_type,
+                            confidence=0.6,
+                            details={"source": "readme_mention"},
+                        )
+                    )
     return signals
 
 
@@ -107,6 +111,7 @@ def build_profile(
 # ─────────────────────────────────────────────────────────────────────
 # Main test runner
 # ─────────────────────────────────────────────────────────────────────
+
 
 async def run_agents_on_repo(repo_url: str) -> None:
     console.print(Panel(f"[bold]Agent Integration Test[/bold]\n{repo_url}", style="cyan"))
@@ -181,7 +186,7 @@ async def run_agents_on_repo(repo_url: str) -> None:
 
     # Show enhanced artifacts
     if result.enhanced_artifacts:
-        console.print(f"\n[bold]Enhanced Artifacts:[/bold]")
+        console.print("\n[bold]Enhanced Artifacts:[/bold]")
         for key, val in result.enhanced_artifacts.items():
             if isinstance(val, str) and len(val) > 200:
                 console.print(f"   [cyan]{key}[/cyan]: {val[:200]}...")
@@ -227,8 +232,7 @@ async def run_agents_on_repo(repo_url: str) -> None:
     console.print(f"   [green]✓[/green] ImpactAgent: {impact_result.success}")
     if impact_result.success:
         report = impact_result.artifacts.get("impact_report", {})
-        console.print(f"      Deltas: {report.get('total_deltas', 0)}, "
-                      f"Formats: {report.get('impacted_formats', [])}")
+        console.print(f"      Deltas: {report.get('total_deltas', 0)}, Formats: {report.get('impacted_formats', [])}")
 
     release_agent = ReleaseNotesAgent()
     release_result = await release_agent.run(

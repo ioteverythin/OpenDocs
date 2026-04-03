@@ -28,7 +28,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from .providers import DEFAULT_MAX_TOKENS, DEFAULT_TEMPERATURE, LLMProvider
+from .providers import LLMProvider
 
 logger = logging.getLogger("opendocs.llm.slm_provider")
 
@@ -115,15 +115,18 @@ class SLMProvider(LLMProvider):
 
         if use_gpu:
             try:
-                free_vram = torch.cuda.mem_get_info()[0] / (1024 ** 2)
-                total_vram = torch.cuda.mem_get_info()[1] / (1024 ** 2)
+                free_vram = torch.cuda.mem_get_info()[0] / (1024**2)
+                total_vram = torch.cuda.mem_get_info()[1] / (1024**2)
                 logger.info(
-                    "GPU VRAM: %.0f MB free / %.0f MB total", free_vram, total_vram,
+                    "GPU VRAM: %.0f MB free / %.0f MB total",
+                    free_vram,
+                    total_vram,
                 )
                 if free_vram < min_vram_mb:
                     logger.warning(
                         "Insufficient free VRAM (%.0f MB < %d MB) — falling back to CPU",
-                        free_vram, min_vram_mb,
+                        free_vram,
+                        min_vram_mb,
                     )
                     use_gpu = False
             except Exception:
@@ -240,6 +243,7 @@ class SLMProvider(LLMProvider):
             cls._loaded_adapter = None
 
             import torch
+
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
             logger.info("SLM model unloaded")

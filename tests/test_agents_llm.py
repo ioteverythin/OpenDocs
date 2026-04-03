@@ -26,13 +26,17 @@ from opendocs.agents.base import RepoProfile, RepoSignal
 from opendocs.agents.orchestrator import AgentOrchestrator
 from opendocs.agents.privacy import PrivacyMode
 from opendocs.core.knowledge_graph import (
-    KnowledgeGraph, Entity, EntityType, Relation, RelationType,
+    Entity,
+    EntityType,
+    KnowledgeGraph,
+    Relation,
+    RelationType,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helper — build a synthetic but realistic RepoProfile + KnowledgeGraph
 # ---------------------------------------------------------------------------
+
 
 def build_fastapi_profile() -> tuple[RepoProfile, KnowledgeGraph]:
     """Simulated profile for tiangolo/fastapi (microservices + ML adjacent)."""
@@ -52,12 +56,14 @@ def build_fastapi_profile() -> tuple[RepoProfile, KnowledgeGraph]:
         ("WebSocket", EntityType.PROTOCOL),
     ]
     for name, etype in entities_data:
-        kg.add_entity(Entity(
-            id=name.lower().replace(" ", "_"),
-            name=name,
-            entity_type=etype,
-            properties={"source": "readme"},
-        ))
+        kg.add_entity(
+            Entity(
+                id=name.lower().replace(" ", "_"),
+                name=name,
+                entity_type=etype,
+                properties={"source": "readme"},
+            )
+        )
 
     # Add a few relations
     kg.add_relation(Relation(source_id="fastapi", target_id="starlette", relation_type=RelationType.DEPENDS_ON))
@@ -114,12 +120,14 @@ def build_transformers_profile() -> tuple[RepoProfile, KnowledgeGraph]:
         ("safetensors", EntityType.TECHNOLOGY),
     ]
     for name, etype in entities_data:
-        kg.add_entity(Entity(
-            id=name.lower().replace(" ", "_").replace("-", "_"),
-            name=name,
-            entity_type=etype,
-            properties={"source": "readme"},
-        ))
+        kg.add_entity(
+            Entity(
+                id=name.lower().replace(" ", "_").replace("-", "_"),
+                name=name,
+                entity_type=etype,
+                properties={"source": "readme"},
+            )
+        )
 
     kg.add_relation(Relation(source_id="transformers", target_id="pytorch", relation_type=RelationType.DEPENDS_ON))
     kg.add_relation(Relation(source_id="transformers", target_id="tensorflow", relation_type=RelationType.DEPENDS_ON))
@@ -164,15 +172,16 @@ def build_transformers_profile() -> tuple[RepoProfile, KnowledgeGraph]:
 # Main test runner
 # ---------------------------------------------------------------------------
 
+
 async def run_single_repo(
     label: str,
     profile: RepoProfile,
     kg: KnowledgeGraph,
 ) -> dict:
     """Run the orchestrator with use_llm=True against one repo profile."""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"  {label}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
     orch = AgentOrchestrator(
         model="gpt-4o-mini",
@@ -222,7 +231,7 @@ async def run_single_repo(
     if result.critic_result:
         critic_meta = result.critic_result.metadata or {}
         if critic_meta.get("llm_reviewed"):
-            print(f"\n  ✓ LLM review included in Critic verdict")
+            print("\n  ✓ LLM review included in Critic verdict")
             llm_review = result.critic_result.artifacts.get("verdict", {})
             if isinstance(llm_review, dict) and "llm_review" in llm_review:
                 rev = str(llm_review["llm_review"])[:500]
@@ -278,12 +287,7 @@ async def main():
         if "error" in r:
             print(f"  {status}  {label}: {r['error']}")
         else:
-            print(
-                f"  {status}  {label}: "
-                f"{r['artifact_count']} artifacts, "
-                f"{r['iterations']} iter, "
-                f"{r['wall_time_s']}s"
-            )
+            print(f"  {status}  {label}: {r['artifact_count']} artifacts, {r['iterations']} iter, {r['wall_time_s']}s")
     print()
 
 

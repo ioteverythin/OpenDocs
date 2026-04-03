@@ -142,6 +142,7 @@ Keep it practical and specific to THIS project's needs."""
 # Helper: build context strings from CodebaseModel
 # ---------------------------------------------------------------------------
 
+
 def _build_context(model: "CodebaseModel") -> dict[str, str]:
     """Build prompt-ready context strings from the analysis model."""
     ctx: dict[str, str] = {}
@@ -151,14 +152,13 @@ def _build_context(model: "CodebaseModel") -> dict[str, str]:
     ctx["total_lines"] = f"{model.total_code_lines:,}"
 
     ctx["languages"] = ", ".join(
-        f"{lang} ({count} files)"
-        for lang, count in sorted(model.languages.items(), key=lambda x: -x[1])
+        f"{lang} ({count} files)" for lang, count in sorted(model.languages.items(), key=lambda x: -x[1])
     )
 
     tech_names = [t.name for t in model.tech_stack[:12]]
     ctx["technologies"] = ", ".join(tech_names) if tech_names else "standard library"
 
-    ctx["layers"] = ", ".join(l.name for l in model.architecture_layers) or "single layer"
+    ctx["layers"] = ", ".join(layer.name for layer in model.architecture_layers) or "single layer"
 
     ctx["entry_points"] = ", ".join(model.entry_points[:5]) if model.entry_points else "none detected"
 
@@ -192,13 +192,13 @@ def _build_context(model: "CodebaseModel") -> dict[str, str]:
 
     # Relationships — internal imports between modules
     rel_parts = []
-    file_set = {fa.path for fa in model.files}
+    {fa.path for fa in model.files}
     for fa in model.files[:20]:
         if fa.is_test:
             continue
         internal_imports = []
         for imp in fa.imports:
-            imp_path = imp.replace(".", "/")
+            imp.replace(".", "/")
             for target in model.files:
                 if target.is_test:
                     continue
@@ -223,8 +223,7 @@ def _build_context(model: "CodebaseModel") -> dict[str, str]:
         has_docstrings = bool(fa.module_docstring) or any(c.docstring for c in fa.classes)
         status = "documented" if has_docstrings else "undocumented"
         status_parts.append(
-            f"- {fa.path}: {purpose} ({fa.line_count} lines, {n_classes} classes, "
-            f"{n_funcs} functions, {status})"
+            f"- {fa.path}: {purpose} ({fa.line_count} lines, {n_classes} classes, {n_funcs} functions, {status})"
         )
     ctx["module_status"] = "\n".join(status_parts[:25]) if status_parts else "(no modules)"
     ctx["total_modules"] = str(len([f for f in model.files if not f.is_test]))
@@ -241,9 +240,10 @@ def _build_context(model: "CodebaseModel") -> dict[str, str]:
     ctx["tech_stack"] = "\n".join(tech_parts) if tech_parts else "(no frameworks detected)"
 
     # Architecture summary (shorter)
-    ctx["architecture_summary"] = ", ".join(
-        f"{l.name} ({len(l.modules)} modules)" for l in model.architecture_layers
-    ) or "flat structure"
+    ctx["architecture_summary"] = (
+        ", ".join(f"{layer.name} ({len(layer.modules)} modules)" for layer in model.architecture_layers)
+        or "flat structure"
+    )
 
     # Config files
     ctx["config_files"] = ", ".join(sorted(model.config_files)[:10]) if model.config_files else "(none)"
@@ -255,9 +255,11 @@ def _build_context(model: "CodebaseModel") -> dict[str, str]:
 # Main generator
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class _SectionResult:
     """Result of generating a single section."""
+
     heading: str
     content: str
     is_generated: bool = True  # True = LLM produced, False = static fallback
@@ -314,7 +316,6 @@ def generate_narrative_markdown(
     str
         Complete Markdown document.
     """
-    from .code_analyzer import generate_codebase_markdown
 
     ctx = _build_context(model)
     title = ctx["project_name"]
@@ -417,6 +418,7 @@ def generate_narrative_markdown(
 # Static section builders — always accurate, used alongside or as fallbacks
 # ---------------------------------------------------------------------------
 
+
 def _static_executive_summary(model: "CodebaseModel", ctx: dict) -> str:
     """Fallback executive summary when LLM fails."""
     lines = ["## Executive Summary\n"]
@@ -463,8 +465,7 @@ def _build_codebase_status_table(model: "CodebaseModel") -> str:
     """Build the Codebase Status section with a module table."""
     lines = [
         "## Codebase Status\n",
-        "A thorough audit of the codebase reveals the following modules, "
-        "their purpose, and current status.\n",
+        "A thorough audit of the codebase reveals the following modules, their purpose, and current status.\n",
         "| Module | Functionality | Lines | Status |",
         "|--------|--------------|------:|--------|",
     ]
@@ -536,7 +537,7 @@ def _static_implementation_plan(model: "CodebaseModel", ctx: dict) -> str:
         "- Expand documentation with usage examples",
         "",
         "## Recommended Next Steps\n",
-        f"1. **Improve documentation coverage** — Several modules lack docstrings",
+        "1. **Improve documentation coverage** — Several modules lack docstrings",
         f"2. **Expand test suite** — Currently {ctx['test_count']} test files",
         f"3. **Review architecture** — {len(model.architecture_layers)} layers identified for potential consolidation",
         "",
@@ -564,7 +565,7 @@ def _build_dependency_graph(model: "CodebaseModel") -> str:
             continue
         src_id = _mermaid_id(fa.path)
         for imp in fa.imports:
-            imp_path = imp.replace(".", "/")
+            imp.replace(".", "/")
             for target in model.files:
                 if target.is_test:
                     continue
@@ -607,10 +608,7 @@ def _build_module_docs(model: "CodebaseModel") -> str:
     """Build detailed module-by-module documentation."""
     lines = ["## Module Documentation\n"]
 
-    documented_files = [
-        f for f in model.files
-        if not f.is_test and (f.classes or f.functions or f.module_docstring)
-    ]
+    documented_files = [f for f in model.files if not f.is_test and (f.classes or f.functions or f.module_docstring)]
 
     for fa in documented_files[:30]:
         lines.append(f"### `{fa.path}`\n")
@@ -682,10 +680,4 @@ def _build_config_section(model: "CodebaseModel") -> str:
 
 def _mermaid_id(path: str) -> str:
     """Make a path safe for Mermaid node IDs."""
-    return (
-        path.replace("/", "_")
-        .replace("\\", "_")
-        .replace(".", "_")
-        .replace("-", "_")
-        .replace(" ", "_")
-    )
+    return path.replace("/", "_").replace("\\", "_").replace(".", "_").replace("-", "_").replace(" ", "_")

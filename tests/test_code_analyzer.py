@@ -3,9 +3,6 @@
 from __future__ import annotations
 
 import textwrap
-from pathlib import Path
-
-import pytest
 
 from opendocs.core.code_analyzer import (
     CodebaseAnalyzer,
@@ -15,7 +12,6 @@ from opendocs.core.code_analyzer import (
     _detect_tech_stack,
     generate_codebase_markdown,
 )
-
 
 # ---------------------------------------------------------------------------
 # Python AST analysis
@@ -71,10 +67,10 @@ class TestAnalyzePython:
         assert fa.functions[0].name == "fetch_data"
 
     def test_entry_point_detection(self):
-        source = textwrap.dedent('''\
+        source = textwrap.dedent("""\
             def main():
                 pass
-        ''')
+        """)
         fa = _analyze_python(source, "app.py")
         assert fa.is_entry_point is True
 
@@ -90,12 +86,12 @@ class TestAnalyzePython:
         assert fa.line_count == 1
 
     def test_line_counts(self):
-        source = textwrap.dedent('''\
+        source = textwrap.dedent("""\
             # Comment line
             x = 1
 
             y = 2
-        ''')
+        """)
         fa = _analyze_python(source, "counts.py")
         assert fa.line_count == 4  # textwrap.dedent strips trailing newline
         assert fa.blank_lines == 1
@@ -103,13 +99,13 @@ class TestAnalyzePython:
         assert fa.code_lines == 2
 
     def test_decorators(self):
-        source = textwrap.dedent('''\
+        source = textwrap.dedent("""\
             from functools import lru_cache
 
             @lru_cache
             def cached():
                 pass
-        ''')
+        """)
         fa = _analyze_python(source, "deco.py")
         assert "lru_cache" in fa.functions[0].decorators
 
@@ -225,17 +221,12 @@ class TestCodebaseAnalyzer:
     def test_analyze_python_project(self, tmp_path):
         # Create a mini Python project
         (tmp_path / "pyproject.toml").write_text(
-            '[project]\nname = "test-proj"\nversion = "1.0.0"\n'
-            'description = "A test project"\n'
+            '[project]\nname = "test-proj"\nversion = "1.0.0"\ndescription = "A test project"\n'
         )
-        (tmp_path / "main.py").write_text(
-            '"""Main module."""\n\nimport os\n\ndef main():\n    print("hi")\n'
-        )
+        (tmp_path / "main.py").write_text('"""Main module."""\n\nimport os\n\ndef main():\n    print("hi")\n')
         src = tmp_path / "src"
         src.mkdir()
-        (src / "helper.py").write_text(
-            '"""Helper utilities."""\n\ndef add(a, b):\n    return a + b\n'
-        )
+        (src / "helper.py").write_text('"""Helper utilities."""\n\ndef add(a, b):\n    return a + b\n')
 
         analyzer = CodebaseAnalyzer()
         model = analyzer.analyze(tmp_path)
@@ -263,10 +254,10 @@ class TestCodebaseAnalyzer:
     def test_end_to_end_markdown(self, tmp_path):
         (tmp_path / "app.py").write_text(
             '"""FastAPI application."""\n\n'
-            'from fastapi import FastAPI\n\n'
-            'app = FastAPI()\n\n'
+            "from fastapi import FastAPI\n\n"
+            "app = FastAPI()\n\n"
             '@app.get("/")\n'
-            'def root():\n'
+            "def root():\n"
             '    return {"msg": "hello"}\n'
         )
         analyzer = CodebaseAnalyzer()

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from opendocs.core.code_analyzer import (
     ArchitectureLayer,
     ClassInfo,
@@ -21,7 +19,6 @@ from opendocs.core.narrative_generator import (
     _static_executive_summary,
     generate_narrative_markdown,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers

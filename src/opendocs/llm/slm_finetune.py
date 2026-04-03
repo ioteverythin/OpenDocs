@@ -82,6 +82,7 @@ Write a professional technical document covering:
 @dataclass
 class TrainingExample:
     """A single code-context → documentation training pair."""
+
     code_context: str
     documentation: str
     project_name: str = "Project"
@@ -111,6 +112,7 @@ class SLMFineTuner:
     learning_rate
         Training learning rate.
     """
+
     base_model: str = "microsoft/Phi-3.5-mini-instruct"
     output_dir: str = "./opendocs-adapter"
     cache_dir: str = ""
@@ -134,11 +136,13 @@ class SLMFineTuner:
         project_name: str = "Project",
     ) -> None:
         """Add a training example (code analysis → desired output)."""
-        self.examples.append(TrainingExample(
-            code_context=code_context,
-            documentation=documentation,
-            project_name=project_name,
-        ))
+        self.examples.append(
+            TrainingExample(
+                code_context=code_context,
+                documentation=documentation,
+                project_name=project_name,
+            )
+        )
 
     def add_examples_from_file(self, path: str | Path) -> int:
         """Load training examples from a JSONL file.
@@ -168,11 +172,15 @@ class SLMFineTuner:
         """Save current training examples to a JSONL file."""
         with open(path, "w", encoding="utf-8") as f:
             for ex in self.examples:
-                json.dump({
-                    "project_name": ex.project_name,
-                    "code_context": ex.code_context,
-                    "documentation": ex.documentation,
-                }, f, ensure_ascii=False)
+                json.dump(
+                    {
+                        "project_name": ex.project_name,
+                        "code_context": ex.code_context,
+                        "documentation": ex.documentation,
+                    },
+                    f,
+                    ensure_ascii=False,
+                )
                 f.write("\n")
         logger.info("Saved %d examples to %s", len(self.examples), path)
 
@@ -200,11 +208,7 @@ class SLMFineTuner:
                     add_generation_prompt=False,
                 )
             else:
-                text = (
-                    f"System: {_SYSTEM_PROMPT}\n\n"
-                    f"User: {user_msg}\n\n"
-                    f"Assistant: {ex.documentation}"
-                )
+                text = f"System: {_SYSTEM_PROMPT}\n\nUser: {user_msg}\n\nAssistant: {ex.documentation}"
 
             records.append({"text": text})
 
@@ -242,8 +246,7 @@ class SLMFineTuner:
         """
         if not self.examples:
             raise ValueError(
-                "No training examples. Add examples with add_example() "
-                "or add_examples_from_file() before training."
+                "No training examples. Add examples with add_example() or add_examples_from_file() before training."
             )
 
         import torch
@@ -252,9 +255,9 @@ class SLMFineTuner:
             AutoModelForCausalLM,
             AutoTokenizer,
             BitsAndBytesConfig,
-            TrainingArguments,
-            Trainer,
             DataCollatorForLanguageModeling,
+            Trainer,
+            TrainingArguments,
         )
 
         output_path = Path(self.output_dir)
@@ -315,7 +318,9 @@ class SLMFineTuner:
         trainable, total = model.get_nb_trainable_parameters()
         logger.info(
             "Trainable parameters: %s / %s (%.2f%%)",
-            f"{trainable:,}", f"{total:,}", trainable / total * 100,
+            f"{trainable:,}",
+            f"{total:,}",
+            trainable / total * 100,
         )
 
         # Build dataset
@@ -372,7 +377,8 @@ class SLMFineTuner:
         logger.info("Adapter saved to: %s", adapter_dir)
         logger.info(
             "To use: SLMProvider(model='%s', adapter_path='%s')",
-            self.base_model, adapter_dir,
+            self.base_model,
+            adapter_dir,
         )
 
         return adapter_dir
@@ -384,7 +390,6 @@ def _find_target_modules(model) -> list[str]:
     Works across different model architectures (Phi, LLaMA, Mistral, etc.)
     by looking for common attention/MLP projection names.
     """
-    import re
 
     linear_names = set()
     for name, module in model.named_modules():
@@ -433,7 +438,7 @@ def generate_training_data_from_codebase(
     TrainingExample
         A training pair ready for fine-tuning.
     """
-    from ..core.code_analyzer import CodebaseAnalyzer, generate_codebase_markdown
+    from ..core.code_analyzer import CodebaseAnalyzer
 
     analyzer = CodebaseAnalyzer()
     model = analyzer.analyze(codebase_dir)
@@ -443,7 +448,7 @@ def generate_training_data_from_codebase(
     context_parts.append(f"Project: {model.project_name}")
     context_parts.append(f"Description: {model.description}")
     context_parts.append(f"Files: {model.total_files}, Code Lines: {model.total_code_lines}")
-    context_parts.append(f"Languages: {', '.join(f'{l} ({c})' for l, c in model.languages.items())}")
+    context_parts.append(f"Languages: {', '.join(f'{lang} ({cnt})' for lang, cnt in model.languages.items())}")
 
     if model.tech_stack:
         context_parts.append("\nTechnology Stack:")
@@ -482,6 +487,7 @@ def generate_training_data_from_codebase(
             doc_text = ref_path.read_text(encoding="utf-8")
         elif ref_path.suffix == ".docx":
             from docx import Document as DocxDocument
+
             doc = DocxDocument(str(ref_path))
             paragraphs = []
             for p in doc.paragraphs:

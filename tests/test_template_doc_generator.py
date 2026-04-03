@@ -13,27 +13,27 @@ from opendocs.core.code_analyzer import (
     TechStackItem,
 )
 from opendocs.core.template_doc_generator import (
-    generate_template_documentation,
-    _maturity_label,
-    _doc_coverage,
-    _build_executive_summary,
     _build_architecture_section,
-    _build_language_breakdown,
-    _build_tech_stack,
     _build_codebase_status,
-    _build_implementation_plan,
-    _build_risk_assessment,
-    _build_dependency_graph,
-    _build_module_docs,
-    _build_test_section,
     _build_config_section,
+    _build_dependency_graph,
+    _build_executive_summary,
+    _build_implementation_plan,
+    _build_language_breakdown,
+    _build_module_docs,
     _build_next_steps,
+    _build_risk_assessment,
+    _build_tech_stack,
+    _build_test_section,
+    _doc_coverage,
+    _maturity_label,
+    generate_template_documentation,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def sample_model() -> CodebaseModel:
@@ -126,12 +126,16 @@ def sample_model() -> CodebaseModel:
         ],
         tech_stack=[
             TechStackItem(name="FastAPI", category="Web Framework", language="python", source_files=["main.py"]),
-            TechStackItem(name="Pydantic", category="Data Validation", language="python", source_files=["models.py", "main.py"]),
+            TechStackItem(
+                name="Pydantic", category="Data Validation", language="python", source_files=["models.py", "main.py"]
+            ),
             TechStackItem(name="Pytest", category="Testing", language="python", source_files=["test_main.py"]),
         ],
         architecture_layers=[
             ArchitectureLayer(name="API Layer", description="HTTP endpoints and routing", modules=["main.py"]),
-            ArchitectureLayer(name="Core Logic", description="Business rules and data models", modules=["models.py", "utils.py"]),
+            ArchitectureLayer(
+                name="Core Logic", description="Business rules and data models", modules=["models.py", "utils.py"]
+            ),
         ],
         entry_points=["main.py"],
         config_files=["pyproject.toml", "Dockerfile"],
@@ -152,6 +156,7 @@ def empty_model() -> CodebaseModel:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
 
 class TestMaturityLabel:
     def test_production_ready(self, sample_model):
@@ -361,6 +366,7 @@ class TestGenerateTemplateDocumentation:
 
     def test_progress_callback(self, sample_model):
         calls = []
+
         def cb(name, idx, total):
             calls.append((name, idx, total))
 
