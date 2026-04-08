@@ -94,6 +94,37 @@ def _build_report(doc: DocumentModel, kg: KnowledgeGraph) -> str:
             lines.append(f"| {et.value.replace('_', ' ').title()} | {count} |")
     lines.append("")
 
+    # -- God Nodes (highest-degree entities) --
+    god = kg.god_nodes(top_n=5)
+    if god:
+        lines.append("## God Nodes")
+        lines.append("")
+        lines.append("The highest-degree concepts that everything connects through:")
+        lines.append("")
+        lines.append("| Rank | Entity | Type | Degree |")
+        lines.append("|------|--------|------|--------|")
+        for i, (ent, deg) in enumerate(god, 1):
+            etype = ent.entity_type.value.replace("_", " ").title()
+            lines.append(f"| {i} | **{ent.name}** | {etype} | {deg} |")
+        lines.append("")
+
+    # -- Surprising Connections --
+    surprises = kg.surprising_connections(top_n=5)
+    if surprises:
+        lines.append("## Surprising Connections")
+        lines.append("")
+        lines.append("Cross-type relationships ranked by surprise score:")
+        lines.append("")
+        lines.append("| Source | Relation | Target | Score |")
+        lines.append("|--------|----------|--------|-------|")
+        for score, rel in surprises:
+            src = kg.get_entity(rel.source_id)
+            tgt = kg.get_entity(rel.target_id)
+            src_name = src.name if src else rel.source_id
+            tgt_name = tgt.name if tgt else rel.target_id
+            lines.append(f"| {src_name} | {rel.relation_type.value.replace('_', ' ')} | {tgt_name} | {score:.2f} |")
+        lines.append("")
+
     # -- Stakeholder Summaries --
     persona_labels = {
         "cto": "CTO / Technical Lead Assessment",

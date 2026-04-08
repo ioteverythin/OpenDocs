@@ -23,8 +23,8 @@ class TestPipeline:
             output_dir=tmp_path,
             local=True,
         )
-        # 12 formats + 1 analysis report = 13
-        assert len(result.results) == 13
+        # 12 formats + 1 analysis report + 1 interactive graph = 14
+        assert len(result.results) == 14
         assert all(r.success for r in result.results)
         assert result.word_path is not None
         assert result.pdf_path is not None
@@ -46,7 +46,7 @@ class TestPipeline:
             formats=[OutputFormat.WORD],
             local=True,
         )
-        # 1 format + 1 analysis report = 2
-        assert len(result.results) == 2
+        # 1 format + 1 analysis report + 1 interactive graph = 3
+        assert len(result.results) == 3
         assert all(r.success for r in result.results)
         assert result.word_path is not None

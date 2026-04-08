@@ -275,3 +275,46 @@ class KnowledgeGraph(BaseModel):
         stats["llm_entities"] = llm_count
         self.extraction_stats = stats
         return stats
+
+    # -- Graph analysis --------------------------------------------------
+
+    def node_degrees(self) -> dict[str, int]:
+        """Return the degree (in + out edges) of every entity."""
+        deg: dict[str, int] = {e.id: 0 for e in self.entities}
+        for r in self.relations:
+            deg[r.source_id] = deg.get(r.source_id, 0) + 1
+            deg[r.target_id] = deg.get(r.target_id, 0) + 1
+        return deg
+
+    def god_nodes(self, top_n: int = 5) -> list[tuple[Entity, int]]:
+        """Return the *top_n* highest-degree entities (god nodes).
+
+        A god node is a concept that everything connects through.
+        """
+        degrees = self.node_degrees()
+        ranked = sorted(degrees.items(), key=lambda kv: kv[1], reverse=True)[:top_n]
+        result: list[tuple[Entity, int]] = []
+        for eid, deg in ranked:
+            ent = self.get_entity(eid)
+            if ent:
+                result.append((ent, deg))
+        return result
+
+    def surprising_connections(self, top_n: int = 5) -> list[tuple[float, Relation]]:
+        """Find cross-type edges ranked by a surprise score.
+
+        Edges linking different entity types are more surprising.
+        Lower confidence further boosts the surprise score.
+        """
+        scored: list[tuple[float, Relation]] = []
+        for r in self.relations:
+            src = self.get_entity(r.source_id)
+            tgt = self.get_entity(r.target_id)
+            if not src or not tgt:
+                continue
+            if src.entity_type == tgt.entity_type:
+                continue
+            score = (1.0 - r.confidence) + 0.3
+            scored.append((score, r))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return scored[:top_n]

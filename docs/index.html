@@ -354,6 +354,7 @@ tr:hover td { background: var(--bg-sidebar); }
       <a href="#" data-page="templates" onclick="navigate('templates');return false;">Template Variables</a>
       <a href="#" data-page="watcher" onclick="navigate('watcher');return false;">File Watcher</a>
       <a href="#" data-page="knowledge-graph" onclick="navigate('knowledge-graph');return false;">Knowledge Graph</a>
+      <a href="#" data-page="interactive-graph" onclick="navigate('interactive-graph');return false;">Interactive Graph <span class="sbadge new-b">NEW</span></a>
       <a href="#" data-page="table-sorting" onclick="navigate('table-sorting');return false;">Smart Table Sorting</a>
       <a href="#" data-page="mermaid" onclick="navigate('mermaid');return false;">Mermaid &rarr; PNG</a>
       <a href="#" data-page="stakeholder-views" onclick="navigate('stakeholder-views');return false;">Stakeholder Views</a>
@@ -418,6 +419,7 @@ tr:hover td { background: var(--bg-sidebar); }
           <div class="feat-card"><h4>&#x1F4E4; Publishing</h4><p>Push generated docs directly to Notion workspaces or Confluence spaces with a single flag.</p></div>
           <div class="feat-card"><h4>&#x1F465; Stakeholder Views</h4><p>LLM-powered perspectives for CTO, Investor, and Developer audiences in every output.</p></div>
           <div class="feat-card"><h4>&#x1F916; AI Reader Files</h4><p>Auto-generate llms.txt, llms-full.txt, AGENTS.md, and CLAUDE.md for LLMs and coding agents.</p></div>
+          <div class="feat-card"><h4>&#x1F578;&#xFE0F; Interactive Graph</h4><p>Explore your knowledge graph in the browser with search, filtering, god-node analysis, and surprising connections.</p></div>
         </div>
 
         <h2 id="examples-overview">Real-World Examples</h2>
@@ -1394,9 +1396,66 @@ kg = result.knowledge_graph
             <tr><td>Architecture diagrams</td><td>Entities become diagram nodes, relations become edges</td></tr>
             <tr><td>PowerPoint (.pptx)</td><td>Dedicated &ldquo;Knowledge Graph&rdquo; slide with entity summary</td></tr>
             <tr><td>Word (.docx)</td><td>Entity tables and relationship lists in analysis sections</td></tr>
-            <tr><td>Analysis Report</td><td>Full entity breakdown with stakeholder views</td></tr>
+            <tr><td>Analysis Report</td><td>Full entity breakdown with stakeholder views, god nodes, surprising connections</td></tr>
+            <tr><td>Interactive Graph (HTML)</td><td>Explorable vis.js graph with search, filtering, god nodes, and surprising connections</td></tr>
           </tbody>
         </table></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ INTERACTIVE GRAPH ══════════════════════════════ -->
+      <div class="doc-page" id="page-interactive-graph">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Interactive Graph</div>
+        <h1 class="page-title">Interactive Graph</h1>
+        <p class="page-intro">A self-contained HTML page that lets you explore the knowledge graph in your browser with pan, zoom, search, filtering, god-node analysis, and surprising-connection discovery. Powered by <strong>vis-network</strong>.</p>
+
+        <div class="callout info"><strong>&#8505; No extra dependencies</strong><p>The generated HTML loads vis-network from a CDN. No npm install needed.</p></div>
+
+        <h2 id="ig-output">What you get</h2>
+        <p>After running the pipeline, an <code>interactive_graph.html</code> file appears in your output directory. Open it in any modern browser to explore:</p>
+        <ul>
+          <li><strong>Draggable, zoomable graph</strong> with physics simulation</li>
+          <li><strong>Search bar</strong> to highlight and focus on any entity</li>
+          <li><strong>Legend panel</strong> showing all entity types with colour codes</li>
+          <li><strong>God Nodes panel</strong> listing the highest-connected entities in your project</li>
+          <li><strong>Surprising Connections panel</strong> revealing unexpected cross-type relationships</li>
+        </ul>
+
+        <h2 id="ig-god">God nodes</h2>
+        <p>God nodes are entities with the most connections (highest degree). They are the <em>hubs</em> of your project and often represent core technologies, services, or concepts that everything else depends on.</p>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Access god nodes programmatically</span>
+<span class="kw">for</span> entity, degree <span class="kw">in</span> kg.god_nodes(top_n=<span class="nb">5</span>):
+    <span class="nb">print</span>(<span class="st">f"{entity.name} ({entity.type}) - {degree} connections"</span>)</pre></div>
+
+        <h2 id="ig-surprise">Surprising connections</h2>
+        <p>Surprising connections are cross-type edges (e.g. a DATABASE linked to a METRIC) ranked by a surprise score. Lower confidence + cross-type = higher surprise. These often reveal hidden architectural dependencies.</p>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Access surprising connections programmatically</span>
+<span class="kw">for</span> score, rel <span class="kw">in</span> kg.surprising_connections(top_n=<span class="nb">5</span>):
+    <span class="nb">print</span>(<span class="st">f"{rel.source} -> {rel.target} ({rel.label}) score={score:.2f}"</span>)</pre></div>
+
+        <h2 id="ig-cli">CLI examples</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate all outputs including interactive graph</span>
+opendocs generate https://github.com/owner/repo --format all
+
+<span class="cm"># The interactive graph is part of 'all' outputs</span>
+<span class="cm"># Open output/interactive_graph.html in your browser</span>
+
+<span class="cm"># LLM mode discovers deeper entities for a richer graph</span>
+opendocs generate https://github.com/owner/repo \
+  --mode llm --api-key sk-... --format all</pre></div>
+
+        <h2 id="ig-visual">Visual design</h2>
+        <ul>
+          <li>Dark-theme UI (#0f172a background) with a collapsible sidebar</li>
+          <li>Node sizes scale with degree (12 px to 40 px)</li>
+          <li>Colour-coded by entity type (17 distinct colours)</li>
+          <li>Edge labels show relationship type and confidence</li>
+          <li>Hover tooltips display entity type and connection count</li>
+        </ul>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>

@@ -654,6 +654,18 @@ class Pipeline:
             else:
                 console.print(f"[red][FAIL][/] Analysis report: {report_result.error}")
 
+        # -- Step 5c: Interactive HTML knowledge graph --------------------
+        if kg.entities:
+            from .generators.interactive_graph import generate_interactive_graph
+
+            console.print("[bold blue]Generating Interactive Graph (HTML)...[/]")
+            graph_result = generate_interactive_graph(doc, kg, output_path)
+            result.results.append(graph_result)
+            if graph_result.success:
+                console.print(f"[green][OK][/] {graph_result.output_path}")
+            else:
+                console.print(f"[red][FAIL][/] Interactive graph: {graph_result.error}")
+
         # -- Step 6: AI-reader companion files ----------------------------
         from .generators.ai_readers import AIReadersGenerator
 
