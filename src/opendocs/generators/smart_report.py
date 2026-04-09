@@ -87,6 +87,17 @@ def _build_report(doc: DocumentModel, kg: KnowledgeGraph) -> str:
     lines.append(f"| Deterministic | {stats.get('deterministic_entities', 0)} |")
     lines.append(f"| LLM-Extracted | {stats.get('llm_entities', 0)} |")
 
+    # Provenance breakdown
+    extracted = sum(1 for e in kg.entities if e.provenance == "EXTRACTED")
+    inferred = sum(1 for e in kg.entities if e.provenance == "INFERRED")
+    ambiguous = sum(1 for e in kg.entities if e.provenance == "AMBIGUOUS")
+    lines.append(f"| EXTRACTED | {extracted} |")
+    lines.append(f"| INFERRED | {inferred} |")
+    lines.append(f"| AMBIGUOUS | {ambiguous} |")
+    if kg.communities:
+        num_communities = max(kg.communities.values(), default=-1) + 1
+        lines.append(f"| Communities | {num_communities} |")
+
     # Entity type breakdown
     for et in EntityType:
         count = stats.get(f"entities_{et.value}", 0)
@@ -125,6 +136,35 @@ def _build_report(doc: DocumentModel, kg: KnowledgeGraph) -> str:
             lines.append(f"| {src_name} | {rel.relation_type.value.replace('_', ' ')} | {tgt_name} | {score:.2f} |")
         lines.append("")
 
+    # -- Community Clusters --
+    comm_summaries = kg.community_summary()
+    if comm_summaries:
+        lines.append("## Community Clusters")
+        lines.append("")
+        lines.append("Entities grouped by edge density (label propagation algorithm):")
+        lines.append("")
+        lines.append("| Cluster | Size | Dominant Type | Internal Edges | Key Members |")
+        lines.append("|---------|------|---------------|----------------|-------------|")
+        for cs in comm_summaries:
+            key_members = ", ".join(cs["members"][:4])
+            if len(cs["members"]) > 4:
+                key_members += f" (+{len(cs['members']) - 4} more)"
+            lines.append(
+                f"| C{cs['id']} | {cs['size']} | {cs['dominant_type']} | {cs['internal_edges']} | {key_members} |"
+            )
+        lines.append("")
+
+    # -- Suggested Questions --
+    questions = kg.suggested_questions(top_n=5)
+    if questions:
+        lines.append("## Suggested Questions")
+        lines.append("")
+        lines.append("Questions this graph is uniquely positioned to answer:")
+        lines.append("")
+        for i, q in enumerate(questions, 1):
+            lines.append(f"{i}. {q}")
+        lines.append("")
+
     # -- Stakeholder Summaries --
     persona_labels = {
         "cto": "CTO / Technical Lead Assessment",
@@ -156,12 +196,12 @@ def _build_report(doc: DocumentModel, kg: KnowledgeGraph) -> str:
         label = et.value.replace("_", " ").title()
         lines.append(f"### {label}s ({len(entities)})")
         lines.append("")
-        lines.append("| Name | Confidence | Method | Source Section |")
-        lines.append("|------|-----------|--------|----------------|")
+        lines.append("| Name | Confidence | Provenance | Method | Source Section |")
+        lines.append("|------|-----------|------------|--------|----------------|")
         for e in entities:
             conf_icon = "HIGH" if e.confidence >= 0.8 else ("MED" if e.confidence >= 0.5 else "LOW")
             lines.append(
-                f"| {e.name} | {conf_icon} {e.confidence:.0%} | {e.extraction_method} | {e.source_section or '—'} |"
+                f"| {e.name} | {conf_icon} {e.confidence:.0%} | {e.provenance} | {e.extraction_method} | {e.source_section or '—'} |"
             )
         lines.append("")
 

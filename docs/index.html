@@ -355,6 +355,7 @@ tr:hover td { background: var(--bg-sidebar); }
       <a href="#" data-page="watcher" onclick="navigate('watcher');return false;">File Watcher</a>
       <a href="#" data-page="knowledge-graph" onclick="navigate('knowledge-graph');return false;">Knowledge Graph</a>
       <a href="#" data-page="interactive-graph" onclick="navigate('interactive-graph');return false;">Interactive Graph <span class="sbadge new-b">NEW</span></a>
+      <a href="#" data-page="graph-export" onclick="navigate('graph-export');return false;">Graph Export <span class="sbadge new-b">NEW</span></a>
       <a href="#" data-page="table-sorting" onclick="navigate('table-sorting');return false;">Smart Table Sorting</a>
       <a href="#" data-page="mermaid" onclick="navigate('mermaid');return false;">Mermaid &rarr; PNG</a>
       <a href="#" data-page="stakeholder-views" onclick="navigate('stakeholder-views');return false;">Stakeholder Views</a>
@@ -419,7 +420,8 @@ tr:hover td { background: var(--bg-sidebar); }
           <div class="feat-card"><h4>&#x1F4E4; Publishing</h4><p>Push generated docs directly to Notion workspaces or Confluence spaces with a single flag.</p></div>
           <div class="feat-card"><h4>&#x1F465; Stakeholder Views</h4><p>LLM-powered perspectives for CTO, Investor, and Developer audiences in every output.</p></div>
           <div class="feat-card"><h4>&#x1F916; AI Reader Files</h4><p>Auto-generate llms.txt, llms-full.txt, AGENTS.md, and CLAUDE.md for LLMs and coding agents.</p></div>
-          <div class="feat-card"><h4>&#x1F578;&#xFE0F; Interactive Graph</h4><p>Explore your knowledge graph in the browser with search, filtering, god-node analysis, and surprising connections.</p></div>
+          <div class="feat-card"><h4>&#x1F578;&#xFE0F; Interactive Graph</h4><p>Explore your knowledge graph in the browser with communities, god nodes, provenance labels, and surprising connections.</p></div>
+          <div class="feat-card"><h4>&#x1F4BE; Graph Export</h4><p>Persistent graph.json with nodes, edges, communities, provenance, and suggested questions. Query weeks later.</p></div>
         </div>
 
         <h2 id="examples-overview">Real-World Examples</h2>
@@ -1397,7 +1399,8 @@ kg = result.knowledge_graph
             <tr><td>PowerPoint (.pptx)</td><td>Dedicated &ldquo;Knowledge Graph&rdquo; slide with entity summary</td></tr>
             <tr><td>Word (.docx)</td><td>Entity tables and relationship lists in analysis sections</td></tr>
             <tr><td>Analysis Report</td><td>Full entity breakdown with stakeholder views, god nodes, surprising connections</td></tr>
-            <tr><td>Interactive Graph (HTML)</td><td>Explorable vis.js graph with search, filtering, god nodes, and surprising connections</td></tr>
+            <tr><td>Interactive Graph (HTML)</td><td>Explorable vis.js graph with communities, god nodes, provenance, and surprising connections</td></tr>
+            <tr><td>Graph JSON</td><td>Persistent queryable graph with nodes, edges, communities, provenance labels, and suggested questions</td></tr>
           </tbody>
         </table></div>
 
@@ -1411,7 +1414,7 @@ kg = result.knowledge_graph
       <div class="doc-page" id="page-interactive-graph">
         <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Interactive Graph</div>
         <h1 class="page-title">Interactive Graph</h1>
-        <p class="page-intro">A self-contained HTML page that lets you explore the knowledge graph in your browser with pan, zoom, search, filtering, god-node analysis, and surprising-connection discovery. Powered by <strong>vis-network</strong>.</p>
+        <p class="page-intro">A self-contained HTML page that lets you explore the knowledge graph in your browser with pan, zoom, search, filtering, god-node analysis, community clusters, and surprising-connection discovery. Powered by <strong>vis-network</strong>.</p>
 
         <div class="callout info"><strong>&#8505; No extra dependencies</strong><p>The generated HTML loads vis-network from a CDN. No npm install needed.</p></div>
 
@@ -1423,6 +1426,9 @@ kg = result.knowledge_graph
           <li><strong>Legend panel</strong> showing all entity types with colour codes</li>
           <li><strong>God Nodes panel</strong> listing the highest-connected entities in your project</li>
           <li><strong>Surprising Connections panel</strong> revealing unexpected cross-type relationships</li>
+          <li><strong>Community Clusters panel</strong> showing auto-detected entity groupings with dominant types and edge counts</li>
+          <li><strong>Suggested Questions panel</strong> with 5 questions the graph is uniquely positioned to answer</li>
+          <li><strong>Provenance bar</strong> showing EXTRACTED / INFERRED / AMBIGUOUS entity counts</li>
         </ul>
 
         <h2 id="ig-god">God nodes</h2>
@@ -1436,6 +1442,24 @@ kg = result.knowledge_graph
         <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Access surprising connections programmatically</span>
 <span class="kw">for</span> score, rel <span class="kw">in</span> kg.surprising_connections(top_n=<span class="nb">5</span>):
     <span class="nb">print</span>(<span class="st">f"{rel.source} -> {rel.target} ({rel.label}) score={score:.2f}"</span>)</pre></div>
+
+        <h2 id="ig-communities">Community clusters</h2>
+        <p>OpenDocs detects communities using a label propagation algorithm (no external dependencies). Entities cluster by edge density, revealing natural groupings in your architecture. Each cluster shows its dominant entity type, internal edge count, and key members.</p>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Detect communities and inspect</span>
+communities = kg.detect_communities()
+<span class="kw">for</span> cs <span class="kw">in</span> kg.community_summary():
+    <span class="nb">print</span>(<span class="st">f"Cluster {cs['id']}: {cs['size']} entities, {cs['dominant_type']}"</span>)</pre></div>
+
+        <h2 id="ig-provenance">Provenance labels</h2>
+        <p>Every entity and relation is tagged with a provenance label so you always know what was found vs guessed:</p>
+        <ul>
+          <li><strong>EXTRACTED</strong> - deterministic, high-confidence findings from pattern matching</li>
+          <li><strong>INFERRED</strong> - LLM-derived findings with a confidence score</li>
+          <li><strong>AMBIGUOUS</strong> - low-confidence findings (below 50%) flagged for review</li>
+        </ul>
+
+        <h2 id="ig-questions">Suggested questions</h2>
+        <p>The graph auto-generates 5 questions it is uniquely positioned to answer, based on structural signals like god nodes, community boundaries, and surprising cross-type edges. These appear in the interactive graph sidebar, the analysis report, and <code>graph.json</code>.</p>
 
         <h2 id="ig-cli">CLI examples</h2>
         <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="cm"># Generate all outputs including interactive graph</span>
@@ -1456,6 +1480,65 @@ opendocs generate https://github.com/owner/repo \
           <li>Edge labels show relationship type and confidence</li>
           <li>Hover tooltips display entity type and connection count</li>
         </ul>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ GRAPH EXPORT ═══════════════════════════════════ -->
+      <div class="doc-page" id="page-graph-export">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Graph Export</div>
+        <h1 class="page-title">Graph Export</h1>
+        <p class="page-intro">A persistent <code>graph.json</code> file that captures the full knowledge graph - nodes, edges, communities, provenance labels, god nodes, surprising connections, and suggested questions. Query it weeks later without re-processing the source.</p>
+
+        <h2 id="ge-format">File format</h2>
+        <p>The JSON export follows a stable v1.0 schema:</p>
+        <div class="code-block"><div class="code-header"><span class="code-lang">json</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>{
+  "version": "1.0",
+  "generator": "opendocs",
+  "project": { "name": "...", "url": "...", "description": "..." },
+  "stats": { "total_nodes": 39, "total_edges": 25, "communities": 8, ... },
+  "nodes": [ { "id": "...", "name": "...", "type": "technology", "provenance": "EXTRACTED", "community": 2, "degree": 5, ... } ],
+  "edges": [ { "source": "...", "target": "...", "relation": "uses", "provenance": "EXTRACTED", ... } ],
+  "communities": [ { "id": 0, "size": 6, "dominant_type": "Technology", "internal_edges": 4, "members": [...] } ],
+  "god_nodes": [ { "name": "FastAPI", "type": "framework", "degree": 8, "community": 0 } ],
+  "surprising_connections": [ { "source": "PostgreSQL", "target": "latency_p99", "score": 1.3 } ],
+  "suggested_questions": [ "What role does FastAPI play in the architecture..." ]
+}</pre></div>
+
+        <h2 id="ge-fields">Key fields</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Field</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>nodes[].provenance</code></td><td>EXTRACTED, INFERRED, or AMBIGUOUS - you always know what was found vs guessed</td></tr>
+            <tr><td><code>nodes[].community</code></td><td>Community cluster ID (0-indexed) from label propagation</td></tr>
+            <tr><td><code>nodes[].degree</code></td><td>Total connections (in + out edges)</td></tr>
+            <tr><td><code>god_nodes</code></td><td>Top-5 highest-degree entities that everything connects through</td></tr>
+            <tr><td><code>communities</code></td><td>Cluster summaries with size, dominant type, internal edges, and member names</td></tr>
+            <tr><td><code>suggested_questions</code></td><td>5 questions the graph is uniquely positioned to answer</td></tr>
+          </tbody>
+        </table></div>
+
+        <h2 id="ge-usage">Usage</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">python</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre><span class="kw">import</span> json
+
+<span class="cm"># Load a previously exported graph</span>
+<span class="kw">with</span> <span class="nb">open</span>(<span class="st">"output/project_graph.json"</span>) <span class="kw">as</span> f:
+    graph = json.load(f)
+
+<span class="cm"># Find god nodes</span>
+<span class="kw">for</span> g <span class="kw">in</span> graph[<span class="st">"god_nodes"</span>]:
+    <span class="nb">print</span>(<span class="st">f"{g['name']} ({g['type']}) - {g['degree']} connections"</span>)
+
+<span class="cm"># Browse communities</span>
+<span class="kw">for</span> c <span class="kw">in</span> graph[<span class="st">"communities"</span>]:
+    <span class="nb">print</span>(<span class="st">f"Cluster {c['id']}: {c['size']} entities, {c['dominant_type']}"</span>)
+
+<span class="cm"># Check provenance</span>
+ambiguous = [n <span class="kw">for</span> n <span class="kw">in</span> graph[<span class="st">"nodes"</span>] <span class="kw">if</span> n[<span class="st">"provenance"</span>] == <span class="st">"AMBIGUOUS"</span>]
+<span class="nb">print</span>(<span class="st">f"{len(ambiguous)} entities need review"</span>)</pre></div>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>

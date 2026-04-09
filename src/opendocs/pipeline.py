@@ -642,8 +642,13 @@ class Pipeline:
             else:
                 console.print(f"[red][FAIL][/] {fmt.value}: {gen_result.error}")
 
-        # -- Step 5b: Smart analysis report (always when KG is populated) --
+        # -- Step 5b: Community detection & smart analysis report ------
         if kg.entities:
+            console.print("[bold blue]Detecting communities...[/]")
+            communities = kg.detect_communities()
+            num_c = max(communities.values(), default=-1) + 1
+            console.print(f"[green][OK][/] {num_c} communities detected")
+
             from .generators.smart_report import generate_smart_report
 
             console.print("[bold blue]Generating Analysis Report (Markdown)...[/]")
@@ -665,6 +670,18 @@ class Pipeline:
                 console.print(f"[green][OK][/] {graph_result.output_path}")
             else:
                 console.print(f"[red][FAIL][/] Interactive graph: {graph_result.error}")
+
+        # -- Step 5d: Graph JSON export -----------------------------------
+        if kg.entities:
+            from .generators.graph_export import generate_graph_json
+
+            console.print("[bold blue]Exporting Graph JSON...[/]")
+            json_result = generate_graph_json(doc, kg, output_path)
+            result.results.append(json_result)
+            if json_result.success:
+                console.print(f"[green][OK][/] {json_result.output_path}")
+            else:
+                console.print(f"[red][FAIL][/] Graph JSON: {json_result.error}")
 
         # -- Step 6: AI-reader companion files ----------------------------
         from .generators.ai_readers import AIReadersGenerator

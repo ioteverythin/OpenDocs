@@ -209,6 +209,25 @@ def _legend_items(kg: KnowledgeGraph) -> str:
     return "\n".join(items)
 
 
+def _communities_json(kg: KnowledgeGraph) -> str:
+    """Build community summaries as JSON for the sidebar."""
+    summaries = kg.community_summary()
+    return json.dumps(summaries)
+
+
+def _questions_json(kg: KnowledgeGraph) -> str:
+    """Build suggested questions as JSON."""
+    return json.dumps(kg.suggested_questions(top_n=5))
+
+
+def _provenance_stats(kg: KnowledgeGraph) -> tuple[int, int, int]:
+    """Count EXTRACTED, INFERRED, AMBIGUOUS entities."""
+    ext = sum(1 for e in kg.entities if e.provenance == "EXTRACTED")
+    inf = sum(1 for e in kg.entities if e.provenance == "INFERRED")
+    amb = sum(1 for e in kg.entities if e.provenance == "AMBIGUOUS")
+    return ext, inf, amb
+
+
 def _build_html(kg: KnowledgeGraph, project_name: str) -> str:
     """Assemble the full self-contained HTML page."""
     nodes_json = _build_nodes_json(kg)
@@ -216,6 +235,10 @@ def _build_html(kg: KnowledgeGraph, project_name: str) -> str:
     god_json = _god_nodes_json(kg)
     surprise_json = _surprising_connections_json(kg)
     legend_html = _legend_items(kg)
+    comm_json = _communities_json(kg)
+    quest_json = _questions_json(kg)
+    prov_ext, prov_inf, prov_amb = _provenance_stats(kg)
+    num_communities = max(kg.communities.values(), default=-1) + 1 if kg.communities else 0
     title = html.escape(project_name)
 
     return f"""<!DOCTYPE html>
@@ -252,6 +275,13 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 .stat{{text-align:center}}
 .stat-val{{font-size:1.1rem;font-weight:700;color:#f8fafc}}
 .stat-lbl{{font-size:0.65rem;color:#64748b;text-transform:uppercase;letter-spacing:0.05em}}
+.prov-bar{{display:flex;gap:0.5rem;padding:0.25rem 1.25rem 0.75rem}}
+.prov-tag{{font-size:0.65rem;padding:0.15rem 0.5rem;border-radius:4px;font-weight:600}}
+.prov-extracted{{background:#052e16;color:#4ade80}}
+.prov-inferred{{background:#1e1b4b;color:#a78bfa}}
+.prov-ambiguous{{background:#431407;color:#fb923c}}
+.question-card{{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:0.6rem 0.75rem;margin-bottom:0.4rem;font-size:0.72rem;color:#94a3b8;line-height:1.45}}
+.question-card em{{color:#e2e8f0}}
 </style>
 </head>
 <body>
@@ -268,6 +298,16 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
     <div class="panel" id="god-nodes"></div>
     <h2>Surprising Connections</h2>
     <div class="panel" id="surprises"></div>
+    <h2>Communities</h2>
+    <div class="panel" id="communities"></div>
+    <h2>Suggested Questions</h2>
+    <div class="panel" id="questions"></div>
+    <h2>Provenance</h2>
+    <div class="prov-bar">
+      <span class="prov-tag prov-extracted">EXTRACTED {prov_ext}</span>
+      <span class="prov-tag prov-inferred">INFERRED {prov_inf}</span>
+      <span class="prov-tag prov-ambiguous">AMBIGUOUS {prov_amb}</span>
+    </div>
   </div>
   <div id="graph-container">
     <div id="graph"></div>
@@ -275,6 +315,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
       <div class="stat"><div class="stat-val">{len(kg.entities)}</div><div class="stat-lbl">Nodes</div></div>
       <div class="stat"><div class="stat-val">{len(kg.relations)}</div><div class="stat-lbl">Edges</div></div>
       <div class="stat"><div class="stat-val">{len({e.entity_type for e in kg.entities})}</div><div class="stat-lbl">Types</div></div>
+      <div class="stat"><div class="stat-val">{num_communities}</div><div class="stat-lbl">Communities</div></div>
     </div>
   </div>
 </div>
@@ -283,6 +324,8 @@ var nodesData = new vis.DataSet({nodes_json});
 var edgesData = new vis.DataSet({edges_json});
 var godNodes  = {god_json};
 var surprises = {surprise_json};
+var communities = {comm_json};
+var questions = {quest_json};
 
 var container = document.getElementById('graph');
 var network = new vis.Network(container, {{nodes: nodesData, edges: edgesData}}, {{
@@ -312,6 +355,26 @@ surprises.forEach(function(s) {{
   d.className = 'panel-card';
   d.innerHTML = '<h4>' + s.source + ' \\u2194 ' + s.target + '</h4><p>' + s.relation.replace(/_/g,' ') + ' <span class="badge">score ' + s.score + '</span></p>';
   sp.appendChild(d);
+}});
+
+// Communities panel
+var cp = document.getElementById('communities');
+communities.forEach(function(c) {{
+  var d = document.createElement('div');
+  d.className = 'panel-card';
+  var members = c.members.slice(0,3).join(', ');
+  if (c.members.length > 3) members += ' (+' + (c.members.length - 3) + ')';
+  d.innerHTML = '<h4>Cluster ' + c.id + ' <span class="badge">' + c.size + ' nodes</span></h4><p>' + c.dominant_type + ' | ' + c.internal_edges + ' edges | ' + members + '</p>';
+  cp.appendChild(d);
+}});
+
+// Questions panel
+var qp = document.getElementById('questions');
+questions.forEach(function(q) {{
+  var d = document.createElement('div');
+  d.className = 'question-card';
+  d.innerHTML = '<em>' + q + '</em>';
+  qp.appendChild(d);
 }});
 
 // Search

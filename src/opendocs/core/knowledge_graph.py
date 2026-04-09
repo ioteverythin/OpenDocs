@@ -11,6 +11,8 @@ The KG sits between the parser and generators:
 
 from __future__ import annotations
 
+import random
+from collections import Counter, defaultdict
 from enum import Enum
 from typing import Any, Optional
 
@@ -84,6 +86,20 @@ class Entity(BaseModel):
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     extraction_method: str = "deterministic"  # "deterministic" | "llm"
 
+    @property
+    def provenance(self) -> str:
+        """Return a Graphify-style provenance label.
+
+        - EXTRACTED: deterministic, high-confidence findings
+        - INFERRED: LLM-derived, with a confidence score
+        - AMBIGUOUS: low-confidence findings flagged for review
+        """
+        if self.confidence < 0.5:
+            return "AMBIGUOUS"
+        if self.extraction_method == "llm":
+            return "INFERRED"
+        return "EXTRACTED"
+
     def __hash__(self) -> int:
         return hash(self.id)
 
@@ -97,6 +113,15 @@ class Relation(BaseModel):
     properties: dict[str, Any] = Field(default_factory=dict)
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     extraction_method: str = "deterministic"
+
+    @property
+    def provenance(self) -> str:
+        """Return a Graphify-style provenance label."""
+        if self.confidence < 0.5:
+            return "AMBIGUOUS"
+        if self.extraction_method == "llm":
+            return "INFERRED"
+        return "EXTRACTED"
 
     @property
     def key(self) -> str:
@@ -117,6 +142,9 @@ class KnowledgeGraph(BaseModel):
     executive_summary: str = ""
     stakeholder_summaries: dict[str, str] = Field(default_factory=dict)
     extraction_stats: dict[str, int] = Field(default_factory=dict)
+
+    # -- Community detection results ------------------------------------
+    communities: dict[str, int] = Field(default_factory=dict)  # entity_id -> community_id
 
     # -- LLM-enhanced content (populated by LLMContentEnhancer) ----------
     llm_blog: str = ""  # Full blog post prose
@@ -318,3 +346,141 @@ class KnowledgeGraph(BaseModel):
             scored.append((score, r))
         scored.sort(key=lambda x: x[0], reverse=True)
         return scored[:top_n]
+
+    # -- Community detection ---------------------------------------------
+
+    def detect_communities(self, max_iterations: int = 50) -> dict[str, int]:
+        """Detect communities using label propagation.
+
+        A lightweight, dependency-free community detection algorithm.
+        Each node starts in its own community, then iteratively adopts
+        the most common community among its neighbours.  Converges
+        when no labels change.
+
+        Returns
+        -------
+        dict[str, int]
+            Mapping of entity ID to community ID (0-indexed).
+        """
+        if not self.entities:
+            self.communities = {}
+            return self.communities
+
+        # Build adjacency list
+        adj: dict[str, list[str]] = defaultdict(list)
+        for r in self.relations:
+            adj[r.source_id].append(r.target_id)
+            adj[r.target_id].append(r.source_id)
+
+        # Initialise: each node in its own community
+        labels: dict[str, int] = {e.id: i for i, e in enumerate(self.entities)}
+        ids = [e.id for e in self.entities]
+
+        for _ in range(max_iterations):
+            changed = False
+            random.shuffle(ids)  # randomised order for convergence
+            for nid in ids:
+                nbrs = adj.get(nid, [])
+                if not nbrs:
+                    continue
+                # Most common label among neighbours
+                counts: Counter[int] = Counter(labels[n] for n in nbrs if n in labels)
+                if not counts:
+                    continue
+                best_label = counts.most_common(1)[0][0]
+                if labels[nid] != best_label:
+                    labels[nid] = best_label
+                    changed = True
+            if not changed:
+                break
+
+        # Renumber communities to 0..N-1
+        unique = sorted(set(labels.values()))
+        remap = {old: new for new, old in enumerate(unique)}
+        self.communities = {nid: remap[lbl] for nid, lbl in labels.items()}
+        return self.communities
+
+    def community_members(self, community_id: int) -> list[Entity]:
+        """Return all entities belonging to a community."""
+        member_ids = {eid for eid, cid in self.communities.items() if cid == community_id}
+        return [e for e in self.entities if e.id in member_ids]
+
+    def community_summary(self) -> list[dict[str, Any]]:
+        """Return a list of community summaries.
+
+        Each dict contains: id, size, members (entity names),
+        dominant_type, and internal_edges count.
+        """
+        if not self.communities:
+            self.detect_communities()
+
+        num_communities = max(self.communities.values(), default=-1) + 1
+        summaries = []
+        for cid in range(num_communities):
+            members = self.community_members(cid)
+            if not members:
+                continue
+            # Dominant entity type
+            type_counts: Counter[str] = Counter(e.entity_type.value for e in members)
+            dominant = type_counts.most_common(1)[0][0] if type_counts else "unknown"
+            # Internal edges
+            member_ids = {e.id for e in members}
+            internal = sum(1 for r in self.relations if r.source_id in member_ids and r.target_id in member_ids)
+            summaries.append(
+                {
+                    "id": cid,
+                    "size": len(members),
+                    "members": [e.name for e in members],
+                    "dominant_type": dominant.replace("_", " ").title(),
+                    "internal_edges": internal,
+                }
+            )
+        return summaries
+
+    # -- Suggested questions ---------------------------------------------
+
+    def suggested_questions(self, top_n: int = 5) -> list[str]:
+        """Generate questions the graph is well-positioned to answer.
+
+        Uses structural signals (god nodes, communities, cross-type
+        edges) to formulate insightful questions about the project.
+        """
+        questions: list[str] = []
+
+        # God-node questions
+        gods = self.god_nodes(top_n=3)
+        for ent, deg in gods:
+            questions.append(
+                f"What role does {ent.name} play in the architecture, and why do {deg} other concepts depend on it?"
+            )
+
+        # Community questions
+        if not self.communities:
+            self.detect_communities()
+        summaries = self.community_summary()
+        if len(summaries) >= 2:
+            biggest = max(summaries, key=lambda s: s["size"])
+            questions.append(
+                f"What holds the {biggest['dominant_type']}-dominated cluster "
+                f"({biggest['size']} entities) together, and could it be split?"
+            )
+
+        # Cross-type surprise questions
+        surprises = self.surprising_connections(top_n=2)
+        for _score, rel in surprises:
+            src = self.get_entity(rel.source_id)
+            tgt = self.get_entity(rel.target_id)
+            if src and tgt:
+                questions.append(
+                    f"Why does {src.name} ({src.entity_type.value.replace('_', ' ')}) "
+                    f"connect to {tgt.name} ({tgt.entity_type.value.replace('_', ' ')})?"
+                )
+
+        # Provenance question
+        ambiguous = [e for e in self.entities if e.provenance == "AMBIGUOUS"]
+        if ambiguous:
+            questions.append(
+                f"Are the {len(ambiguous)} ambiguous entities (e.g. {ambiguous[0].name}) correctly classified?"
+            )
+
+        return questions[:top_n]
