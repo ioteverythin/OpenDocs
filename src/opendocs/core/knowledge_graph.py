@@ -67,6 +67,7 @@ class RelationType(str, Enum):
     CONFIGURED_BY = "configured_by"
     INTEGRATES_WITH = "integrates_with"
     PART_OF = "part_of"
+    SIMILAR_TO = "similar_to"
 
 
 # ---------------------------------------------------------------------------
@@ -484,3 +485,54 @@ class KnowledgeGraph(BaseModel):
             )
 
         return questions[:top_n]
+
+    # -- Semantic similarity edges ---------------------------------------
+
+    def discover_similarity_edges(self) -> int:
+        """Add SIMILAR_TO edges between entities that co-occur in the same section.
+
+        Two entities that appear in the same ``source_section`` but have
+        no direct structural relation are likely conceptually related.
+        This mirrors Graphify's semantic-similarity edges.
+
+        Returns
+        -------
+        int
+            Number of new similarity edges added.
+        """
+        # Group entities by source_section
+        section_map: dict[str, list[Entity]] = defaultdict(list)
+        for e in self.entities:
+            if e.source_section:
+                section_map[e.source_section].append(e)
+
+        # Existing edge set for fast lookup
+        existing = {(r.source_id, r.target_id) for r in self.relations}
+        existing |= {(r.target_id, r.source_id) for r in self.relations}
+
+        added = 0
+        for _section, ents in section_map.items():
+            if len(ents) < 2:
+                continue
+            # Only cross-type pairs (same-type co-occurrence is less interesting)
+            for i, a in enumerate(ents):
+                for b in ents[i + 1 :]:
+                    if a.entity_type == b.entity_type:
+                        continue
+                    if (a.id, b.id) in existing:
+                        continue
+                    # Confidence proportional to both entities' confidence
+                    conf = round(min(a.confidence, b.confidence) * 0.6, 2)
+                    self.add_relation(
+                        Relation(
+                            source_id=a.id,
+                            target_id=b.id,
+                            relation_type=RelationType.SIMILAR_TO,
+                            confidence=conf,
+                            extraction_method="deterministic",
+                            properties={"source": "co-occurrence"},
+                        )
+                    )
+                    existing.add((a.id, b.id))
+                    added += 1
+        return added

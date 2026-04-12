@@ -596,6 +596,12 @@ class Pipeline:
         stats = kg.compute_stats()
         console.print(f"[green][OK][/] KG: {stats['total_entities']} entities, {stats['total_relations']} relations")
 
+        # -- Step 3b: Semantic similarity edges ---------------------------
+        if kg.entities:
+            n_sim = kg.discover_similarity_edges()
+            if n_sim:
+                console.print(f"[green][OK][/] +{n_sim} semantic similarity edges added")
+
         # -- Step 4: Render diagrams & download images --------------------
         console.print("[bold blue]Rendering diagrams & downloading images...[/]")
         renderer = MermaidRenderer(cache_dir=output_path / "diagrams")
@@ -682,6 +688,18 @@ class Pipeline:
                 console.print(f"[green][OK][/] {json_result.output_path}")
             else:
                 console.print(f"[red][FAIL][/] Graph JSON: {json_result.error}")
+
+        # -- Step 5e: Wiki export -----------------------------------------
+        if kg.entities:
+            from .generators.wiki_export import generate_wiki
+
+            console.print("[bold blue]Generating Knowledge Wiki...[/]")
+            wiki_result = generate_wiki(doc, kg, output_path)
+            result.results.append(wiki_result)
+            if wiki_result.success:
+                console.print(f"[green][OK][/] {wiki_result.output_path}")
+            else:
+                console.print(f"[red][FAIL][/] Wiki export: {wiki_result.error}")
 
         # -- Step 6: AI-reader companion files ----------------------------
         from .generators.ai_readers import AIReadersGenerator

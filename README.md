@@ -38,15 +38,27 @@ OpenDocs (by [ioteverythin](https://www.ioteverythin.com/)) takes a GitHub repos
 | Architecture Diagrams | `.mmd` + `.png` (5 views) | Available |
 | Mermaid Diagrams | PNG rendering | Available |
 | Knowledge Graph | Entity extraction | Available |
+| Interactive Graph | `.html` (vis.js) | Available |
+| Graph Export | `.json` (queryable) | Available |
+| Knowledge Wiki | Markdown folder | Available |
 | LLM Summaries | Stakeholder views | Available |
 
 ### What's New in v0.5.0
 
+- **Interactive Knowledge Graph** -- Explorable HTML graph (vis.js) with search, filtering, god-node analysis, community clusters, provenance labels, and surprising connections
+- **Graph JSON Export** -- Persistent `graph.json` with nodes, edges, communities, provenance, god nodes, surprising connections, and suggested questions. Query weeks later without re-processing
+- **Community Detection** -- Label propagation clustering groups entities by edge density. No external dependencies
+- **Provenance Labels** -- Every entity and relation tagged EXTRACTED, INFERRED, or AMBIGUOUS so you always know what was found vs guessed
+- **Suggested Questions** -- 5 auto-generated questions the graph is uniquely positioned to answer, based on structural signals
+- **God Nodes & Surprising Connections** -- Highest-degree hub entities and cross-type edges ranked by surprise score
+- **Knowledge Wiki Export** -- Wikipedia-style linked Markdown articles: one per community, plus index and entity catalog. Inspired by Graphify `--wiki`
+- **Semantic Similarity Edges** -- Entities co-occurring in the same section but with no structural link get automatic SIMILAR_TO edges, surfacing hidden conceptual connections
 - **Jupyter Notebook Ingestion** -- Parse `.ipynb` files and convert markdown cells, code cells, and outputs into polished reports
 - **Parameterized Report Templates** -- Inject project name, author, version, date, and organisation into document headers, footers, and title pages via `--config` YAML/JSON or CLI flags
 - **File Watcher + Auto-PR** -- `opendocs watch` daemon monitors repos for changes and auto-regenerates docs; supports cron mode (`--once`) and automatic pull requests (`--auto-pr`)
 - **5 LLM Providers** -- OpenAI, Anthropic (Claude), Google (Gemini), Ollama (local), Azure OpenAI
 - **25 Built-in Themes** -- 15 original + 10 new modern themes (Aurora, Carbon, Lavender, Graphite, Obsidian, Coral, Zen, Nebula, Sand, Glacier)
+- **AI Reader Files** -- Auto-generate `llms.txt`, `llms-full.txt`, `AGENTS.md`, and `CLAUDE.md` for LLMs and coding agents
 
 ## Two Engines
 
@@ -303,14 +315,23 @@ pipeline.run(
 
 ## Features
 
-- **11 Output Formats** -- Word, PDF, PPTX, Blog Post, Jira Tickets, Changelog, LaTeX Paper, One-Pager PDF, Social Cards, FAQ, Architecture Diagrams
+- **15 Output Formats** -- Word, PDF, PPTX, Blog Post, Jira Tickets, Changelog, LaTeX Paper, One-Pager PDF, Social Cards, FAQ, Architecture Diagrams, Interactive Graph, Graph JSON, Knowledge Wiki
+- **Interactive Knowledge Graph** -- Self-contained HTML visualization (vis.js) with search, legend, community clusters, god nodes, surprising connections, provenance bar, and suggested questions
+- **Graph JSON Export** -- Persistent queryable `graph.json` with nodes, edges, communities, provenance labels, god nodes, surprising connections, and suggested questions
+- **Knowledge Wiki** -- Wikipedia-style inter-linked Markdown articles (one per community) with navigable index and full entity catalog
+- **Community Detection** -- Label propagation algorithm groups entities into clusters by edge density (zero external dependencies)
+- **Provenance Labels** -- Every entity/relation tagged EXTRACTED (deterministic), INFERRED (LLM), or AMBIGUOUS (low confidence)
+- **God Nodes & Surprising Connections** -- Highest-degree hub entities and cross-type edges ranked by composite surprise score
+- **Suggested Questions** -- Auto-generated questions the graph is uniquely positioned to answer
+- **Semantic Similarity Edges** -- Cross-type entities co-occurring in the same section get automatic SIMILAR_TO edges
+- **AI Reader Files** -- Auto-generate `llms.txt`, `llms-full.txt`, `AGENTS.md`, and `CLAUDE.md` for LLMs and coding agents
 - **Jupyter Notebook Support** -- Parse `.ipynb` files including markdown cells, code cells, and outputs (images, tables, text)
 - **Parameterized Templates** -- Inject project name, author, version, org, date into headers/footers via config file or CLI
 - **File Watcher + Auto-PR** -- Monitor repos for changes, auto-regenerate docs, and create pull requests
 - **5 LLM Providers** -- OpenAI, Anthropic (Claude), Google (Gemini), Ollama (local), Azure OpenAI
 - **25 Built-in Themes** -- Classic, Professional, and Modern theme categories
 - **Smart Table Sorting** -- 6 strategies (smart, alpha, numeric, column:N, column:N:desc, none)
-- **Knowledge Graph** -- Extracts 10+ entity types (projects, technologies, APIs, metrics, etc.)
+- **Knowledge Graph** -- Extracts 17 entity types (projects, technologies, APIs, metrics, frameworks, databases, etc.)
 - **Architecture Diagrams** -- 5 auto-generated views: System Architecture (C4-style), Tech Stack Layers, Data Flow, Dependency Tree, Deployment View
 - **Mermaid -> PNG** -- Renders mermaid diagrams to images via mermaid.ink API
 - **LLM Summaries** -- Executive summary + CTO / Investor / Developer stakeholder views
@@ -343,13 +364,17 @@ GitHub URL / Local .md / .ipynb
 +--------+----------+
          v
 +-------------------+
+| Community Detect  |  <-- Label propagation clustering
++--------+----------+
+         v
++-------------------+
 |  Diagram Renderer |  <-- mermaid.ink API
 +--------+----------+
          |
-    +----+----+----+----+------+------+-------+------+-----+------+------+
-    v    v    v    v    v      v      v       v      v     v      v
-  Word  PDF  PPTX  Blog  Jira  Change  LaTeX  1-Pgr  Social  FAQ  Arch
-                                 log                              Diag
+    +----+----+----+----+------+------+-------+------+-----+------+------+------+------+------+
+    v    v    v    v    v      v      v       v      v     v      v      v      v      v
+  Word  PDF  PPTX  Blog  Jira  Change  LaTeX  1-Pgr  Social  FAQ  Arch  iGraph  JSON  Wiki
+                                 log                              Diag   .html  .json  .md/
 ```
 
 ### File Watcher Flow

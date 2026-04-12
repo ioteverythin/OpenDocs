@@ -356,6 +356,7 @@ tr:hover td { background: var(--bg-sidebar); }
       <a href="#" data-page="knowledge-graph" onclick="navigate('knowledge-graph');return false;">Knowledge Graph</a>
       <a href="#" data-page="interactive-graph" onclick="navigate('interactive-graph');return false;">Interactive Graph <span class="sbadge new-b">NEW</span></a>
       <a href="#" data-page="graph-export" onclick="navigate('graph-export');return false;">Graph Export <span class="sbadge new-b">NEW</span></a>
+      <a href="#" data-page="wiki-export" onclick="navigate('wiki-export');return false;">Knowledge Wiki <span class="sbadge new-b">NEW</span></a>
       <a href="#" data-page="table-sorting" onclick="navigate('table-sorting');return false;">Smart Table Sorting</a>
       <a href="#" data-page="mermaid" onclick="navigate('mermaid');return false;">Mermaid &rarr; PNG</a>
       <a href="#" data-page="stakeholder-views" onclick="navigate('stakeholder-views');return false;">Stakeholder Views</a>
@@ -402,16 +403,16 @@ tr:hover td { background: var(--bg-sidebar); }
         </div>
 
         <h2 id="what-is-opendocs">What is OpenDocs?</h2>
-        <p>OpenDocs (by <a href="https://www.ioteverythin.com/" target="_blank">ioteverythin</a>) takes a GitHub repository README, npm package, local Markdown file, or Jupyter Notebook and automatically generates beautiful, professional documentation in <strong>13 output formats</strong>.</p>
+        <p>OpenDocs (by <a href="https://www.ioteverythin.com/" target="_blank">ioteverythin</a>) takes a GitHub repository README, npm package, local Markdown file, or Jupyter Notebook and automatically generates beautiful, professional documentation in <strong>16 output formats</strong>.</p>
         <p>It ships two engines: a <strong>deterministic pipeline</strong> (fast, free, no LLM needed) and <strong>DocAgent</strong> (a full agentic system for enterprise document generation).</p>
 
         <h2 id="key-features">Key Features</h2>
         <div class="feature-grid">
-          <div class="feat-card"><h4>&#x1F4C4; 13 Output Formats</h4><p>Word, PDF, PPTX, Blog, Jira, Changelog, LaTeX, One-Pager, Social Cards, FAQ, Architecture, Mindmap from a single command.</p></div>
+          <div class="feat-card"><h4>&#x1F4C4; 16 Output Formats</h4><p>Word, PDF, PPTX, Blog, Jira, Changelog, LaTeX, One-Pager, Social Cards, FAQ, Architecture, Mindmap, Interactive Graph, Graph JSON, Knowledge Wiki from a single command.</p></div>
           <div class="feat-card"><h4>&#x1F3A8; 25 Built-in Themes</h4><p>Classic, Professional, and Modern theme categories. Corporate, Aurora, Carbon, Graphite, and more.</p></div>
           <div class="feat-card"><h4>&#x1F9E0; 5 LLM Providers</h4><p>OpenAI, Anthropic (Claude), Google (Gemini), Ollama (local), Azure OpenAI or zero-LLM basic mode.</p></div>
           <div class="feat-card"><h4>&#x1F4E6; Multiple Sources</h4><p>GitHub URLs, npm packages, local .md files, folder merging, and Jupyter Notebooks (.ipynb).</p></div>
-          <div class="feat-card"><h4>&#x1F50D; Knowledge Graph</h4><p>Extracts 10+ entity types: projects, technologies, APIs, metrics, prerequisites. Generates architecture diagrams.</p></div>
+          <div class="feat-card"><h4>&#x1F50D; Knowledge Graph</h4><p>Extracts 17 entity types: projects, technologies, APIs, metrics, frameworks, databases. Community detection + provenance labels.</p></div>
           <div class="feat-card"><h4>&#x1F440; File Watcher</h4><p>Monitor repos for changes, auto-regenerate docs, and create pull requests with <code>opendocs watch</code>.</p></div>
           <div class="feat-card"><h4>&#x1F4DD; Template Variables</h4><p>Inject project name, author, version, org into headers/footers via YAML config or CLI flags.</p></div>
           <div class="feat-card"><h4>&#x1F916; DocAgent</h4><p>Agentic engine generating PRD, Proposal, SOP, Report, Slides, Changelog, Onboarding, and Tech Debt docs.</p></div>
@@ -422,6 +423,7 @@ tr:hover td { background: var(--bg-sidebar); }
           <div class="feat-card"><h4>&#x1F916; AI Reader Files</h4><p>Auto-generate llms.txt, llms-full.txt, AGENTS.md, and CLAUDE.md for LLMs and coding agents.</p></div>
           <div class="feat-card"><h4>&#x1F578;&#xFE0F; Interactive Graph</h4><p>Explore your knowledge graph in the browser with communities, god nodes, provenance labels, and surprising connections.</p></div>
           <div class="feat-card"><h4>&#x1F4BE; Graph Export</h4><p>Persistent graph.json with nodes, edges, communities, provenance, and suggested questions. Query weeks later.</p></div>
+          <div class="feat-card"><h4>&#x1F4DA; Knowledge Wiki</h4><p>Wikipedia-style Markdown articles per community with navigable index, entity catalog, and cross-community links.</p></div>
         </div>
 
         <h2 id="examples-overview">Real-World Examples</h2>
@@ -539,7 +541,7 @@ jupyter notebook opendocs_examples.ipynb</pre></div>
         <div class="code-block"><div class="code-header"><span class="code-lang">bash</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>opendocs generate ./README.md --local --mode llm --api-key sk-...</pre></div>
         <p>LLM mode adds knowledge graph extraction, executive summaries, and stakeholder views (CTO, Investor, Developer).</p>
 
-        <div class="callout tip"><strong>&#10003; Next steps</strong><p>Explore <a href="#" onclick="navigate('formats');return false;">all 13 output formats</a>, try <a href="#" onclick="navigate('themes');return false;">25 built-in themes</a>, or set up the <a href="#" onclick="navigate('watcher');return false;">file watcher</a>.</p></div>
+        <div class="callout tip"><strong>&#10003; Next steps</strong><p>Explore <a href="#" onclick="navigate('formats');return false;">all 16 output formats</a>, try <a href="#" onclick="navigate('themes');return false;">25 built-in themes</a>, or set up the <a href="#" onclick="navigate('watcher');return false;">file watcher</a>.</p></div>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs/blob/main/README.md" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
@@ -870,8 +872,8 @@ result = pipeline.run(
 
       <!-- ══ FORMATS ════════════════════════════════════════ -->
       <div class="doc-page" id="page-formats">
-        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Output Formats<span>/</span>All 13 Formats</div>
-        <h1 class="page-title">All 13 Output Formats</h1>
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Output Formats<span>/</span>All 16 Formats</div>
+        <h1 class="page-title">All 16 Output Formats</h1>
         <p class="page-intro">Use <code>-f</code> / <code>--format</code> to generate specific formats, or omit for all.</p>
 
         <div class="table-wrap"><table>
@@ -889,6 +891,11 @@ result = pipeline.run(
             <tr><td><code>faq</code></td><td>FAQ</td><td><code>.md</code></td><td>Auto-generated Q&amp;A from content</td></tr>
             <tr><td><code>architecture</code></td><td>Architecture</td><td><code>.mmd</code> + <code>.png</code></td><td>5 auto-generated C4-style views</td></tr>
             <tr><td><code>mindmap</code></td><td>Mindmap</td><td><code>.md</code> + <code>.json</code></td><td>Mermaid mindmap diagram + hierarchical JSON</td></tr>
+            <tr><td colspan="4" style="padding:0.5rem 1rem;font-weight:600;color:var(--muted);font-size:0.82rem;">Auto-generated (always included)</td></tr>
+            <tr><td>-</td><td>Interactive Graph</td><td><code>.html</code></td><td>Explorable vis.js knowledge graph with communities, god nodes, provenance, and surprising connections</td></tr>
+            <tr><td>-</td><td>Graph JSON</td><td><code>.json</code></td><td>Persistent queryable graph with nodes, edges, communities, provenance labels, and suggested questions</td></tr>
+            <tr><td>-</td><td>Analysis Report</td><td><code>.md</code></td><td>Comprehensive Markdown report with KG stats, god nodes, communities, and entity catalog</td></tr>
+            <tr><td>-</td><td>Knowledge Wiki</td><td><code>.md/</code> folder</td><td>Wikipedia-style linked articles per community with index, entity catalog, and cross-community navigation</td></tr>
             <tr><td><code>all</code></td><td>Everything</td><td>all above</td><td>Default generate all formats</td></tr>
           </tbody>
         </table></div>
@@ -1539,6 +1546,54 @@ opendocs generate https://github.com/owner/repo \
 <span class="cm"># Check provenance</span>
 ambiguous = [n <span class="kw">for</span> n <span class="kw">in</span> graph[<span class="st">"nodes"</span>] <span class="kw">if</span> n[<span class="st">"provenance"</span>] == <span class="st">"AMBIGUOUS"</span>]
 <span class="nb">print</span>(<span class="st">f"{len(ambiguous)} entities need review"</span>)</pre></div>
+
+        <div class="page-footer">
+          <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
+          <div class="helpful"><span>Was this helpful?</span><button onclick="markHelpful(this,true)">&#x1F44D; Yes</button><button onclick="markHelpful(this,false)">&#x1F44E; No</button></div>
+        </div>
+      </div>
+
+      <!-- ══ WIKI EXPORT ════════════════════════════════════ -->
+      <div class="doc-page" id="page-wiki-export">
+        <div class="breadcrumb"><a href="#" onclick="navigate('overview');return false;">Docs</a><span>/</span>Features<span>/</span>Knowledge Wiki</div>
+        <h1 class="page-title">Knowledge Wiki</h1>
+        <p class="page-intro">Wikipedia-style inter-linked Markdown articles generated from the knowledge graph. One article per community, plus a navigable index and full entity catalog.</p>
+
+        <h2 id="wiki-what">What is it?</h2>
+        <p>Inspired by Graphify's <code>--wiki</code> flag, the Knowledge Wiki turns your KG communities into a browsable folder of Markdown files. Each community gets its own article with member tables, internal relations, and cross-community connections.</p>
+
+        <h2 id="wiki-output">Output Structure</h2>
+        <div class="code-block"><div class="code-header"><span class="code-lang">plaintext</span><button class="copy-btn" onclick="copyCode(this)">&#8984; Copy</button></div><pre>output/
+  project_wiki/
+    index.md              # Landing page with stats, TOC, god nodes, questions
+    community_0.md        # Article for community 0
+    community_1.md        # Article for community 1
+    ...
+    entity_catalog.md     # Full entity listing sorted by connections</pre></div>
+
+        <h3>index.md</h3>
+        <ul>
+          <li>Quick stats table (entities, relations, communities, provenance breakdown)</li>
+          <li>Community table of contents with dominant type, size, and links</li>
+          <li>God nodes (highest-degree hub entities)</li>
+          <li>Suggested questions</li>
+        </ul>
+
+        <h3>Community articles</h3>
+        <ul>
+          <li>Member table with type, provenance, and confidence</li>
+          <li>Internal relations table (edges within the community)</li>
+          <li>Cross-community connections (inbound / outbound edges)</li>
+          <li>Navigation links back to index and entity catalog</li>
+        </ul>
+
+        <h3>Entity catalog</h3>
+        <p>A single flat table of every entity, sorted by number of connections, with type, provenance, confidence, community ID, and degree.</p>
+
+        <h2 id="wiki-auto">Automatic generation</h2>
+        <p>The wiki is auto-generated as part of every pipeline run (no extra flags needed). It appears in the output directory alongside the other formats.</p>
+
+        <div class="callout tip"><strong>&#10003; Tip</strong><p>The wiki pairs well with the <a href="#" onclick="navigate('graph-export');return false;">Graph JSON</a> export. Load the JSON in a tool like <a href="https://obsidian.md/" target="_blank">Obsidian</a> for a graph + wiki browsing experience.</p></div>
 
         <div class="page-footer">
           <a href="https://github.com/ioteverythin/OpenDocs" class="edit-link" target="_blank">&#9998; Edit on GitHub</a>
